@@ -12,7 +12,9 @@ include_directories(
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(cold_arc_gtk main.cpp)
+add_executable(cold_arc_gtk main.cpp
+        MainWindow.cpp
+        MainWindow.h)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}  )
