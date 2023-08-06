@@ -19,6 +19,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     initButton("open_archive_button", m_open_archive_button);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
+    m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
     m_upload_folder_button->set_sensitive(false);
 }
 
@@ -35,9 +36,29 @@ void MainWindow::onNewArchiveButtonClicked() {
     dbFilter->add_mime_type("application/x-sqlite3");
     newArcDlg.add_filter(dbFilter);
 
-    switch (newArcDlg.run()) {
+    if (newArcDlg.run() == Gtk::RESPONSE_OK) {
+        arc::Archive::instance().newArchive(newArcDlg.get_filename());
+        set_title(Glib::ustring::compose("ColdArc [%1]",arc::Archive::instance().settings->name()));
+    }
+}
+
+void MainWindow::onOpenArchiveButtonClicked() {
+    Gtk::FileChooserDialog openArcDlg("Please choose the name of archive database", Gtk::FILE_CHOOSER_ACTION_SAVE);
+    openArcDlg.set_transient_for(*this);
+
+    openArcDlg.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+    openArcDlg.add_button("Open", Gtk::RESPONSE_OK);
+
+    auto dbFilter = Gtk::FileFilter::create();
+    dbFilter->set_name("sqlite files");
+    dbFilter->add_mime_type("application/vnd.sqlite3");
+    dbFilter->add_mime_type("application/x-sqlite3");
+    openArcDlg.add_filter(dbFilter);
+
+    switch (openArcDlg.run()) {
         case Gtk::RESPONSE_OK: {
-            arc::Archive::instance().newArchive(newArcDlg.get_filename());
+
+            // set_title(Glib::ustring::compose("ColdArc [%1]",arc::Archive::instance().settings->name()));
             break;
         }
         default:

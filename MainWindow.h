@@ -19,6 +19,7 @@ private:
     Gtk::ToolButton* m_new_archive_button;
 
     void onNewArchiveButtonClicked();
+    void onOpenArchiveButtonClicked();
 };
 
 
