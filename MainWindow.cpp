@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "MainWindow.h"
+#include "Archive.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
@@ -36,7 +37,7 @@ void MainWindow::onNewArchiveButtonClicked() {
 
     switch (newArcDlg.run()) {
         case Gtk::RESPONSE_OK: {
-            std::cout << newArcDlg.get_filename() << "\n";
+            arc::Archive::instance().newArchive(newArcDlg.get_filename());
             break;
         }
         default:
