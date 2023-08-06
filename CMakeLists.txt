@@ -14,7 +14,21 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(cold_arc_gtk main.cpp
         MainWindow.cpp
-        MainWindow.h)
+        MainWindow.h
+        resources.c)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}  )
+
+add_custom_command(
+        OUTPUT ${PROJECT_SOURCE_DIR}/resources.c
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        COMMAND glib-compile-resources --target=${PROJECT_SOURCE_DIR}/resources.c --generate-source ${PROJECT_SOURCE_DIR}/resources.xml
+        DEPENDS ${PROJECT_SOURCE_DIR}/resources.xml
+)
+
+add_custom_target(resources
+        DEPENDS ${PROJECT_SOURCE_DIR}/resources.c
+)
+
+add_dependencies(cold_arc_gtk resources)
