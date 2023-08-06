@@ -5,3 +5,12 @@
 /cmake-build-debug/
 /run-clion
 /resources.c
+/.Xauthority
+/.bash_history
+/.cache/
+/.config/
+/.java/
+/.local/
+/.selected_editor
+/.sqlite_history
+/skeleton.db
