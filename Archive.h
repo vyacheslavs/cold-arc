@@ -21,6 +21,8 @@ namespace arc {
             void openArchive(const Glib::ustring& filename);
             void newMedia(const Glib::ustring& name, const Glib::ustring& serial, int capacity);
 
+            bool hasActiveArchive() const;
+
         private:
 
             class Media {

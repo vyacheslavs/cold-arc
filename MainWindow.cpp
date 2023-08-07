@@ -21,7 +21,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
     m_archive_settings_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onArchiveSettings));
     m_add_new_media_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
-    setArchiveLoaded(false);
+    updateUI();
 }
 
 void MainWindow::onNewArchiveButtonClicked() {
@@ -39,7 +39,7 @@ void MainWindow::onNewArchiveButtonClicked() {
 
     if (newArcDlg.run() == Gtk::RESPONSE_OK) {
         arc::Archive::instance().newArchive(newArcDlg.get_filename());
-        setArchiveLoaded(true);
+        updateUI();
     }
 }
 
@@ -58,15 +58,15 @@ void MainWindow::onOpenArchiveButtonClicked() {
 
     if (openArcDlg.run() == Gtk::RESPONSE_OK) {
         arc::Archive::instance().openArchive(openArcDlg.get_filename());
-        setArchiveLoaded(true);
+        updateUI();
     }
 }
 
-void MainWindow::setArchiveLoaded(bool loaded) {
-    m_upload_folder_button->set_visible(loaded);
-    m_archive_settings_button->set_visible(loaded);
-    m_add_new_media_button->set_visible(loaded);
-    if (loaded) {
+void MainWindow::updateUI() {
+    m_upload_folder_button->set_visible(false);
+    m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
+    m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
+    if (arc::Archive::instance().hasActiveArchive()) {
         set_title(Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name()));
     } else {
         set_title("ColdArc");
@@ -75,10 +75,10 @@ void MainWindow::setArchiveLoaded(bool loaded) {
 
 void MainWindow::onArchiveSettings() {
     ArchiveSettingsDialog::run();
-    setArchiveLoaded(true);
+    updateUI();
 }
 
 void MainWindow::onNewMediaButtonClicked() {
     NewMediaDialog::run();
-    setArchiveLoaded(true);
+    updateUI();
 }

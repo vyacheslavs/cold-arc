@@ -59,8 +59,17 @@ namespace arc {
         settings->updateCurrentMedia(rowid);
     }
 
+    bool Archive::hasActiveArchive() const {
+        return m_dbhandle.operator bool();
+    }
+
     template <>
     sqlite3_int64 SqLiteHandle::sql_column_type(sqlite3_stmt* stmt, int column) {
+        return sqlite3_column_int64(stmt, column);
+    }
+
+    template <>
+    sqlite3_uint64 SqLiteHandle::sql_column_type(sqlite3_stmt* stmt, int column) {
         return sqlite3_column_int64(stmt, column);
     }
 
@@ -70,8 +79,9 @@ namespace arc {
     }
 
     Archive::Settings::Settings(std::unique_ptr<SqLiteHandle> &_settings) : m_dbhandle(_settings) {
-        m_dbhandle->select("SELECT name FROM db_settings", [&](const char* text) {
+        m_dbhandle->select("SELECT name, current_media FROM db_settings", [&](const char* text, sqlite3_uint64 id) {
             m_name = text;
+            std::cout << "current_media = "<<id<<"\n";
         });
     }
 
