@@ -30,7 +30,9 @@ add_executable(cold_arc_gtk main.cpp
         SqLiteHandle.h
         Utils.cpp
         NewMediaDialog.cpp
-        NewMediaDialog.h)
+        NewMediaDialog.h
+        Signals.cpp
+        Signals.h)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}

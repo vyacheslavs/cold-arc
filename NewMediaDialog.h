@@ -12,7 +12,7 @@ public:
     NewMediaDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
     static void run();
 
-    std::tuple<Glib::ustring, Glib::ustring, int> get() const;
+    std::tuple<Glib::ustring, Glib::ustring, uint64_t> get() const;
 
 private:
 

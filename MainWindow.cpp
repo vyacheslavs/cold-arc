@@ -2,12 +2,12 @@
 // Created by developer on 8/5/23.
 //
 
-#include <iostream>
 #include "MainWindow.h"
 #include "Archive.h"
 #include "ArchiveSettingsDialog.h"
 #include "Utils.h"
 #include "NewMediaDialog.h"
+#include "Signals.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
@@ -21,6 +21,8 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
     m_archive_settings_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onArchiveSettings));
     m_add_new_media_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
+
+    Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     updateUI();
 }
 
@@ -39,7 +41,6 @@ void MainWindow::onNewArchiveButtonClicked() {
 
     if (newArcDlg.run() == Gtk::RESPONSE_OK) {
         arc::Archive::instance().newArchive(newArcDlg.get_filename());
-        updateUI();
     }
 }
 
@@ -58,7 +59,6 @@ void MainWindow::onOpenArchiveButtonClicked() {
 
     if (openArcDlg.run() == Gtk::RESPONSE_OK) {
         arc::Archive::instance().openArchive(openArcDlg.get_filename());
-        updateUI();
     }
 }
 
@@ -66,19 +66,20 @@ void MainWindow::updateUI() {
     m_upload_folder_button->set_visible(false);
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
+    auto title = Glib::ustring("ColdArc");
     if (arc::Archive::instance().hasActiveArchive()) {
-        set_title(Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name()));
-    } else {
-        set_title("ColdArc");
+        title = Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name());
+        if (arc::Archive::instance().hasCurrentMedia() && arc::Archive::instance().settings->media()) {
+            title += Glib::ustring::compose(" %1 / %2", arc::Archive::instance().settings->media()->name(),arc::Archive::instance().settings->media()->serial());
+        }
     }
+    set_title(title);
 }
 
 void MainWindow::onArchiveSettings() {
     ArchiveSettingsDialog::run();
-    updateUI();
 }
 
 void MainWindow::onNewMediaButtonClicked() {
     NewMediaDialog::run();
-    updateUI();
 }

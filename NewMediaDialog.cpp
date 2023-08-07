@@ -19,7 +19,7 @@ NewMediaDialog::NewMediaDialog(Gtk::Dialog::BaseObjectType *win, const Glib::Ref
     m_edit_media_serial->set_text(generateSerial());
     m_edit_media_capacity->set_value(750);
 
-    set_response_sensitive(Gtk::RESPONSE_OK, false);
+    checkSanity();
 }
 
 void NewMediaDialog::run() {
@@ -57,10 +57,12 @@ void NewMediaDialog::checkSanity() {
     );
 }
 
-std::tuple<Glib::ustring, Glib::ustring, int> NewMediaDialog::get() const {
+std::tuple<Glib::ustring, Glib::ustring, uint64_t> NewMediaDialog::get() const {
+    uint64_t cap = 1000'000ULL * m_edit_media_capacity->get_value_as_int();
+
     return {
             m_edit_media_name->get_text(),
             m_edit_media_serial->get_text(),
-            m_edit_media_capacity->get_value_as_int()
+            cap
     };
 }

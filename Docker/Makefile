@@ -5,7 +5,7 @@ all: .phony
 
 run:
 	docker run -d --rm --name cold-arc-devcontainer \
-	 --mount "type=bind,source=$(shell realpath $(shell pwd)/..),target=/home/developer" \
+	 --mount "type=bind,source=/home/slavs/workspace/cold-arc-gtk,target=/home/developer" \
 	 --env="DISPLAY" \
 	 --ipc=host \
 	 --hostname cold-arc \
