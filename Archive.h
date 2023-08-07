@@ -21,27 +21,48 @@ namespace arc {
             void openArchive(const Glib::ustring& filename);
             void newMedia(const Glib::ustring& name, const Glib::ustring& serial, int capacity);
 
-            bool hasActiveArchive() const;
+            [[nodiscard]] bool hasActiveArchive() const;
+            bool hasCurrentMedia() const;
 
         private:
 
             class Media {
                 public:
+                    Media() = default;
+                    Media(Glib::ustring name, Glib::ustring serial, uint64_t cap) :
+                        m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap) {}
 
+                    Media(Glib::ustring name, Glib::ustring serial, uint64_t cap, uint64_t occ, uint64_t loc) :
+                        m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap), m_occupied(occ), m_locked(loc) {}
+
+                    [[nodiscard]] const Glib::ustring& name() const;
+                    [[nodiscard]] const Glib::ustring& serial() const;
+
+                private:
+                    Glib::ustring m_name;
+                    Glib::ustring m_serial;
+                    uint64_t m_capacity {0};
+                    uint64_t m_occupied {0};
+                    bool m_locked {false};
+
+                friend class Archive;
             };
 
             class Settings {
                 public:
                     explicit Settings(std::unique_ptr<SqLiteHandle>& _settings);
                     [[nodiscard]] const Glib::ustring& name() const;
+                    [[nodiscard]] const std::unique_ptr<Media>& media() const;
                     void updateName(const Glib::ustring& name);
                     void updateCurrentMedia(sqlite3_uint64 id);
 
                 private:
                     Glib::ustring m_name;
-                    std::optional<sqlite3_uint64> m_current_media_id;
+                    sqlite3_uint64 m_currentMediaId {0};
                     std::unique_ptr<SqLiteHandle>& m_dbhandle;
                     std::unique_ptr<Media> m_currentMedia;
+
+                    friend class Archive;
             };
 
             std::unique_ptr<SqLiteHandle> m_dbhandle;
