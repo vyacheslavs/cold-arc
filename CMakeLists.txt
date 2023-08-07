@@ -32,7 +32,8 @@ add_executable(cold_arc_gtk main.cpp
         NewMediaDialog.cpp
         NewMediaDialog.h
         Signals.cpp
-        Signals.h)
+        Signals.h
+        Exceptions.h)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}

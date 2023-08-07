@@ -11,6 +11,7 @@
 #include <fstream>
 #include <gtkmm/messagedialog.h>
 #include "Signals.h"
+#include "Exceptions.h"
 
 namespace arc {
     Archive &Archive::instance() {
@@ -41,12 +42,19 @@ namespace arc {
     }
 
     void Archive::openArchive(const Glib::ustring &filename) {
-        const auto fn = endsWith(filename, ".db") ? filename : filename+".db";
+        try {
+            const auto fn = endsWith(filename, ".db") ? filename : filename+".db";
 
-        m_dbhandle = std::make_unique<SqLiteHandle>(fn);
-        settings = std::make_unique<Settings>(m_dbhandle);
+            m_dbhandle = std::make_unique<SqLiteHandle>(fn);
+            settings = std::make_unique<Settings>(m_dbhandle);
 
-        Signals::instance().update_main_window.emit();
+            Signals::instance().update_main_window.emit();
+        } catch (const WrongDatabaseVersion& e) {
+            Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to open archive %1", filename));
+            dlg.set_secondary_text(e.what());
+
+            dlg.run();
+        }
     }
 
     void Archive::newMedia(const Glib::ustring &name, const Glib::ustring &serial, int capacity) {
@@ -66,6 +74,8 @@ namespace arc {
     }
 
     bool Archive::hasCurrentMedia() const {
+        if (!settings)
+            return false;
         return settings->m_currentMediaId > 0;
     }
 

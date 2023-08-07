@@ -68,11 +68,35 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="upload_folder">
+              <object class="GtkToolButton" id="settings_button">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="tooltip-text" translatable="yes">Upload a folder</property>
-                <property name="label" translatable="yes">Upload a folder</property>
+                <property name="tooltip-text" translatable="yes">Archive settings</property>
+                <property name="label" translatable="yes">Archive Settings</property>
+                <property name="use-underline">True</property>
+                <property name="icon-name">preferences-other</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="upload_btn">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="tooltip-text" translatable="yes">Upload</property>
+                <property name="label" translatable="yes">Upload</property>
                 <property name="use-underline">True</property>
                 <property name="icon-name">folder-new</property>
               </object>
@@ -82,13 +106,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="settings_button">
+              <object class="GtkToolButton" id="create_folder_btn">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="tooltip-text" translatable="yes">Archive settings</property>
-                <property name="label" translatable="yes">Archive Settings</property>
+                <property name="tooltip-text" translatable="yes">Create a folder</property>
+                <property name="label" translatable="yes">Create folder</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">preferences-other</property>
+                <property name="icon-name">edit-copy</property>
               </object>
               <packing>
                 <property name="expand">False</property>

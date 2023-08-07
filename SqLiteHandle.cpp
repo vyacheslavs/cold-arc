@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "SqLiteHandle.h"
+#include "Exceptions.h"
 
 namespace arc {
     SqLiteHandle::SqLiteHandle(const Glib::ustring &filename) {
@@ -14,7 +15,7 @@ namespace arc {
         // verify database version
         select("SELECT version FROM db_settings", [](sqlite3_int64 v) {
             if (v != db_version)
-                throw std::runtime_error("Wrong database version");
+                throw WrongDatabaseVersion(v, db_version);
         });
     }
 

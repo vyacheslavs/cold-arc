@@ -11,7 +11,7 @@
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
-    m_upload_folder_button = findWidget<Gtk::ToolButton>("upload_folder", m_builder);
+    m_upload_button = findWidget<Gtk::ToolButton>("upload_btn", m_builder);
     m_new_archive_button = findWidget<Gtk::ToolButton>("new_archive_button", m_builder);
     m_open_archive_button = findWidget<Gtk::ToolButton>("open_archive_button", m_builder);
     m_archive_settings_button = findWidget<Gtk::ToolButton>("settings_button", m_builder);
@@ -63,7 +63,7 @@ void MainWindow::onOpenArchiveButtonClicked() {
 }
 
 void MainWindow::updateUI() {
-    m_upload_folder_button->set_visible(false);
+    m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
     auto title = Glib::ustring("ColdArc");
