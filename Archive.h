@@ -7,6 +7,7 @@
 
 #include <glibmm/ustring.h>
 #include <memory>
+#include <optional>
 #include "SqLiteHandle.h"
 
 namespace arc {
@@ -18,21 +19,25 @@ namespace arc {
             static Archive& instance();
             void newArchive(const Glib::ustring& filename);
             void openArchive(const Glib::ustring& filename);
+            void newMedia(const Glib::ustring& name, const Glib::ustring& serial, int capacity);
 
         private:
 
             class Media {
                 public:
-                    
+
             };
 
             class Settings {
                 public:
                     explicit Settings(std::unique_ptr<SqLiteHandle>& _settings);
                     [[nodiscard]] const Glib::ustring& name() const;
-                    void updateSettings(const Glib::ustring& name);
+                    void updateName(const Glib::ustring& name);
+                    void updateCurrentMedia(sqlite3_uint64 id);
+
                 private:
                     Glib::ustring m_name;
+                    std::optional<sqlite3_uint64> m_current_media_id;
                     std::unique_ptr<SqLiteHandle>& m_dbhandle;
                     std::unique_ptr<Media> m_currentMedia;
             };

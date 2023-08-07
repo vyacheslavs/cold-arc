@@ -12,15 +12,10 @@ ArchiveSettingsDialog::ArchiveSettingsDialog(Gtk::Dialog::BaseObjectType *win, c
 }
 
 void ArchiveSettingsDialog::run() {
-
-    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_resource("/main/settings.glade");
-
-    auto ret = findWidgetDerived<ArchiveSettingsDialog>("settings_win", builder);
-    std::unique_ptr<ArchiveSettingsDialog> _auto(ret);
-
-    if (static_cast<Gtk::Dialog*>(ret)->run() == Gtk::RESPONSE_OK) {
-        arc::Archive::instance().settings->updateSettings(ret->getArchiveName());
-    }
+    runDialog<ArchiveSettingsDialog>("/main/settings.glade", "settings_win", [](ArchiveSettingsDialog* dlg, int rc){
+        if (rc == Gtk::RESPONSE_OK)
+            arc::Archive::instance().settings->updateName(dlg->getArchiveName());
+    });
 }
 
 Glib::ustring ArchiveSettingsDialog::getArchiveName() const {

@@ -47,6 +47,17 @@ namespace arc {
         settings = std::make_unique<Settings>(m_dbhandle);
     }
 
+    void Archive::newMedia(const Glib::ustring &name, const Glib::ustring &serial, int capacity) {
+        auto rowid = m_dbhandle->insertInto("arc_media")
+            .set("name", name)
+            .set("serial", serial)
+            .set("capacity", capacity)
+            .set("occupied", 0)
+            .set("locked", 0)
+            .done();
+
+        settings->updateCurrentMedia(rowid);
+    }
 
     template <>
     sqlite3_int64 SqLiteHandle::sql_column_type(sqlite3_stmt* stmt, int column) {
@@ -68,10 +79,17 @@ namespace arc {
         return m_name;
     }
 
-    void Archive::Settings::updateSettings(const Glib::ustring &name) {
+    void Archive::Settings::updateName(const Glib::ustring &name) {
         m_name = name;
         m_dbhandle->update("db_settings")
             .set("name", name)
+            .done();
+    }
+
+    void Archive::Settings::updateCurrentMedia(sqlite3_uint64 id) {
+        m_current_media_id = id;
+        m_dbhandle->update("db_settings")
+            .set("current_media", id)
             .done();
     }
 } // arc

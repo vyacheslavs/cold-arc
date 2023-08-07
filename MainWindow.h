@@ -23,6 +23,7 @@ private:
     void onNewArchiveButtonClicked();
     void onOpenArchiveButtonClicked();
     void onArchiveSettings();
+    void onNewMediaButtonClicked();
     void setArchiveLoaded(bool loaded);
 };
 

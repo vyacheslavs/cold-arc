@@ -7,6 +7,7 @@
 #include "Archive.h"
 #include "ArchiveSettingsDialog.h"
 #include "Utils.h"
+#include "NewMediaDialog.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
@@ -19,6 +20,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
     m_archive_settings_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onArchiveSettings));
+    m_add_new_media_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
     setArchiveLoaded(false);
 }
 
@@ -73,5 +75,10 @@ void MainWindow::setArchiveLoaded(bool loaded) {
 
 void MainWindow::onArchiveSettings() {
     ArchiveSettingsDialog::run();
+    setArchiveLoaded(true);
+}
+
+void MainWindow::onNewMediaButtonClicked() {
+    NewMediaDialog::run();
     setArchiveLoaded(true);
 }

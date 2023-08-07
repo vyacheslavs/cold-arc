@@ -57,12 +57,12 @@ namespace arc {
             }
         }
 
-        using SqliteValue = std::variant<sqlite3_int64, Glib::ustring>;
+        using SqliteValue = std::variant<sqlite3_int64, sqlite3_uint64, Glib::ustring>;
 
         class UpdateProxy {
         public:
 
-            UpdateProxy(Glib::ustring database, sqlite3* _db) : m_database(std::move(database)), m_db(_db) {}
+            UpdateProxy(Glib::ustring table, sqlite3* _db) : m_table(std::move(table)), m_db(_db) {}
 
             template<typename T>
             UpdateProxy& set(const Glib::ustring& column_name, T val) {
@@ -72,13 +72,35 @@ namespace arc {
 
             void done();
         private:
-            Glib::ustring m_database;
+            Glib::ustring m_table;
             sqlite3* m_db {nullptr};
             std::vector<std::pair<Glib::ustring, SqliteValue>> m_values;
         };
 
-        UpdateProxy update(const Glib::ustring& database) {
-            return UpdateProxy(database, m_db);
+        UpdateProxy update(const Glib::ustring& table) {
+            return UpdateProxy(table, m_db);
+        }
+
+        class InsertProxy {
+            public:
+                InsertProxy(const Glib::ustring& table, sqlite3* _db) : m_table(table), m_db(_db) {};
+
+                template<typename T>
+                InsertProxy& set(const Glib::ustring& column_name, T val) {
+                    m_values.emplace_back(column_name, val);
+                    return *this;
+                }
+
+                sqlite3_int64 done();
+
+            private:
+                Glib::ustring m_table;
+                sqlite3* m_db {nullptr};
+                std::vector<std::pair<Glib::ustring, SqliteValue>> m_values;
+        };
+
+        InsertProxy insertInto(const Glib::ustring& table) {
+            return InsertProxy(table, m_db);
         }
 
         sqlite3* m_db {nullptr};
