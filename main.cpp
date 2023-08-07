@@ -8,6 +8,7 @@ int main(int argc, char** argv) {
         auto app = Gtk::Application::create(argc, argv, "org.coldarc");
 
         Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_resource("/main/glade.glade");
+        builder->add_from_resource("/main/settings.glade");
 
         MainWindow* winPtr = nullptr;
         builder->get_widget_derived("main", winPtr);

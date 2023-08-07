@@ -22,7 +22,9 @@ add_executable(cold_arc_gtk main.cpp
         MainWindow.h
         resources.c
         Archive.cpp
-        Archive.h)
+        Archive.h
+        ArchiveSettings.cpp
+        ArchiveSettings.h)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}
@@ -34,6 +36,8 @@ add_custom_command(
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         COMMAND glib-compile-resources --target=${PROJECT_SOURCE_DIR}/resources.c --generate-source ${PROJECT_SOURCE_DIR}/resources.xml
         DEPENDS ${PROJECT_SOURCE_DIR}/resources.xml
+        DEPENDS ${PROJECT_SOURCE_DIR}/glade.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/settings.glade
 )
 
 add_custom_target(resources

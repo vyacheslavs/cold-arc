@@ -5,6 +5,7 @@
 #include <iostream>
 #include "MainWindow.h"
 #include "Archive.h"
+#include "ArchiveSettings.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
@@ -17,10 +18,12 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     initButton("upload_folder", m_upload_folder_button);
     initButton("new_archive_button", m_new_archive_button);
     initButton("open_archive_button", m_open_archive_button);
+    initButton("settings_button", m_archive_settings_button);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
-    m_upload_folder_button->set_sensitive(false);
+    m_archive_settings_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onArchiveSettings));
+    setArchiveLoaded(false);
 }
 
 void MainWindow::onNewArchiveButtonClicked() {
@@ -38,7 +41,7 @@ void MainWindow::onNewArchiveButtonClicked() {
 
     if (newArcDlg.run() == Gtk::RESPONSE_OK) {
         arc::Archive::instance().newArchive(newArcDlg.get_filename());
-        set_title(Glib::ustring::compose("ColdArc [%1]",arc::Archive::instance().settings->name()));
+        setArchiveLoaded(true);
     }
 }
 
@@ -57,11 +60,26 @@ void MainWindow::onOpenArchiveButtonClicked() {
 
     switch (openArcDlg.run()) {
         case Gtk::RESPONSE_OK: {
-
             // set_title(Glib::ustring::compose("ColdArc [%1]",arc::Archive::instance().settings->name()));
             break;
         }
         default:
             break;
     }
+}
+
+void MainWindow::setArchiveLoaded(bool loaded) {
+    m_upload_folder_button->set_visible(loaded);
+    m_archive_settings_button->set_visible(loaded);
+    if (loaded) {
+        set_title(Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name()));
+    } else {
+        set_title("ColdArc");
+    }
+}
+
+void MainWindow::onArchiveSettings() {
+    std::unique_ptr<ArchiveSettings> dlg(ArchiveSettings::create(m_builder));
+    dlg->run();
+    // m_app->run(*dlg);
 }
