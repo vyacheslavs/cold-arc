@@ -48,35 +48,19 @@ namespace arc {
         settings = std::make_unique<Settings>(m_dbhandle);
     }
 
-    Archive::SqLiteHandle::SqLiteHandle(const Glib::ustring &filename) {
-        auto rc = sqlite3_open(filename.c_str(), &m_db);
-        if (rc)
-            throw std::runtime_error(Glib::ustring::compose("failed to open database: %1: code %2", filename, rc));
-
-        // verify database version
-        select("SELECT version FROM db_settings", [](sqlite3_int64 v) {
-            if (v != db_version)
-                throw std::runtime_error("Wrong database version");
-        });
-    }
-
-    Archive::SqLiteHandle::~SqLiteHandle() {
-        if (m_db)
-            sqlite3_close(m_db);
-    }
 
     template <>
-    sqlite3_int64 Archive::SqLiteHandle::sql_column_type(sqlite3_stmt* stmt, int column) {
+    sqlite3_int64 SqLiteHandle::sql_column_type(sqlite3_stmt* stmt, int column) {
         return sqlite3_column_int64(stmt, column);
     }
 
     template <>
-    const char* Archive::SqLiteHandle::sql_column_type(sqlite3_stmt *stmt, int column) {
+    const char* SqLiteHandle::sql_column_type(sqlite3_stmt *stmt, int column) {
         return (const char*)sqlite3_column_text(stmt, column);
     }
 
-    Archive::Settings::Settings(std::unique_ptr<SqLiteHandle> &_settings) : m_settings(_settings) {
-        m_settings->select("SELECT name FROM db_settings", [&](const char* text) {
+    Archive::Settings::Settings(std::unique_ptr<SqLiteHandle> &_settings) : m_dbhandle(_settings) {
+        m_dbhandle->select("SELECT name FROM db_settings", [&](const char* text) {
             m_name = text;
         });
     }
@@ -87,5 +71,9 @@ namespace arc {
 
     void Archive::Settings::updateSettings(const Glib::ustring &name) {
         m_name = name;
+        m_dbhandle->update("db_settings")
+            .set("name", name)
+            .done();
+
     }
 } // arc
