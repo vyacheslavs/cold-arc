@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(cold_arc_gtk main.cpp
         MainWindow.cpp
         MainWindow.h
-        resources.c
+        res/resources.c
         Archive.cpp
         Archive.h
         ArchiveSettings.cpp
@@ -32,28 +32,28 @@ target_link_libraries(cold_arc_gtk
 )
 
 add_custom_command(
-        OUTPUT ${PROJECT_SOURCE_DIR}/resources.c
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        COMMAND glib-compile-resources --target=${PROJECT_SOURCE_DIR}/resources.c --generate-source ${PROJECT_SOURCE_DIR}/resources.xml
-        DEPENDS ${PROJECT_SOURCE_DIR}/resources.xml
-        DEPENDS ${PROJECT_SOURCE_DIR}/glade.glade
-        DEPENDS ${PROJECT_SOURCE_DIR}/settings.glade
+        OUTPUT ${PROJECT_SOURCE_DIR}/res/resources.c
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/res
+        COMMAND glib-compile-resources --target=${PROJECT_SOURCE_DIR}/res/resources.c --generate-source ${PROJECT_SOURCE_DIR}/res/resources.xml
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/resources.xml
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/glade.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/settings.glade
 )
 
 add_custom_target(resources
         DEPENDS skeleton_db
-        DEPENDS ${PROJECT_SOURCE_DIR}/resources.c
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/resources.c
 )
 
 add_custom_command(
-        OUTPUT ${PROJECT_SOURCE_DIR}/skeleton.db
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        COMMAND cat ${PROJECT_SOURCE_DIR}/skeleton_db.sql | sqlite3 ${PROJECT_SOURCE_DIR}/skeleton.db
-        DEPENDS ${PROJECT_SOURCE_DIR}/skeleton_db.sql
+        OUTPUT ${PROJECT_SOURCE_DIR}/res/skeleton.db
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/res
+        COMMAND cat ${PROJECT_SOURCE_DIR}/res/skeleton_db.sql | sqlite3 ${PROJECT_SOURCE_DIR}/res/skeleton.db
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton_db.sql
 )
 
 add_custom_target(skeleton_db
-        DEPENDS ${PROJECT_SOURCE_DIR}/skeleton.db
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
 )
 
 add_dependencies(cold_arc_gtk resources)
