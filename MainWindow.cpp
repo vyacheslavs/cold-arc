@@ -8,22 +8,43 @@
 #include "Utils.h"
 #include "NewMediaDialog.h"
 #include "Signals.h"
+#include "NewFolderDialog.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
     m_upload_button = findWidget<Gtk::ToolButton>("upload_btn", m_builder);
+    m_create_folder = findWidget<Gtk::ToolButton>("create_folder_btn", m_builder);
     m_new_archive_button = findWidget<Gtk::ToolButton>("new_archive_button", m_builder);
     m_open_archive_button = findWidget<Gtk::ToolButton>("open_archive_button", m_builder);
     m_archive_settings_button = findWidget<Gtk::ToolButton>("settings_button", m_builder);
     m_add_new_media_button = findWidget<Gtk::ToolButton>("new_media_btn", m_builder);
+    m_tree = findWidget<Gtk::TreeView>("treeview", m_builder);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
     m_archive_settings_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onArchiveSettings));
     m_add_new_media_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
+    m_create_folder->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onCreateFolderClicked));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     updateUI();
+
+    auto render = findObject<Gtk::CellRendererText>("folder_text", m_builder);
+    auto col = findObject<Gtk::TreeViewColumn>("folder_column", m_builder);
+    col->add_attribute(*render, "text", 0);
+
+    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(
+            m_builder->get_object("treestore1")
+    );
+
+    auto it = items->append();
+    auto row = *it;
+    row.set_value<Glib::ustring>(0, "hello");
+
+    it = items->append(it->children());
+    auto row1 = *it;
+    row1.set_value<Glib::ustring>(0, "ehlo");
+
 }
 
 void MainWindow::onNewArchiveButtonClicked() {
@@ -64,6 +85,7 @@ void MainWindow::onOpenArchiveButtonClicked() {
 
 void MainWindow::updateUI() {
     m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia());
+    m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
     auto title = Glib::ustring("ColdArc");
@@ -82,4 +104,8 @@ void MainWindow::onArchiveSettings() {
 
 void MainWindow::onNewMediaButtonClicked() {
     NewMediaDialog::run();
+}
+
+void MainWindow::onCreateFolderClicked() {
+    NewFolderDialog::run();
 }

@@ -25,6 +25,16 @@ T* findWidgetDerived(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>
     return widget;
 }
 
+template <typename T>
+T* findObject(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder> &builder) {
+    Glib::RefPtr<T>::cast_dynamic(builder->get_object(name));
+    auto widget = Glib::RefPtr<T>::cast_dynamic(builder->get_object(name));
+    if (!widget)
+        throw std::runtime_error(Glib::ustring::compose("failed to find widget %1", name));
+    return widget.get();
+}
+
+
 template <typename DialogT, typename F>
 void runDialog(const Glib::ustring& resourcePath, const Glib::ustring& dialogId, F callback) {
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_resource(resourcePath);

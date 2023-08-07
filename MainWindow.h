@@ -15,15 +15,18 @@ private:
 
     const Glib::RefPtr<Gtk::Builder>& m_builder;
     Gtk::ToolButton* m_upload_button;
+    Gtk::ToolButton* m_create_folder;
     Gtk::ToolButton* m_open_archive_button;
     Gtk::ToolButton* m_new_archive_button;
     Gtk::ToolButton* m_archive_settings_button;
     Gtk::ToolButton* m_add_new_media_button;
+    Gtk::TreeView* m_tree;
 
     void onNewArchiveButtonClicked();
     void onOpenArchiveButtonClicked();
     void onArchiveSettings();
     void onNewMediaButtonClicked();
+    void onCreateFolderClicked();
     void updateUI();
 };
 

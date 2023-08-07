@@ -20,9 +20,10 @@ namespace arc {
             void newArchive(const Glib::ustring& filename);
             void openArchive(const Glib::ustring& filename);
             void newMedia(const Glib::ustring& name, const Glib::ustring& serial, int capacity);
+            void createFolder(const Glib::ustring& name);
 
             [[nodiscard]] bool hasActiveArchive() const;
-            bool hasCurrentMedia() const;
+            [[nodiscard]] bool hasCurrentMedia() const;
 
         private:
 

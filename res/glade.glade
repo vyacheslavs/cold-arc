@@ -2,6 +2,14 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <object class="GtkTreeStore" id="treestore1">
+    <columns>
+      <!-- column-name Folder -->
+      <column type="gchararray"/>
+      <!-- column-name Entry Id -->
+      <column type="guint64"/>
+    </columns>
+  </object>
   <object class="GtkWindow" id="main">
     <property name="can-focus">False</property>
     <property name="default-width">800</property>
@@ -135,8 +143,17 @@
                 <property name="width-request">200</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
+                <property name="model">treestore1</property>
                 <child internal-child="selection">
-                  <object class="GtkTreeSelection"/>
+                  <object class="GtkTreeSelection" id="selected"/>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="folder_column">
+                    <property name="title" translatable="yes">Folder</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="folder_text"/>
+                    </child>
+                  </object>
                 </child>
               </object>
               <packing>

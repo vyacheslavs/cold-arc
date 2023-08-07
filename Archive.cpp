@@ -79,6 +79,10 @@ namespace arc {
         return settings->m_currentMediaId > 0;
     }
 
+    void Archive::createFolder(const Glib::ustring &name) {
+
+    }
+
     template <>
     sqlite3_int64 SqLiteHandle::sql_column_type(sqlite3_stmt* stmt, int column) {
         return sqlite3_column_int64(stmt, column);
