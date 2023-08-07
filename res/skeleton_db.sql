@@ -1,8 +1,9 @@
 DROP TABLE IF EXISTS db_settings;
 
 CREATE TABLE IF NOT EXISTS db_settings (
-    version INTEGER NOT NULL,
-    name    TEXT NOT NULL CHECK( LENGTH(name) <= 100 )
+    version       INTEGER NOT NULL,
+    name          TEXT NOT NULL CHECK( LENGTH(name) <= 100 ),
+    current_media INTEGER
 );
 
 INSERT INTO db_settings (version, name) VALUES (1, "my archive");
@@ -20,6 +21,8 @@ DROP TABLE IF EXISTS arc_media;
 CREATE TABLE IF NOT EXISTS arc_media (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     capacity  INTEGER NOT NULL,
+    occupied  INTEGER NOT NULL,
+    locked    INTEGER NOT NULL,
     name      TEXT NOT NULL,
-    serial    TEXT NOT NULL
+    serial    TEXT NOT NULL UNIQUE
 );

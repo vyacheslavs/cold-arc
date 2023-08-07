@@ -42,6 +42,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/resources.xml
         DEPENDS ${PROJECT_SOURCE_DIR}/res/glade.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/settings.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
 )
 
 add_custom_target(resources

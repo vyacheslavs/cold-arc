@@ -3,6 +3,7 @@
     <gresource prefix="/main">
         <file preprocess="xml-stripblanks">glade.glade</file>
         <file preprocess="xml-stripblanks">settings.glade</file>
+        <file preprocess="xml-stripblanks">newmedia.glade</file>
         <file>skeleton.db</file>
     </gresource>
 </gresources>

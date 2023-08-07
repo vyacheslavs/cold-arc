@@ -14,6 +14,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_new_archive_button = findWidget<Gtk::ToolButton>("new_archive_button", m_builder);
     m_open_archive_button = findWidget<Gtk::ToolButton>("open_archive_button", m_builder);
     m_archive_settings_button = findWidget<Gtk::ToolButton>("settings_button", m_builder);
+    m_add_new_media_button = findWidget<Gtk::ToolButton>("new_media_btn", m_builder);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
@@ -62,6 +63,7 @@ void MainWindow::onOpenArchiveButtonClicked() {
 void MainWindow::setArchiveLoaded(bool loaded) {
     m_upload_folder_button->set_visible(loaded);
     m_archive_settings_button->set_visible(loaded);
+    m_add_new_media_button->set_visible(loaded);
     if (loaded) {
         set_title(Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name()));
     } else {

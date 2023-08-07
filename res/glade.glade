@@ -54,6 +54,20 @@
               </packing>
             </child>
             <child>
+              <object class="GtkToolButton" id="new_media_btn">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="tooltip-text" translatable="yes">Add new media</property>
+                <property name="label" translatable="yes">New Media</property>
+                <property name="use-underline">True</property>
+                <property name="icon-name">drive-optical</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkToolButton" id="upload_folder">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>

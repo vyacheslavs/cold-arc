@@ -18,6 +18,7 @@ private:
     Gtk::ToolButton* m_open_archive_button;
     Gtk::ToolButton* m_new_archive_button;
     Gtk::ToolButton* m_archive_settings_button;
+    Gtk::ToolButton* m_add_new_media_button;
 
     void onNewArchiveButtonClicked();
     void onOpenArchiveButtonClicked();
