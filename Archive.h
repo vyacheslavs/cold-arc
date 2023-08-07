@@ -17,6 +17,7 @@ namespace arc {
         public:
             static Archive& instance();
             void newArchive(const Glib::ustring& filename);
+            void openArchive(const Glib::ustring& filename);
 
         private:
 

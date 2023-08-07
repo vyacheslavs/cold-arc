@@ -27,7 +27,8 @@ add_executable(cold_arc_gtk main.cpp
         ArchiveSettings.h
         Utils.h
         SqLiteHandle.cpp
-        SqLiteHandle.h)
+        SqLiteHandle.h
+        Utils.cpp)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}

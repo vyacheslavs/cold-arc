@@ -6,6 +6,7 @@
 #include <glibmm/refptr.h>
 #include <glibmm/bytes.h>
 #include "Archive.h"
+#include "Utils.h"
 #include <giomm/resource.h>
 #include <fstream>
 #include <sys/stat.h>
@@ -19,15 +20,9 @@ namespace arc {
     }
 
     void Archive::newArchive(const Glib::ustring &filename) {
-        auto endswith = [](const Glib::ustring &filename, const Glib::ustring &postfix) {
-            if (postfix.size() > filename.size()) return false;
-            return std::equal(postfix.rbegin(), postfix.rend(), filename.rbegin());
-        };
-        const auto fn = endswith(filename, ".db") ? filename : filename+".db";
+        const auto fn = endsWith(filename, ".db") ? filename : filename+".db";
 
-        // check if such db exists
-        struct stat st {};
-        if (stat(fn.c_str(), &st) == 0) {
+        if (fileExists(fn)) {
             Gtk::MessageDialog rusure("Database is already exist. Do you want to replace it?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO,
                                       true);
             if (rusure.run() == Gtk::RESPONSE_NO)
@@ -43,8 +38,13 @@ namespace arc {
             const char* buf = reinterpret_cast<const char*>(blob->get_data(sz));
             of.write(buf, sz);
         }
+        openArchive(fn);
+    }
 
-        m_dbhandle = std::make_unique<SqLiteHandle>(filename);
+    void Archive::openArchive(const Glib::ustring &filename) {
+        const auto fn = endsWith(filename, ".db") ? filename : filename+".db";
+
+        m_dbhandle = std::make_unique<SqLiteHandle>(fn);
         settings = std::make_unique<Settings>(m_dbhandle);
     }
 
@@ -74,6 +74,5 @@ namespace arc {
         m_dbhandle->update("db_settings")
             .set("name", name)
             .done();
-
     }
 } // arc

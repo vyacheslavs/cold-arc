@@ -53,13 +53,9 @@ void MainWindow::onOpenArchiveButtonClicked() {
     dbFilter->add_mime_type("application/x-sqlite3");
     openArcDlg.add_filter(dbFilter);
 
-    switch (openArcDlg.run()) {
-        case Gtk::RESPONSE_OK: {
-            // set_title(Glib::ustring::compose("ColdArc [%1]",arc::Archive::instance().settings->name()));
-            break;
-        }
-        default:
-            break;
+    if (openArcDlg.run() == Gtk::RESPONSE_OK) {
+        arc::Archive::instance().openArchive(openArcDlg.get_filename());
+        setArchiveLoaded(true);
     }
 }
 
