@@ -38,7 +38,7 @@ namespace arc {
         {
             std::ofstream of(fn);
             if (!of)
-                throw std::runtime_error("failed to create database");
+                throw std::runtime_error("failed to run database");
             gsize sz;
             const char* buf = reinterpret_cast<const char*>(blob->get_data(sz));
             of.write(buf, sz);
@@ -83,5 +83,9 @@ namespace arc {
 
     const Glib::ustring &Archive::Settings::name() const {
         return m_name;
+    }
+
+    void Archive::Settings::updateSettings(const Glib::ustring &name) {
+        m_name = name;
     }
 } // arc

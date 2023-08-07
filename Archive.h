@@ -71,6 +71,7 @@ namespace arc {
                 public:
                     explicit Settings(std::unique_ptr<SqLiteHandle>& _settings);
                     [[nodiscard]] const Glib::ustring& name() const;
+                    void updateSettings(const Glib::ustring& name);
                 private:
                     Glib::ustring m_name;
                     std::unique_ptr<SqLiteHandle>& m_settings;

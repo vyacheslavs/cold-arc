@@ -10,8 +10,12 @@
 class ArchiveSettings : public Gtk::Dialog {
     public:
         ArchiveSettings(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
-        static ArchiveSettings* create(const Glib::RefPtr<Gtk::Builder>& _builder);
+        static void run();
 
+        Glib::ustring getArchiveName() const;
+    private:
+
+        Gtk::Entry* m_edit_arc_name;
 };
 
 

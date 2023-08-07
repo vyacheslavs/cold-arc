@@ -6,19 +6,14 @@
 #include "MainWindow.h"
 #include "Archive.h"
 #include "ArchiveSettings.h"
+#include "Utils.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
-    auto initButton = [&](const Glib::ustring& name, Gtk::ToolButton* &btn) {
-        m_builder->get_widget<Gtk::ToolButton>(name, btn);
-        if (!btn)
-            throw std::runtime_error("failed to initialize ui");
-    };
-
-    initButton("upload_folder", m_upload_folder_button);
-    initButton("new_archive_button", m_new_archive_button);
-    initButton("open_archive_button", m_open_archive_button);
-    initButton("settings_button", m_archive_settings_button);
+    m_upload_folder_button = findWidget<Gtk::ToolButton>("upload_folder", m_builder);
+    m_new_archive_button = findWidget<Gtk::ToolButton>("new_archive_button", m_builder);
+    m_open_archive_button = findWidget<Gtk::ToolButton>("open_archive_button", m_builder);
+    m_archive_settings_button = findWidget<Gtk::ToolButton>("settings_button", m_builder);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
@@ -79,7 +74,6 @@ void MainWindow::setArchiveLoaded(bool loaded) {
 }
 
 void MainWindow::onArchiveSettings() {
-    std::unique_ptr<ArchiveSettings> dlg(ArchiveSettings::create(m_builder));
-    dlg->run();
-    // m_app->run(*dlg);
+    ArchiveSettings::run();
+    setArchiveLoaded(true);
 }
