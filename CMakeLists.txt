@@ -23,8 +23,8 @@ add_executable(cold_arc_gtk main.cpp
         res/resources.c
         Archive.cpp
         Archive.h
-        ArchiveSettings.cpp
-        ArchiveSettings.h
+        ArchiveSettingsDialog.cpp
+        ArchiveSettingsDialog.h
         Utils.h
         SqLiteHandle.cpp
         SqLiteHandle.h

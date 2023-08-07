@@ -21,6 +21,11 @@ namespace arc {
 
         private:
 
+            class Media {
+                public:
+                    
+            };
+
             class Settings {
                 public:
                     explicit Settings(std::unique_ptr<SqLiteHandle>& _settings);
@@ -29,6 +34,7 @@ namespace arc {
                 private:
                     Glib::ustring m_name;
                     std::unique_ptr<SqLiteHandle>& m_dbhandle;
+                    std::unique_ptr<Media> m_currentMedia;
             };
 
             std::unique_ptr<SqLiteHandle> m_dbhandle;

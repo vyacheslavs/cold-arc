@@ -9,7 +9,6 @@
 #include "Utils.h"
 #include <giomm/resource.h>
 #include <fstream>
-#include <sys/stat.h>
 #include <gtkmm/messagedialog.h>
 
 

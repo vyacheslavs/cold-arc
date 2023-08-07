@@ -5,7 +5,7 @@
 #include <iostream>
 #include "MainWindow.h"
 #include "Archive.h"
-#include "ArchiveSettings.h"
+#include "ArchiveSettingsDialog.h"
 #include "Utils.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
@@ -70,6 +70,6 @@ void MainWindow::setArchiveLoaded(bool loaded) {
 }
 
 void MainWindow::onArchiveSettings() {
-    ArchiveSettings::run();
+    ArchiveSettingsDialog::run();
     setArchiveLoaded(true);
 }
