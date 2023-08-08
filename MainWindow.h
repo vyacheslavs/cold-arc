@@ -31,7 +31,7 @@ private:
     void onCreateFolderClicked();
     void updateUI();
     void updateTree();
-    void onNewFolder(const Glib::ustring &folderName, uint64_t id, uint64_t parentId);
+    void onUpload();
 
     template <typename A, typename B, typename C>
     void allocateTreeNode(A it, B id, C name) {

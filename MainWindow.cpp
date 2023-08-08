@@ -11,6 +11,7 @@
 #include "Signals.h"
 #include "NewFolderDialog.h"
 #include "FolderModelColumns.h"
+#include "UploadChooserDialog.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
@@ -27,6 +28,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_archive_settings_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onArchiveSettings));
     m_add_new_media_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
     m_create_folder->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onCreateFolderClicked));
+    m_upload_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onUpload));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
@@ -57,7 +59,7 @@ void MainWindow::onNewArchiveButtonClicked() {
 }
 
 void MainWindow::onOpenArchiveButtonClicked() {
-    Gtk::FileChooserDialog openArcDlg("Please choose the name of archive database", Gtk::FILE_CHOOSER_ACTION_SAVE);
+    Gtk::FileChooserDialog openArcDlg("Please choose the name of archive database", Gtk::FILE_CHOOSER_ACTION_OPEN);
     openArcDlg.set_transient_for(*this);
 
     openArcDlg.add_button("Cancel", Gtk::RESPONSE_CANCEL);
@@ -132,5 +134,9 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64
             allocateTreeNode(items->append(t_it->second->children()), id, name);
         }
     }
+}
+
+void MainWindow::onUpload() {
+    UploadChooserDialog::run();
 }
 

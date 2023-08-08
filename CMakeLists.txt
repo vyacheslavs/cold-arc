@@ -36,7 +36,9 @@ add_executable(cold_arc_gtk main.cpp
         Exceptions.h
         NewFolderDialog.cpp
         NewFolderDialog.h
-        FolderModelColumns.h)
+        FolderModelColumns.h
+        UploadChooserDialog.cpp
+        UploadChooserDialog.h)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}
@@ -51,6 +53,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/glade.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/settings.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/newfolder.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/uploaddialog.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
 )
 
