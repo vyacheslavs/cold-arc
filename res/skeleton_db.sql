@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS db_settings (
     current_media INTEGER
 );
 
-INSERT INTO db_settings (version, name) VALUES (7, "my archive");
+INSERT INTO db_settings (version, name) VALUES (8, "my archive");
 
 DROP TABLE IF EXISTS arc_tree;
 CREATE TABLE IF NOT EXISTS arc_tree(
@@ -16,9 +16,13 @@ CREATE TABLE IF NOT EXISTS arc_tree(
     name      TEXT NOT NULL,
     hash      TEXT,
     lnk       TEXT,
-    dt        INTEGER NOT NULL,
+    dt        INTEGER NOT NULL, /* date when put to database */
+    dt_org    INTEGER,          /* original mtime */
+    perm      INTEGER,          /* original permissions */
     UNIQUE (name, parent_id)
 );
+
+INSERT INTO arc_tree (id, parent_id, typ, name, dt) VALUES (1, 0, 'folder', '/', 0);
 
 DROP TABLE IF EXISTS arc_media;
 CREATE TABLE IF NOT EXISTS arc_media (

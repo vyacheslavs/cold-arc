@@ -6,6 +6,7 @@
 #define COLD_ARC_GTK_MAINWINDOW_H
 
 #include <gtkmm-3.0/gtkmm.h>
+#include "FolderModelColumns.h"
 
 class MainWindow : public Gtk::Window {
 public:
@@ -31,6 +32,18 @@ private:
     void updateUI();
     void updateTree();
     void onNewFolder(const Glib::ustring &folderName, uint64_t id, uint64_t parentId);
+
+    template <typename A, typename B, typename C>
+    void allocateTreeNode(A it, B id, C name) {
+        m_tree_fast_access[id] = it;
+        const auto& row = *it;
+
+        FolderModelColumns cols;
+        row[cols.folder] = name;
+        row[cols.id] = id;
+    }
+
+    void allocateTreeNodeUsingParentId(const Glib::ustring &folderName, uint64_t id, uint64_t parentId);
 };
 
 

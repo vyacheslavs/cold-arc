@@ -29,14 +29,11 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_create_folder->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onCreateFolderClicked));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
-    Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::onNewFolder));
+    Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
     Signals::instance().update_tree.connect(sigc::mem_fun(this, &MainWindow::updateTree));
 
     FolderModelColumns cols;
     m_tree->append_column("Folder", cols.folder);
-    // Gdk::RGBA c;
-    //m_tree->get_style_context()->get_color(Gtk::STATE_FLAG_PRELIGHT);
-    // m_tree->override_background_color(m_tree->get_style_context()->get_color(Gtk::STATE_FLAG_VISITED));
     updateUI();
     updateTree();
 }
@@ -101,7 +98,7 @@ void MainWindow::onNewMediaButtonClicked() {
 }
 
 void MainWindow::onCreateFolderClicked() {
-    uint64_t parentId = 0;
+    uint64_t parentId = 1;
     Glib::ustring val;
 
     if (m_tree->get_selection()->get_selected()) {
@@ -113,52 +110,26 @@ void MainWindow::onCreateFolderClicked() {
     NewFolderDialog::run(parentId);
 }
 
-void MainWindow::onNewFolder(const Glib::ustring &folderName, uint64_t id, uint64_t parentId) {
-
-    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(
-            m_builder->get_object("treestore1")
-    );
-
-    // Gtk::TreeIter it = items->append();
-
-    auto row_it = [&]() {
-        if (parentId == 0)
-            return items->append();
-        else {
-            return items->append(m_tree->get_selection()->get_selected()->children());
-        }
-    }();
-
-    m_tree_fast_access[id] = row_it;
-    auto row = *row_it;
-
-    FolderModelColumns cols;
-    row[cols.folder] = folderName;
-    row[cols.id] = id;
-}
-
 void MainWindow::updateTree() {
 
     auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(m_builder->get_object("treestore1"));
     items->clear();
 
-    auto allocate = [&](auto it, auto id, auto name) {
-        m_tree_fast_access[id] = it;
-        auto row = *it;
-
-        FolderModelColumns cols;
-        row[cols.folder] = name;
-        row[cols.id] = id;
-    };
-
     arc::Archive::instance().walkTree([&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk, sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
-        if (parent_id == 0) {
-            allocate(items->append(), id, name);
-        } else {
-            auto t_it = m_tree_fast_access.find(parent_id);
-            if (t_it != m_tree_fast_access.end()) {
-                allocate(items->append(t_it->second->children()), id, name);
-            }
-        }
+        allocateTreeNodeUsingParentId(name, id, parent_id);
     });
 }
+
+void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64_t id, uint64_t parent_id) {
+    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(m_builder->get_object("treestore1"));
+
+    if (parent_id == 0) {
+        allocateTreeNode(items->append(), id, name);
+    } else {
+        auto t_it = m_tree_fast_access.find(parent_id);
+        if (t_it != m_tree_fast_access.end()) {
+            allocateTreeNode(items->append(t_it->second->children()), id, name);
+        }
+    }
+}
+

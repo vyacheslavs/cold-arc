@@ -16,4 +16,13 @@ run:
 con: .phony
 	docker exec -ti cold-arc-devcontainer /bin/bash
 
+loop: /dev/loop0 loop.img
+	losetup /dev/loop0 loop.img
+
+/dev/loop0:
+	mknod /dev/loop0 b 7 0
+
+loop.img:
+	dd if=/dev/zero of=./loop.img bs=1M count=5120
+
 .phony:
