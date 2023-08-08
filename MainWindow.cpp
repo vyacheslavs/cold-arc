@@ -22,20 +22,27 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_archive_settings_button = findWidget<Gtk::ToolButton>("settings_button", m_builder);
     m_add_new_media_button = findWidget<Gtk::ToolButton>("new_media_btn", m_builder);
     m_tree = findWidget<Gtk::TreeView>("treeview", m_builder);
+    m_show_progress_button = findWidget<Gtk::ToolButton>("show_progress", m_builder);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
     m_archive_settings_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onArchiveSettings));
     m_add_new_media_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
     m_create_folder->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onCreateFolderClicked));
-    m_upload_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onUpload));
+    m_upload_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onUploadButtonClicked));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
     Signals::instance().update_tree.connect(sigc::mem_fun(this, &MainWindow::updateTree));
+    Signals::instance().upload_progress.connect(sigc::mem_fun(this, &MainWindow::onUploadProgress));
 
     FolderModelColumns cols;
     m_tree->append_column("Folder", cols.folder);
+
+    m_progress_window.reset(findWidgetDerived<ProgressWindow>("progress_win", builder));
+    m_show_progress_button->signal_clicked().connect(sigc::mem_fun(m_progress_window.get(), &ProgressWindow::show));
+    m_show_progress_button->hide();
+
     updateUI();
     updateTree();
 }
@@ -113,8 +120,7 @@ void MainWindow::onCreateFolderClicked() {
 }
 
 void MainWindow::updateTree() {
-
-    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(m_builder->get_object("treestore1"));
+    auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
     items->clear();
 
     arc::Archive::instance().walkTree([&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk, sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
@@ -124,7 +130,7 @@ void MainWindow::updateTree() {
 }
 
 void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64_t id, uint64_t parent_id) {
-    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(m_builder->get_object("treestore1"));
+    auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
 
     if (parent_id == 0) {
         allocateTreeNode(items->append(), id, name);
@@ -136,7 +142,14 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64
     }
 }
 
-void MainWindow::onUpload() {
+void MainWindow::onUploadButtonClicked() {
     UploadChooserDialog::run();
+}
+
+void MainWindow::onUploadProgress(const ProgressInfo & prog) {
+    if (prog.upload_in_progress)
+        m_show_progress_button->show();
+    else
+        m_show_progress_button->hide();
 }
 

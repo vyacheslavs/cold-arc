@@ -4,6 +4,7 @@ project(cold_arc_gtk)
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
 pkg_check_modules(SQLITE3 sqlite3)
+find_package(OpenSSL REQUIRED)
 
 link_directories(
         ${GTKMM_LIBRARY_DIRS}
@@ -13,6 +14,7 @@ link_directories(
 include_directories(
         ${GTKMM_INCLUDE_DIRS}
         ${SQLITE3_INCLUDE_DIRS}
+        ${OPENSSL_INCLUDE_DIR}
 )
 
 set(CMAKE_CXX_STANDARD 17)
@@ -38,11 +40,16 @@ add_executable(cold_arc_gtk main.cpp
         NewFolderDialog.h
         FolderModelColumns.h
         UploadChooserDialog.cpp
-        UploadChooserDialog.h)
+        UploadChooserDialog.h
+        ProgressWindow.cpp
+        ProgressWindow.h
+        ProgressInfo.cpp
+        ProgressInfo.h)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}
         ${SQLITE3_LIBRARIES}
+        ${OPENSSL_LIBRARIES}
 )
 
 add_custom_command(
@@ -54,6 +61,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/settings.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/newfolder.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/uploaddialog.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/progress.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
 )
 
