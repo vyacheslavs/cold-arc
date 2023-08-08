@@ -50,6 +50,7 @@ namespace arc {
             settings = std::make_unique<Settings>(m_dbhandle);
 
             Signals::instance().update_main_window.emit();
+            Signals::instance().update_tree.emit();
         } catch (const WrongDatabaseVersion& e) {
             Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to open archive %1", filename));
             dlg.set_secondary_text(e.what());
@@ -87,10 +88,14 @@ namespace arc {
                     .set("name", name)
                     .set("dt", std::time(nullptr))
                     .done();
-            m_dbhandle->insertInto("arc_tree_to_media")
-                    .set("arc_tree_id", idx)
-                    .set("arc_media_id", settings->m_currentMediaId)
-                    .done();
+
+            walkRoot([&](sqlite3_uint64 id) {
+                m_dbhandle->insertInto("arc_tree_to_media")
+                        .set("arc_tree_id", id)
+                        .set("arc_media_id", settings->m_currentMediaId)
+                        .ignoreConstraintError()
+                        .done();
+            }, idx);
 
             Signals::instance().new_folder.emit(name, idx, parentId);
         } catch (const InsertConstraint&) {

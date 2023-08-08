@@ -102,12 +102,19 @@ namespace arc {
 
         int ret;
         if ((ret = sqlite3_step(stmt)) != SQLITE_DONE) {
-            if (ret == SQLITE_CONSTRAINT)
-                throw InsertConstraint();
-            throw std::runtime_error(Glib::ustring::compose("sqlite3 step failed on insert: %1", ret));
+            if (ret == SQLITE_CONSTRAINT) {
+                if (!m_ignoreConstraintError)
+                    throw InsertConstraint();
+            } else
+                throw std::runtime_error(Glib::ustring::compose("sqlite3 step failed on insert: %1", ret));
         }
 
         return sqlite3_last_insert_rowid(m_db);
+    }
+
+    SqLiteHandle::InsertProxy &SqLiteHandle::InsertProxy::ignoreConstraintError() {
+        m_ignoreConstraintError = true;
+        return *this;
     }
 
 } // arc

@@ -30,12 +30,15 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::onNewFolder));
-    updateUI();
+    Signals::instance().update_tree.connect(sigc::mem_fun(this, &MainWindow::updateTree));
 
     FolderModelColumns cols;
-
     m_tree->append_column("Folder", cols.folder);
-    // m_tree->append_column("Id", cols.id);
+    // Gdk::RGBA c;
+    //m_tree->get_style_context()->get_color(Gtk::STATE_FLAG_PRELIGHT);
+    // m_tree->override_background_color(m_tree->get_style_context()->get_color(Gtk::STATE_FLAG_VISITED));
+    updateUI();
+    updateTree();
 }
 
 void MainWindow::onNewArchiveButtonClicked() {
@@ -116,15 +119,46 @@ void MainWindow::onNewFolder(const Glib::ustring &folderName, uint64_t id, uint6
             m_builder->get_object("treestore1")
     );
 
-    auto row = [&]() {
+    // Gtk::TreeIter it = items->append();
+
+    auto row_it = [&]() {
         if (parentId == 0)
-            return *(items->append());
+            return items->append();
         else {
-            return *(items->append(m_tree->get_selection()->get_selected()->children()));
+            return items->append(m_tree->get_selection()->get_selected()->children());
         }
     }();
+
+    m_tree_fast_access[id] = row_it;
+    auto row = *row_it;
 
     FolderModelColumns cols;
     row[cols.folder] = folderName;
     row[cols.id] = id;
+}
+
+void MainWindow::updateTree() {
+
+    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(m_builder->get_object("treestore1"));
+    items->clear();
+
+    auto allocate = [&](auto it, auto id, auto name) {
+        m_tree_fast_access[id] = it;
+        auto row = *it;
+
+        FolderModelColumns cols;
+        row[cols.folder] = name;
+        row[cols.id] = id;
+    };
+
+    arc::Archive::instance().walkTree([&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk, sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
+        if (parent_id == 0) {
+            allocate(items->append(), id, name);
+        } else {
+            auto t_it = m_tree_fast_access.find(parent_id);
+            if (t_it != m_tree_fast_access.end()) {
+                allocate(items->append(t_it->second->children()), id, name);
+            }
+        }
+    });
 }

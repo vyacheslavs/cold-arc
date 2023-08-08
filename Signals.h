@@ -13,6 +13,7 @@ class Signals {
         static Signals& instance();
 
         sigc::signal<void> update_main_window;
+        sigc::signal<void> update_tree;
         sigc::signal<void(const Glib::ustring& folder_name, uint64_t id, uint64_t parentId)> new_folder;
 };
 

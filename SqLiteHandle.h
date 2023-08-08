@@ -19,7 +19,7 @@ namespace arc {
         ~SqLiteHandle();
     private:
 
-        static auto constexpr db_version = 6;
+        static auto constexpr db_version = 7;
 
         template <class... T>
         struct pack { };
@@ -83,7 +83,7 @@ namespace arc {
 
         class InsertProxy {
             public:
-                InsertProxy(const Glib::ustring& table, sqlite3* _db) : m_table(table), m_db(_db) {};
+                InsertProxy(Glib::ustring  table, sqlite3* _db) : m_table(std::move(table)), m_db(_db) {};
 
                 template<typename T>
                 InsertProxy& set(const Glib::ustring& column_name, T val) {
@@ -91,11 +91,15 @@ namespace arc {
                     return *this;
                 }
 
+                InsertProxy& ignoreConstraintError();
+
                 sqlite3_int64 done();
 
             private:
                 Glib::ustring m_table;
                 sqlite3* m_db {nullptr};
+                bool m_ignoreConstraintError{false};
+
                 std::vector<std::pair<Glib::ustring, SqliteValue>> m_values;
         };
 

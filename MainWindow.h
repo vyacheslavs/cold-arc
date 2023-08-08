@@ -21,6 +21,7 @@ private:
     Gtk::ToolButton* m_archive_settings_button;
     Gtk::ToolButton* m_add_new_media_button;
     Gtk::TreeView* m_tree;
+    std::unordered_map<uint64_t, Gtk::TreeIter> m_tree_fast_access;
 
     void onNewArchiveButtonClicked();
     void onOpenArchiveButtonClicked();
@@ -28,6 +29,7 @@ private:
     void onNewMediaButtonClicked();
     void onCreateFolderClicked();
     void updateUI();
+    void updateTree();
     void onNewFolder(const Glib::ustring &folderName, uint64_t id, uint64_t parentId);
 };
 

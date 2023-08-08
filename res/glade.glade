@@ -2,14 +2,6 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkTreeStore" id="treestore1">
-    <columns>
-      <!-- column-name Folder -->
-      <column type="gchararray"/>
-      <!-- column-name Id -->
-      <column type="gulong"/>
-    </columns>
-  </object>
   <object class="GtkWindow" id="main">
     <property name="can-focus">False</property>
     <property name="default-width">800</property>
@@ -106,7 +98,7 @@
                 <property name="tooltip-text" translatable="yes">Upload</property>
                 <property name="label" translatable="yes">Upload</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">folder-new</property>
+                <property name="icon-name">folder-open</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -120,7 +112,7 @@
                 <property name="tooltip-text" translatable="yes">Create a folder</property>
                 <property name="label" translatable="yes">Create folder</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">edit-copy</property>
+                <property name="icon-name">folder-new</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -139,32 +131,40 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <child>
-              <object class="GtkTreeView" id="treeview">
-                <property name="width-request">200</property>
+              <object class="GtkPaned">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="model">treestore1</property>
-                <property name="headers-visible">False</property>
-                <child internal-child="selection">
-                  <object class="GtkTreeSelection" id="selected"/>
+                <property name="wide-handle">True</property>
+                <child>
+                  <object class="GtkTreeView" id="treeview">
+                    <property name="width-request">150</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="model">treestore1</property>
+                    <property name="headers-visible">False</property>
+                    <property name="search-column">0</property>
+                  </object>
+                  <packing>
+                    <property name="resize">False</property>
+                    <property name="shrink">False</property>
+                  </packing>
                 </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkIconView" id="iconview">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="margin">6</property>
+                <child>
+                  <object class="GtkIconView" id="iconview">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="margin">6</property>
+                  </object>
+                  <packing>
+                    <property name="resize">True</property>
+                    <property name="shrink">False</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
@@ -176,5 +176,13 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkTreeStore" id="treestore1">
+    <columns>
+      <!-- column-name Folder -->
+      <column type="gchararray"/>
+      <!-- column-name Id -->
+      <column type="gulong"/>
+    </columns>
   </object>
 </interface>

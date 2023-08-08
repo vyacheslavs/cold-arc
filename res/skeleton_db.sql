@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS db_settings (
     current_media INTEGER
 );
 
-INSERT INTO db_settings (version, name) VALUES (6, "my archive");
+INSERT INTO db_settings (version, name) VALUES (7, "my archive");
 
 DROP TABLE IF EXISTS arc_tree;
 CREATE TABLE IF NOT EXISTS arc_tree(
@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS arc_tree(
     name      TEXT NOT NULL,
     hash      TEXT,
     lnk       TEXT,
-    dt        INTEGER,
-    UNIQUE(name, parent_id)
+    dt        INTEGER NOT NULL,
+    UNIQUE (name, parent_id)
 );
 
 DROP TABLE IF EXISTS arc_media;
@@ -34,5 +34,5 @@ DROP TABLE IF EXISTS arc_tree_to_media;
 CREATE TABLE IF NOT EXISTS arc_tree_to_media (
     arc_tree_id  INTEGER NOT NULL,
     arc_media_id INTEGER NOT NULL,
-    UNIQUE(arc_tree_id, arc_media_id)
+    PRIMARY KEY (arc_tree_id, arc_media_id)
 );
