@@ -28,6 +28,7 @@ private:
     void onNewMediaButtonClicked();
     void onCreateFolderClicked();
     void updateUI();
+    void onNewFolder(const Glib::ustring &folderName, uint64_t id, uint64_t parentId);
 };
 
 

@@ -12,6 +12,7 @@
 #include <gtkmm/messagedialog.h>
 #include "Signals.h"
 #include "Exceptions.h"
+#include <ctime>
 
 namespace arc {
     Archive &Archive::instance() {
@@ -79,8 +80,19 @@ namespace arc {
         return settings->m_currentMediaId > 0;
     }
 
-    void Archive::createFolder(const Glib::ustring &name) {
+    void Archive::createFolder(const Glib::ustring &name, uint64_t parentId) {
+        auto idx = m_dbhandle->insertInto("arc_tree")
+            .set("parent_id", parentId)
+            .set("typ", "folder")
+            .set("name", name)
+            .set("dt", std::time(nullptr))
+            .done();
+        m_dbhandle->insertInto("arc_tree_to_media")
+            .set("arc_tree_id", idx)
+            .set("arc_media_id", settings->m_currentMediaId)
+            .done();
 
+        Signals::instance().new_folder.emit(name, idx, parentId);
     }
 
     template <>

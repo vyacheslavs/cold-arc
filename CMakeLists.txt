@@ -35,7 +35,9 @@ add_executable(cold_arc_gtk main.cpp
         Signals.h
         Exceptions.h
         NewFolderDialog.cpp
-        NewFolderDialog.h)
+        NewFolderDialog.h
+        FolderModelColumns.cpp
+        FolderModelColumns.h)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}

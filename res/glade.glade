@@ -6,8 +6,8 @@
     <columns>
       <!-- column-name Folder -->
       <column type="gchararray"/>
-      <!-- column-name Entry Id -->
-      <column type="guint64"/>
+      <!-- column-name Id -->
+      <column type="gulong"/>
     </columns>
   </object>
   <object class="GtkWindow" id="main">
@@ -144,16 +144,9 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="model">treestore1</property>
+                <property name="headers-visible">False</property>
                 <child internal-child="selection">
                   <object class="GtkTreeSelection" id="selected"/>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="folder_column">
-                    <property name="title" translatable="yes">Folder</property>
-                    <child>
-                      <object class="GtkCellRendererText" id="folder_text"/>
-                    </child>
-                  </object>
                 </child>
               </object>
               <packing>

@@ -10,11 +10,11 @@ NewFolderDialog::NewFolderDialog(Gtk::Dialog::BaseObjectType *win, const Glib::R
     edit_folder_name = findWidget<Gtk::Entry>("edit_folder_name", builder);
 }
 
-void NewFolderDialog::run() {
-    runDialog<NewFolderDialog>("/main/newfolder.glade", "settings_win", [](NewFolderDialog* dlg, int rc){
+void NewFolderDialog::run(uint64_t parentId) {
+    runDialog<NewFolderDialog>("/main/newfolder.glade", "settings_win", [&](NewFolderDialog* dlg, int rc){
         auto folder_name = dlg->edit_folder_name->get_text();
         if (rc == Gtk::RESPONSE_OK && !folder_name.empty()) {
-            arc::Archive::instance().createFolder(folder_name);
+            arc::Archive::instance().createFolder(folder_name, parentId);
         }
     });
 }

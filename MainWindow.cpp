@@ -2,6 +2,7 @@
 // Created by developer on 8/5/23.
 //
 
+#include <iostream>
 #include "MainWindow.h"
 #include "Archive.h"
 #include "ArchiveSettingsDialog.h"
@@ -9,6 +10,7 @@
 #include "NewMediaDialog.h"
 #include "Signals.h"
 #include "NewFolderDialog.h"
+#include "FolderModelColumns.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
@@ -27,24 +29,13 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_create_folder->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onCreateFolderClicked));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
+    Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::onNewFolder));
     updateUI();
 
-    auto render = findObject<Gtk::CellRendererText>("folder_text", m_builder);
-    auto col = findObject<Gtk::TreeViewColumn>("folder_column", m_builder);
-    col->add_attribute(*render, "text", 0);
+    FolderModelColumns cols;
 
-    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(
-            m_builder->get_object("treestore1")
-    );
-
-    auto it = items->append();
-    auto row = *it;
-    row.set_value<Glib::ustring>(0, "hello");
-
-    it = items->append(it->children());
-    auto row1 = *it;
-    row1.set_value<Glib::ustring>(0, "ehlo");
-
+    m_tree->append_column("Folder", cols.folder);
+    // m_tree->append_column("Id", cols.id);
 }
 
 void MainWindow::onNewArchiveButtonClicked() {
@@ -107,5 +98,49 @@ void MainWindow::onNewMediaButtonClicked() {
 }
 
 void MainWindow::onCreateFolderClicked() {
-    NewFolderDialog::run();
+    uint64_t parentId = 0;
+    Glib::ustring val;
+
+    if (m_tree->get_selection()->get_selected()) {
+        auto row = *(m_tree->get_selection()->get_selected());
+        FolderModelColumns cols;
+        parentId = row[cols.id];
+    }
+
+    NewFolderDialog::run(parentId);
+}
+
+void MainWindow::onNewFolder(const Glib::ustring &folderName, uint64_t id, uint64_t parentId) {
+
+    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(
+            m_builder->get_object("treestore1")
+    );
+
+    auto row = [&]() {
+        if (parentId == 0)
+            return *(items->append());
+        else {
+            return *(items->append(m_tree->get_selection()->get_selected()->children()));
+        }
+    }();
+
+    FolderModelColumns cols;
+    row[cols.folder] = folderName;
+    row[cols.id] = id;
+
+
+    /*
+    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(
+            m_builder->get_object("treestore1")
+    );
+
+    auto it = items->append();
+    auto row = *it;
+    row.set_value<Glib::ustring>(0, "hello");
+
+    it = items->append(it->children());
+    auto row1 = *it;
+    row1.set_value<Glib::ustring>(0, "ehlo");
+    */
+
 }
