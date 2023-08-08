@@ -51,7 +51,7 @@ namespace arc {
                         throw std::runtime_error("sqlite3_bind_int64 failed to bind");
                 } else if constexpr (std::is_same_v<T, Glib::ustring>) {
                     int ret;
-                    if ((ret = sqlite3_bind_text(stmt, index++, arg.c_str(), arg.length(), nullptr))!=SQLITE_OK)
+                    if ((ret = sqlite3_bind_text(stmt, index++, arg.c_str(), arg.bytes(), nullptr))!=SQLITE_OK)
                         throw std::runtime_error(Glib::ustring::compose("sqlite3_bind_text failed to bind: %1", ret));
                 }
             }, p.second);
@@ -94,7 +94,7 @@ namespace arc {
                         throw std::runtime_error("sqlite3_bind_int64 failed to bind");
                 } else if constexpr (std::is_same_v<T, Glib::ustring>) {
                     int ret;
-                    if ((ret = sqlite3_bind_text(stmt, index++, arg.c_str(), arg.length(), nullptr))!=SQLITE_OK)
+                    if ((ret = sqlite3_bind_text(stmt, index++, arg.c_str(), arg.bytes(), nullptr))!=SQLITE_OK)
                         throw std::runtime_error(Glib::ustring::compose("sqlite3_bind_text failed to bind: %1", ret));
                 }
             }, p.second);

@@ -116,7 +116,8 @@ void MainWindow::updateTree() {
     items->clear();
 
     arc::Archive::instance().walkTree([&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk, sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
-        allocateTreeNodeUsingParentId(name, id, parent_id);
+        if (Glib::ustring(typ) == "folder")
+            allocateTreeNodeUsingParentId(name, id, parent_id);
     });
 }
 
