@@ -36,7 +36,6 @@ add_executable(cold_arc_gtk main.cpp
         Exceptions.h
         NewFolderDialog.cpp
         NewFolderDialog.h
-        FolderModelColumns.cpp
         FolderModelColumns.h)
 
 target_link_libraries(cold_arc_gtk

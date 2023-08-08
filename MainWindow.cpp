@@ -127,20 +127,4 @@ void MainWindow::onNewFolder(const Glib::ustring &folderName, uint64_t id, uint6
     FolderModelColumns cols;
     row[cols.folder] = folderName;
     row[cols.id] = id;
-
-
-    /*
-    auto items = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic(
-            m_builder->get_object("treestore1")
-    );
-
-    auto it = items->append();
-    auto row = *it;
-    row.set_value<Glib::ustring>(0, "hello");
-
-    it = items->append(it->children());
-    auto row1 = *it;
-    row1.set_value<Glib::ustring>(0, "ehlo");
-    */
-
 }
