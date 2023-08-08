@@ -53,7 +53,6 @@ namespace arc {
         } catch (const WrongDatabaseVersion& e) {
             Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to open archive %1", filename));
             dlg.set_secondary_text(e.what());
-
             dlg.run();
         }
     }
@@ -81,18 +80,24 @@ namespace arc {
     }
 
     void Archive::createFolder(const Glib::ustring &name, uint64_t parentId) {
-        auto idx = m_dbhandle->insertInto("arc_tree")
-            .set("parent_id", parentId)
-            .set("typ", "folder")
-            .set("name", name)
-            .set("dt", std::time(nullptr))
-            .done();
-        m_dbhandle->insertInto("arc_tree_to_media")
-            .set("arc_tree_id", idx)
-            .set("arc_media_id", settings->m_currentMediaId)
-            .done();
+        try {
+            auto idx = m_dbhandle->insertInto("arc_tree")
+                    .set("parent_id", parentId)
+                    .set("typ", "folder")
+                    .set("name", name)
+                    .set("dt", std::time(nullptr))
+                    .done();
+            m_dbhandle->insertInto("arc_tree_to_media")
+                    .set("arc_tree_id", idx)
+                    .set("arc_media_id", settings->m_currentMediaId)
+                    .done();
 
-        Signals::instance().new_folder.emit(name, idx, parentId);
+            Signals::instance().new_folder.emit(name, idx, parentId);
+        } catch (const InsertConstraint&) {
+            Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to create a new folder: %1", name));
+            dlg.set_secondary_text("Probably such folder already exists");
+            dlg.run();
+        }
     }
 
     template <>

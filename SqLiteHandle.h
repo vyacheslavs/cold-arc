@@ -19,7 +19,7 @@ namespace arc {
         ~SqLiteHandle();
     private:
 
-        static auto constexpr db_version = 5;
+        static auto constexpr db_version = 6;
 
         template <class... T>
         struct pack { };

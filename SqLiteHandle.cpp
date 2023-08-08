@@ -100,8 +100,12 @@ namespace arc {
             }, p.second);
         }
 
-        if (sqlite3_step(stmt) != SQLITE_DONE)
-            throw std::runtime_error("sqlite3 step failed on insert");
+        int ret;
+        if ((ret = sqlite3_step(stmt)) != SQLITE_DONE) {
+            if (ret == SQLITE_CONSTRAINT)
+                throw InsertConstraint();
+            throw std::runtime_error(Glib::ustring::compose("sqlite3 step failed on insert: %1", ret));
+        }
 
         return sqlite3_last_insert_rowid(m_db);
     }
