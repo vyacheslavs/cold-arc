@@ -5,6 +5,7 @@
 #include "UploadStage1Resolving.h"
 #include <memory>
 #include <iostream>
+#include <filesystem>
 
 UploadStage1Resolving::UploadStage1Resolving(UploadFilesCollection&& files) : m_files(std::move(files)) {
     m_dispatcher.connect(sigc::mem_fun(this, &UploadStage1Resolving::onDispatcherNotification));
@@ -13,11 +14,17 @@ UploadStage1Resolving::UploadStage1Resolving(UploadFilesCollection&& files) : m_
 
 void UploadStage1Resolving::stage1Main() {
     uint64_t index = 0;
-    for (const auto& item: m_files) {
+    for (; index < m_files.size(); ++index) {
+        auto& item = m_files[index];
         auto file_type = item->query_file_type(Gio::FILE_QUERY_INFO_NOFOLLOW_SYMLINKS);
         if (file_type == Gio::FILE_TYPE_REGULAR)
-            processRegularFile(item, index++, m_files.size());
-        else {
+            processRegularFile(item, index, m_files.size());
+        else if (file_type == Gio::FILE_TYPE_DIRECTORY) {
+            // list this directory and add them to m_files
+            for (const auto& sub : std::filesystem::directory_iterator(item->get_path())) {
+                m_files.push_back(Gio::File::create_for_path(sub.path()));
+            }
+        } else {
             enqueueNotification(UploadStage1Notification::skipped(item->get_path()));
         }
     }
