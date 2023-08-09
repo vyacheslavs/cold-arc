@@ -30,7 +30,7 @@ class UploadStage1Notification {
         [[nodiscard]] static UploadStage1Notification skipped(const std::string& path);
         [[nodiscard]] static UploadStage1Notification failedToOpen(const std::string& path);
         [[nodiscard]] static UploadStage1Notification failedToHash(const std::string& path);
-        [[nodiscard]] static UploadStage1Notification hashing(uint64_t fraction, uint64_t total, const std::string& path);
+        [[nodiscard]] static UploadStage1Notification hashing(uint64_t fraction, uint64_t total, const std::string& basename);
         [[nodiscard]] static UploadStage1Notification
         processed(uint64_t fraction, uint64_t total, const std::string& path,
                   const std::string& basename, uint64_t size_in_bytes, uint64_t mtime,

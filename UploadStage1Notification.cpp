@@ -21,9 +21,9 @@ UploadStage1Notification UploadStage1Notification::failedToOpen(const std::strin
     return ret;
 }
 
-UploadStage1Notification UploadStage1Notification::hashing(uint64_t fraction, uint64_t total, const std::string& path) {
+UploadStage1Notification UploadStage1Notification::hashing(uint64_t fraction, uint64_t total, const std::string& basename) {
     UploadStage1Notification ret;
-    ret.m_path = path;
+    ret.m_basename = basename;
     ret.m_status = UploadStage1FileStatus::HASHING;
     ret.m_progress_total = total;
     ret.m_progress_fraction = fraction;
@@ -75,6 +75,8 @@ UploadStage1Notification UploadStage1Notification::skipped(const std::string& pa
 bool UploadStage1Notification::isSkipped() const {
     return m_status == UploadStage1FileStatus::SKIPPED;
 }
+
+#include <iostream>
 
 double UploadStage1Notification::fraction() const {
     if (!m_progress_total)

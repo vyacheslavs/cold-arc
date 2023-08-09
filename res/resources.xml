@@ -20,5 +20,6 @@
     <gresource prefix="/icons">
         <file>ca-check.svg</file>
         <file>ca-skipped.svg</file>
+        <file>ca-error.svg</file>
     </gresource>
 </gresources>

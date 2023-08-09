@@ -83,6 +83,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-icon.svg
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-check.svg
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-skipped.svg
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-error.svg
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-close-button.svg
 )
 

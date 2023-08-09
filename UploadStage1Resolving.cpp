@@ -60,7 +60,7 @@ void UploadStage1Resolving::processRegularFile(const Glib::RefPtr<Gio::File>& fi
     uint64_t size_in_bytes = st.st_size;
     uint64_t dt_mtime = st.st_mtim.tv_sec;
     auto res = calculateSha256(file->get_path(), size_in_bytes, [&](uint64_t fraction) {
-        enqueueNotification(UploadStage1Notification::hashing(fraction, size_in_bytes, file->get_path()),
+        enqueueNotification(UploadStage1Notification::hashing(fraction, size_in_bytes, file->get_basename()),
                             DispatcherEmitPolicy::Throttled);
     });
     if (!res) {
@@ -74,7 +74,7 @@ void UploadStage1Resolving::processRegularFile(const Glib::RefPtr<Gio::File>& fi
 }
 
 void UploadStage1Resolving::enqueueNotification(UploadStage1Notification&& notification, DispatcherEmitPolicy policy) {
-    {
+    if (m_dispatcher.timeToEmit() || policy == DispatcherEmitPolicy::Force){
         auto acc = m_stage1_notification_queue.access();
         acc->push_back(std::move(notification));
     }
@@ -93,11 +93,15 @@ void UploadStage1Resolving::Dispatcher::emit(UploadStage1Resolving::DispatcherEm
     if (policy == DispatcherEmitPolicy::Force)
         dispatcher.emit();
     else if (policy == DispatcherEmitPolicy::Throttled) {
-        auto now = std::chrono::steady_clock::now();
-        if (std::chrono::duration_cast<std::chrono::seconds>(now - lastEmit).count() > 0) {
-            lastEmit = now;
+        if (timeToEmit()) {
+            lastEmit = std::chrono::steady_clock::now();
             dispatcher.emit();
         }
     }
+}
+
+bool UploadStage1Resolving::Dispatcher::timeToEmit() const {
+    auto now = std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::seconds>(now - lastEmit).count() > 0;
 }
 

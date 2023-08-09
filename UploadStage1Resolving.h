@@ -28,6 +28,7 @@ class UploadStage1Resolving {
         struct Dispatcher {
             sigc::connection connect(sigc::slot<void>&& slot);
             void emit(DispatcherEmitPolicy policy = DispatcherEmitPolicy::Force);
+            bool timeToEmit() const;
             Glib::Dispatcher dispatcher;
             std::chrono::time_point<std::chrono::steady_clock> lastEmit;
         } m_dispatcher;

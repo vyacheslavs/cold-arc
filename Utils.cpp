@@ -83,10 +83,12 @@ tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::stri
 
     EVP_DigestInit_ex(mdctx.get(), md, nullptr);
 
+    uint64_t fraction = 0;
     while (fp.good()) {
         fp.read(buffer, buffer_size);
-        callback(fp.tellg());
+        callback(fraction);
         EVP_DigestUpdate(mdctx.get(), buffer, fp.gcount());
+        fraction += fp.gcount();
     }
     EVP_DigestFinal_ex(mdctx.get(), hash, &md_len);
 

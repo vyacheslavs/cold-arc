@@ -43,14 +43,20 @@ void UploadDialog::onStage1Notification(const UploadStage1Notification& notifica
         row[cols.status] = Gdk::Pixbuf::create_from_resource("/icons/ca-skipped.svg");
         row[cols.path] = notification.getPath();
         row[cols.reason] = "skipped";
-    } else if (notification.failedToOpen()) {
+    } else if (notification.isFailedToOpen()) {
         auto row = *m_store->insert(m_store->children().begin());
         UploadListColumns cols;
-        row[cols.status] = Gdk::Pixbuf::create_from_resource("/icons/ca-skipped.svg");
+        row[cols.status] = Gdk::Pixbuf::create_from_resource("/icons/ca-error.svg");
         row[cols.path] = notification.getPath();
-        row[cols.reason] = "skipped";
+        row[cols.reason] = "failed to open";
+    } else if (notification.isFailedToHash()) {
+        auto row = *m_store->insert(m_store->children().begin());
+        UploadListColumns cols;
+        row[cols.status] = Gdk::Pixbuf::create_from_resource("/icons/ca-error.svg");
+        row[cols.path] = notification.getPath();
+        row[cols.reason] = "failed to hash";
     } else if (notification.isHashing()) {
-        m_progress->set_text(Glib::ustring::compose("Hashing %1 .. %2", notification.getPath(),
+        m_progress->set_text(Glib::ustring::compose("Hashing %1 .. %2", notification.getBasename(),
                                                     static_cast<int>(notification.fraction() * 100)));
     } else if (notification.isThreadStopped()) {
         m_progress->set_fraction(1);
