@@ -30,15 +30,7 @@ namespace arc {
                 return;
         }
 
-        Glib::RefPtr< const Glib::Bytes > blob = Gio::Resource::lookup_data_global("/main/skeleton.db");
-        {
-            std::ofstream of(fn);
-            if (!of)
-                throw std::runtime_error("failed to run database");
-            gsize sz;
-            const char* buf = reinterpret_cast<const char*>(blob->get_data(sz));
-            of.write(buf, sz);
-        }
+        extractFromResource("/main/skeleton.db", fn);
         openArchive(fn);
     }
 

@@ -5,6 +5,7 @@
 #include "Utils.h"
 #include <sys/stat.h>
 #include <random>
+#include <fstream>
 
 bool endsWith(const Glib::ustring &filename, const Glib::ustring &postfix) {
     if (postfix.size() > filename.size()) return false;
@@ -32,4 +33,16 @@ Glib::ustring generateSerial() {
         s += chrs[pick(rg)];
 
     return s;
+}
+
+void extractFromResource(const Glib::ustring& resource_path, const Glib::ustring& filename) {
+    Glib::RefPtr< const Glib::Bytes > blob = Gio::Resource::lookup_data_global(resource_path);
+    {
+        std::ofstream of(filename.c_str());
+        if (!of)
+            throw std::runtime_error("failed to extract resource");
+        gsize sz;
+        const char* buf = reinterpret_cast<const char*>(blob->get_data(sz));
+        of.write(buf, static_cast<std::streamsize>(sz));
+    }
 }
