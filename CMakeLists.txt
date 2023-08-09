@@ -63,6 +63,9 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/uploaddialog.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/progress.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-solid-900.otf
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-regular-400.otf
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-brands-regular-400.otf
 )
 
 add_custom_target(resources

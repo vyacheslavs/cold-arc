@@ -8,5 +8,8 @@
         <file preprocess="xml-stripblanks">uploaddialog.glade</file>
         <file preprocess="xml-stripblanks">progress.glade</file>
         <file>skeleton.db</file>
+        <file>awesome-free-solid-900.otf</file>
+        <file>awesome-free-regular-400.otf</file>
+        <file>awesome-free-brands-regular-400.otf</file>
     </gresource>
 </gresources>
