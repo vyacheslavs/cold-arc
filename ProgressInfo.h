@@ -9,8 +9,16 @@
 #include <string>
 
 struct ProgressInfo {
+    enum class Action {
+        UNKNOWN,
+        HASHING
+    };
     ProgressInfo() = default;
     bool upload_in_progress {false};
+    int percent {0};
+    int total_percent {0};
+    std::string info;
+    Action action {Action::UNKNOWN};
 };
 
 struct UploadFileInfo {

@@ -40,7 +40,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_tree->append_column("Folder", cols.folder);
 
     m_progress_window.reset(findWidgetDerived<ProgressWindow>("progress_win", builder));
-    m_show_progress_button->signal_clicked().connect(sigc::mem_fun(m_progress_window.get(), &ProgressWindow::show));
+    m_show_progress_button->signal_clicked().connect(sigc::mem_fun(m_progress_window.get(), &ProgressWindow::doShow));
     m_show_progress_button->hide();
 
     updateUI();
@@ -147,9 +147,12 @@ void MainWindow::onUploadButtonClicked() {
 }
 
 void MainWindow::onUploadProgress(const ProgressInfo & prog) {
-    if (prog.upload_in_progress)
+    if (prog.upload_in_progress) {
         m_show_progress_button->show();
-    else
+        m_progress_window->tryShow();
+    } else {
         m_show_progress_button->hide();
+        m_progress_window->hide();
+    }
 }
 

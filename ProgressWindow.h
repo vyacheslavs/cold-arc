@@ -16,22 +16,29 @@ class ProgressWindow : public Gtk::Window {
     public:
         ProgressWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
 
-        bool isUploadInProgress() const;
         void startUploadProcess(const std::vector<Glib::RefPtr<Gio::File> >& files);
+
+        void tryShow();
+        void doShow();
 
     private:
         Gtk::Button* m_hide_button;
-        std::atomic_bool m_upload_in_progress {false};
         std::unique_ptr<std::thread> m_upload_thread;
         Glib::Dispatcher m_dispatcher;
         std::vector<Glib::RefPtr<Gio::File>> m_files;
         std::vector<UploadFileInfo> m_files_info;
         std::vector<std::string> m_failed_files;
         BodyGuard<ProgressInfo> m_progress_info;
+        Gtk::ProgressBar* m_current_action;
+        Gtk::ProgressBar* m_total_progress;
+        Gtk::Label* m_current_path;
+        bool m_hidden{false};
 
-        void on_thread_notification();
+        void onHideButtonClicked();
+        void onThreadNotification();
+        bool onCloseButtonClicked(GdkEventAny*);
         void thread_main();
-        std::string calculateSha256(const std::string& filename);
+        static std::string calculateSha256(const std::string& filename, uint64_t size, const std::function<void(uint64_t)>& callback);
 };
 
 
