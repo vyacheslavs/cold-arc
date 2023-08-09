@@ -38,7 +38,12 @@ void UploadDialog::onStage1Notification(const UploadStage1Notification& notifica
         row[cols.reason] = "OK";
         m_progress->set_fraction(notification.fraction());
     } else if (notification.isSkipped()) {
-        // auto row = *m_store->append();
+        auto row = *m_store->insert(m_store->children().begin());
+        UploadListColumns cols;
+        row[cols.status] = Gdk::Pixbuf::create_from_resource("/icons/ca-skipped.svg");
+        row[cols.path] = notification.getPath();
+        row[cols.reason] = "skipped";
+    } else if (notification.failedToOpen()) {
         auto row = *m_store->insert(m_store->children().begin());
         UploadListColumns cols;
         row[cols.status] = Gdk::Pixbuf::create_from_resource("/icons/ca-skipped.svg");

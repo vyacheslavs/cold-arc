@@ -85,3 +85,11 @@ double UploadStage1Notification::fraction() const {
 bool UploadStage1Notification::isHashing() const {
     return m_status == UploadStage1FileStatus::HASHING;
 }
+
+bool UploadStage1Notification::isFailedToHash() const {
+    return m_status == UploadStage1FileStatus::FAILED_TO_HASH;
+}
+
+bool UploadStage1Notification::isFailedToOpen() const {
+    return m_status == UploadStage1FileStatus::FAILED_TO_OPEN;
+}

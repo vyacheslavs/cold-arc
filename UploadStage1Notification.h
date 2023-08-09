@@ -22,6 +22,8 @@ class UploadStage1Notification {
         [[nodiscard]] bool isProcessed() const;
         [[nodiscard]] bool isSkipped() const;
         [[nodiscard]] bool isHashing() const;
+        [[nodiscard]] bool isFailedToOpen() const;
+        [[nodiscard]] bool isFailedToHash() const;
         [[nodiscard]] const std::string& getPath() const;
         [[nodiscard]] const std::string& getBasename() const;
         [[nodiscard]] static UploadStage1Notification threadStoppedNotification();
