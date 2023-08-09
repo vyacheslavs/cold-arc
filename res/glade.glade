@@ -2,6 +2,31 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <object class="GtkLabel" id="create_folder">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
+  <object class="GtkLabel" id="new_archive">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
+  <object class="GtkLabel" id="new_media_label">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
+  <object class="GtkLabel" id="open_archive_label">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
+  <object class="GtkLabel" id="settings_label">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
   <object class="GtkTreeStore" id="treestore1">
     <columns>
       <!-- column-name Folder -->
@@ -10,10 +35,16 @@
       <column type="gulong"/>
     </columns>
   </object>
+  <object class="GtkLabel" id="upload_btn_label">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
   <object class="GtkWindow" id="main">
     <property name="can-focus">False</property>
     <property name="default-width">800</property>
     <property name="default-height">600</property>
+    <property name="icon-name">ca-icon</property>
     <child>
       <object class="GtkBox" id="box1">
         <property name="visible">True</property>
@@ -25,12 +56,12 @@
             <property name="can-focus">False</property>
             <child>
               <object class="GtkToolButton" id="open_archive_button">
+                <property name="height-request">60</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="tooltip-text" translatable="yes">Open archive</property>
-                <property name="label" translatable="yes">Open</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">folder-open</property>
+                <property name="label-widget">open_archive_label</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -42,9 +73,8 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="tooltip-text" translatable="yes">Create new archive</property>
-                <property name="label" translatable="yes">New Archive</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">document-new</property>
+                <property name="label-widget">new_archive</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -66,9 +96,8 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="tooltip-text" translatable="yes">Add new media</property>
-                <property name="label" translatable="yes">New Media</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">drive-optical</property>
+                <property name="label-widget">new_media_label</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -80,9 +109,8 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="tooltip-text" translatable="yes">Archive settings</property>
-                <property name="label" translatable="yes">Archive Settings</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">preferences-other</property>
+                <property name="label-widget">settings_label</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -104,9 +132,8 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="tooltip-text" translatable="yes">Upload</property>
-                <property name="label" translatable="yes">Upload</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">folder-open</property>
+                <property name="label-widget">upload_btn_label</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -118,9 +145,8 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="tooltip-text" translatable="yes">Create a folder</property>
-                <property name="label" translatable="yes">Create folder</property>
                 <property name="use-underline">True</property>
-                <property name="icon-name">folder-new</property>
+                <property name="label-widget">create_folder</property>
               </object>
               <packing>
                 <property name="expand">False</property>

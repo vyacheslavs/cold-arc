@@ -100,5 +100,6 @@ bool fileExists(const Glib::ustring& filename);
 Glib::ustring generateSerial();
 
 void extractFromResource(const Glib::ustring& resource_path, const Glib::ustring& filename);
+void addFont(const Glib::ustring& font_resource);
 
 #endif //COLD_ARC_GTK_UTILS_H

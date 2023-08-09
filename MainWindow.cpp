@@ -15,6 +15,14 @@
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
+    auto applyFontAwesome = [&](auto widget) {
+        auto desc = widget->get_pango_context()->get_font_description();
+        desc.set_family("Font Awesome 6 Free");
+        desc.set_size(18 * Pango::SCALE);
+        desc.set_weight(Pango::WEIGHT_HEAVY);
+        widget->get_pango_context()->set_font_description(desc);
+    };
+
     m_upload_button = findWidget<Gtk::ToolButton>("upload_btn", m_builder);
     m_create_folder = findWidget<Gtk::ToolButton>("create_folder_btn", m_builder);
     m_new_archive_button = findWidget<Gtk::ToolButton>("new_archive_button", m_builder);
@@ -23,6 +31,13 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_add_new_media_button = findWidget<Gtk::ToolButton>("new_media_btn", m_builder);
     m_tree = findWidget<Gtk::TreeView>("treeview", m_builder);
     m_show_progress_button = findWidget<Gtk::ToolButton>("show_progress", m_builder);
+
+    applyFontAwesome(m_open_archive_button->get_label_widget());
+    applyFontAwesome(m_new_archive_button->get_label_widget());
+    applyFontAwesome(m_add_new_media_button->get_label_widget());
+    applyFontAwesome(m_archive_settings_button->get_label_widget());
+    applyFontAwesome(m_create_folder->get_label_widget());
+    applyFontAwesome(m_upload_button->get_label_widget());
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
@@ -84,6 +99,10 @@ void MainWindow::onOpenArchiveButtonClicked() {
 }
 
 void MainWindow::updateUI() {
+
+    auto theme = Gtk::IconTheme::get_default();
+    theme->add_resource_path("/icons/app");
+
     m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());

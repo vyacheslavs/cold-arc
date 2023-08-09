@@ -12,4 +12,7 @@
         <file>awesome-free-regular-400.otf</file>
         <file>awesome-free-brands-regular-400.otf</file>
     </gresource>
+    <gresource prefix="/icons/app/scalable/actions">
+        <file>ca-icon.svg</file>
+    </gresource>
 </gresources>

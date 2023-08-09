@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <random>
 #include <fstream>
+#include <filesystem>
 
 bool endsWith(const Glib::ustring &filename, const Glib::ustring &postfix) {
     if (postfix.size() > filename.size()) return false;
@@ -44,5 +45,19 @@ void extractFromResource(const Glib::ustring& resource_path, const Glib::ustring
         gsize sz;
         const char* buf = reinterpret_cast<const char*>(blob->get_data(sz));
         of.write(buf, static_cast<std::streamsize>(sz));
+    }
+}
+
+void addFont(const Glib::ustring& font_resource) {
+
+    const auto tmpdir = std::string("/tmp/.cold-arc");
+    std::filesystem::create_directories(tmpdir);
+    const auto res = "/main/" + font_resource;
+    const auto out = tmpdir + "/" + font_resource;
+
+    extractFromResource(res, out);
+    auto fc_config = FcConfigGetCurrent();
+    if (!FcConfigAppFontAddFile(fc_config, (const FcChar8 *)out.c_str())) {
+        throw std::runtime_error("Failed to load icon font");
     }
 }

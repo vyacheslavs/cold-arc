@@ -5,6 +5,7 @@ find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
 pkg_check_modules(SQLITE3 sqlite3)
 find_package(OpenSSL REQUIRED)
+find_package(Fontconfig)
 
 link_directories(
         ${GTKMM_LIBRARY_DIRS}
@@ -50,6 +51,7 @@ target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}
         ${SQLITE3_LIBRARIES}
         ${OPENSSL_LIBRARIES}
+        ${Fontconfig_LIBRARIES}
 )
 
 add_custom_command(
@@ -66,6 +68,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-solid-900.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-regular-400.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-brands-regular-400.otf
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-icon.svg
 )
 
 add_custom_target(resources
