@@ -16,10 +16,10 @@ T* findWidget(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>& build
     return widget;
 }
 
-template<typename T>
-T* findWidgetDerived(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>& builder) {
+template<typename T, typename ... Args>
+T* findWidgetDerived(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>& builder, Args ... args) {
     T* widget = nullptr;
-    builder->get_widget_derived<T>(name, widget);
+    builder->get_widget_derived<T>(name, widget, std::forward<Args>(args)...);
     if (!widget)
         throw std::runtime_error(Glib::ustring::compose("failed to find widget %1", name));
     return widget;
@@ -33,10 +33,10 @@ T* findObject(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>& build
     return widget.get();
 }
 
-template<typename DialogT, typename F>
-void runDialog(const Glib::ustring& resourcePath, const Glib::ustring& dialogId, F callback) {
+template<typename DialogT, typename F, typename ...Args>
+void runDialog(const Glib::ustring& resourcePath, const Glib::ustring& dialogId, F callback, Args ... args) {
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_resource(resourcePath);
-    std::unique_ptr<DialogT> _auto(findWidgetDerived<DialogT>(dialogId, builder));
+    std::unique_ptr<DialogT> _auto(findWidgetDerived<DialogT, Args...>(dialogId, builder, std::forward<Args>(args)...));
 
     auto r = static_cast<Gtk::Dialog*>(_auto.get())->run();
     callback(_auto.get(), r);

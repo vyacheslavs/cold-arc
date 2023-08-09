@@ -6,6 +6,7 @@
         <file preprocess="xml-stripblanks">newmedia.glade</file>
         <file preprocess="xml-stripblanks">newfolder.glade</file>
         <file preprocess="xml-stripblanks">uploaddialog.glade</file>
+        <file preprocess="xml-stripblanks">updlg.glade</file>
         <file preprocess="xml-stripblanks">progress.glade</file>
         <file>skeleton.db</file>
         <file>awesome-free-solid-900.otf</file>
@@ -14,5 +15,6 @@
     </gresource>
     <gresource prefix="/icons/app/scalable/actions">
         <file>ca-icon.svg</file>
+        <file>ca-close-button.svg</file>
     </gresource>
 </gresources>

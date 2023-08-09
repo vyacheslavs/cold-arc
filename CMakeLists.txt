@@ -45,7 +45,10 @@ add_executable(cold_arc_gtk main.cpp
         ProgressWindow.cpp
         ProgressWindow.h
         ProgressInfo.cpp
-        ProgressInfo.h)
+        ProgressInfo.h
+        UploadDialog.cpp
+        UploadDialog.h
+        UploadFilesCollection.h)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}
@@ -63,12 +66,14 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/settings.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/newfolder.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/uploaddialog.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/updlg.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/progress.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-solid-900.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-regular-400.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-brands-regular-400.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-icon.svg
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-close-button.svg
 )
 
 add_custom_target(resources

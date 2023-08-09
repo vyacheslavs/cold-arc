@@ -2,7 +2,6 @@
 // Created by developer on 8/5/23.
 //
 
-#include <iostream>
 #include "MainWindow.h"
 #include "Archive.h"
 #include "ArchiveSettingsDialog.h"
@@ -12,6 +11,7 @@
 #include "NewFolderDialog.h"
 #include "FolderModelColumns.h"
 #include "UploadChooserDialog.h"
+#include "UploadDialog.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
 
@@ -162,7 +162,9 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64
 }
 
 void MainWindow::onUploadButtonClicked() {
-    UploadChooserDialog::run();
+    auto files = UploadChooserDialog::run();
+    if (!files.empty())
+        UploadDialog::run(std::move(files));
 }
 
 void MainWindow::onUploadProgress(const ProgressInfo & prog) {
