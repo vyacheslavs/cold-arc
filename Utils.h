@@ -6,6 +6,7 @@
 #define COLD_ARC_GTK_UTILS_H
 
 #include <gtkmm-3.0/gtkmm.h>
+#include <tl/expected.hpp>
 
 template<typename T>
 T* findWidget(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>& builder) {
@@ -100,6 +101,16 @@ bool fileExists(const Glib::ustring& filename);
 Glib::ustring generateSerial();
 
 void extractFromResource(const Glib::ustring& resource_path, const Glib::ustring& filename);
+
 void addFont(const Glib::ustring& font_resource);
+
+enum class CalculateSHA256Errors {
+    failedToOpenFileForReading,
+    noSHA256CipherFound,
+};
+
+tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::string& filename, uint64_t size, const std::function<void(uint64_t)>& callback);
+
+
 
 #endif //COLD_ARC_GTK_UTILS_H

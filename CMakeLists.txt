@@ -16,6 +16,7 @@ include_directories(
         ${GTKMM_INCLUDE_DIRS}
         ${SQLITE3_INCLUDE_DIRS}
         ${OPENSSL_INCLUDE_DIR}
+        ${PROJECT_SOURCE_DIR}/expected/include
 )
 
 set(CMAKE_CXX_STANDARD 17)
@@ -48,7 +49,14 @@ add_executable(cold_arc_gtk main.cpp
         ProgressInfo.h
         UploadDialog.cpp
         UploadDialog.h
-        UploadFilesCollection.h)
+        UploadFilesCollection.h
+        UploadStage1Resolving.cpp
+        UploadStage1Resolving.h
+        UploadStage1Notification.cpp
+        UploadStage1Notification.h
+        expected/include/tl/expected.hpp
+        UploadListColumns.h
+)
 
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}
@@ -73,6 +81,8 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-regular-400.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-brands-regular-400.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-icon.svg
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-check.svg
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-skipped.svg
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-close-button.svg
 )
 

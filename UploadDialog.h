@@ -7,6 +7,7 @@
 
 #include <gtkmm-3.0/gtkmm.h>
 #include "UploadFilesCollection.h"
+#include "UploadStage1Resolving.h"
 
 class UploadDialog : public Gtk::Dialog {
 public:
@@ -17,7 +18,11 @@ public:
 
 private:
 
-    UploadFilesCollection m_files;
+    void onStage1Notification(const UploadStage1Notification& notification);
+    UploadStage1Resolving m_stage1;
+    Gtk::TreeView* m_tree;
+    Gtk::ListStore* m_store;
+    Gtk::ProgressBar* m_progress;
 };
 
 

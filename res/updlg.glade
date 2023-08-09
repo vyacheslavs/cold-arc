@@ -4,8 +4,8 @@
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkListStore" id="resolve_tree_list_store">
     <columns>
-      <!-- column-name current_status -->
-      <column type="gint"/>
+      <!-- column-name status -->
+      <column type="GdkPixbuf"/>
       <!-- column-name path -->
       <column type="gchararray"/>
       <!-- column-name reason -->
@@ -38,7 +38,7 @@
             <property name="margin-top">9</property>
             <property name="layout-style">end</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="button1">
                 <property name="label" translatable="yes">Next</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -52,7 +52,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="btn_close">
                 <property name="label" translatable="yes">Close</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -160,5 +160,9 @@
         </child>
       </object>
     </child>
+    <action-widgets>
+      <action-widget response="-5">button1</action-widget>
+      <action-widget response="-6">btn_close</action-widget>
+    </action-widgets>
   </object>
 </interface>

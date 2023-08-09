@@ -17,4 +17,8 @@
         <file>ca-icon.svg</file>
         <file>ca-close-button.svg</file>
     </gresource>
+    <gresource prefix="/icons">
+        <file>ca-check.svg</file>
+        <file>ca-skipped.svg</file>
+    </gresource>
 </gresources>

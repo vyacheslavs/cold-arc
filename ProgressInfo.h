@@ -23,7 +23,7 @@ struct ProgressInfo {
 
 struct UploadFileInfo {
     uint64_t sizeInBytes {0};
-    uint64_t dtOriginal {0}; // original mtime
+    uint64_t dtOriginal {0}; // original m_mtime
     std::string sha256hash;
 };
 

@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS arc_tree(
     hash      TEXT,
     lnk       TEXT,
     dt        INTEGER NOT NULL, /* date when put to database */
-    dt_org    INTEGER,          /* original mtime */
+    dt_org    INTEGER,          /* original m_mtime */
     perm      INTEGER,          /* original permissions */
     UNIQUE (name, parent_id)
 );
