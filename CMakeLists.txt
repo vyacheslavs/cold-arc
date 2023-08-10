@@ -54,6 +54,10 @@ add_executable(cold_arc_gtk main.cpp
         UploadFileInfo.cpp
         UploadFileInfo.h
         UploadListColumns.h
+        UploadStage2DbUpdate.cpp
+        UploadStage2DbUpdate.h
+        Dispatcher.cpp
+        Dispatcher.h
 )
 
 target_link_libraries(cold_arc_gtk

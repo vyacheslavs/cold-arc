@@ -8,6 +8,7 @@
 #include <gtkmm-3.0/gtkmm.h>
 #include "UploadFilesCollection.h"
 #include "UploadStage1Resolving.h"
+#include "UploadStage2DbUpdate.h"
 
 class UploadDialog : public Gtk::Dialog {
 public:
@@ -19,11 +20,13 @@ public:
 private:
 
     void onStage1Notification(const UploadFileInfo& notification);
+    void onStage2Update(uint64_t id, uint64_t total, bool shut);
     void onRemoveButtonClicked();
     void onRemoveErrButtonClicked();
     void onNextButtonClicked();
 
     UploadStage1Resolving m_stage1;
+    std::unique_ptr<UploadStage2DbUpdate> m_stage2;
     Gtk::TreeView* m_tree;
     Gtk::ListStore* m_store;
     Gtk::ProgressBar* m_progress;

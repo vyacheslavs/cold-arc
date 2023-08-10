@@ -62,6 +62,7 @@ public:
 
     void skip();
 
+    uint64_t index{0};
 private:
     UploadFileInfo() = default;
 
@@ -75,7 +76,6 @@ private:
     uint64_t m_progress_fraction{0};
     uint64_t m_size_in_bytes{0};
     uint64_t m_mtime{0};
-
 };
 
 

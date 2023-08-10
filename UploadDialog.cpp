@@ -55,6 +55,7 @@ void UploadDialog::onStage1Notification(const UploadFileInfo& notification) {
         row[cols.status] = Gdk::Pixbuf::create_from_resource("/icons/ca-check.svg");
         row[cols.path] = notification.getBasename();
         row[cols.reason] = "OK";
+        m_ready_files.rbegin()->index = m_ready_files.size();
         row[cols.data] = m_ready_files.size();
         row[cols.folder] = notification.getFolder().empty() ? "/" : notification.getFolder();
         row[cols.hash] = notification.getHash();
@@ -82,8 +83,12 @@ void UploadDialog::onStage1Notification(const UploadFileInfo& notification) {
         row[cols.reason] = "failed to hash";
         row[cols.data] = 0;
     } else if (notification.isHashing()) {
-        m_progress->set_text(Glib::ustring::compose("Hashing %1 .. %2", notification.getBasename(),
-                                                    static_cast<int>(notification.fraction() * 100)));
+        auto percent = static_cast<int>(notification.fraction() * 100);
+        if (percent>0)
+            m_progress->set_text(Glib::ustring::compose("Hashing %1 (%2%%) ...", notification.getBasename(),
+                                                    percent));
+        else
+            m_progress->set_text(Glib::ustring::compose("Hashing %1 ...", notification.getBasename()));
     } else if (notification.isThreadStopped()) {
         m_progress->set_fraction(1);
         m_progress->set_text("Complete");
@@ -118,34 +123,24 @@ void UploadDialog::onRemoveErrButtonClicked() {
 }
 
 void UploadDialog::onNextButtonClicked() {
-    UploadListColumns cols;
 
-    onRemoveErrButtonClicked();
-
-    auto iterate_files = [&](auto callback) {
-        for (auto it = m_store->children().begin(); it != m_store->children().end();) {
-            auto index = (*it)[cols.data];
-            if (index>0) {
-                const auto& file_info = m_ready_files[index-1];
-                if (!file_info.isSkipped()) {
-                    callback(file_info);
-                }
-            }
-            it = m_store->erase(it);
-        }
-    };
-
-    double index = 0, total = m_store->children().size();
-    iterate_files([&](const UploadFileInfo& file_info) {
-        auto file_folder = arc::Archive::instance().createPath(file_info.getFolder(), m_current_folder_parent_id);
-        arc::Archive::instance().createFile(file_info.getBasename(), file_info, file_folder);
-
-        m_progress->set_fraction(index / total);
-        m_progress->set_text(file_info.getBasename());
-    });
-
-    m_progress->set_fraction(1);
-    m_progress->set_text("Upload complete");
     m_btn_next->set_sensitive(false);
+    m_btn_close->set_sensitive(false);
+
+    m_stage2 = std::make_unique<UploadStage2DbUpdate>(std::move(m_ready_files), m_current_folder_parent_id);
+    m_stage2->signal_update_notification(sigc::mem_fun(this, &UploadDialog::onStage2Update));
+    m_stage2->start();
+}
+
+void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut) {
+    if (id>0) {
+        m_progress->set_fraction(static_cast<double>(id) / static_cast<double>(total));
+        m_progress->set_text(Glib::ustring());
+    }
+    if (shut) {
+        m_progress->set_fraction(1);
+        m_progress->set_text("Upload complete");
+        m_btn_close->set_sensitive(true);
+    }
 }
 

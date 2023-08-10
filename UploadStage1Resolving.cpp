@@ -107,23 +107,3 @@ std::string UploadStage1Resolving::guessFolder(const std::string& path) {
     return folder;
 }
 
-sigc::connection UploadStage1Resolving::Dispatcher::connect(sigc::slot<void>&& slot) {
-    return dispatcher.connect(std::move(slot));
-}
-
-void UploadStage1Resolving::Dispatcher::emit(UploadStage1Resolving::DispatcherEmitPolicy policy) {
-    if (policy == DispatcherEmitPolicy::Force)
-        dispatcher.emit();
-    else if (policy == DispatcherEmitPolicy::Throttled) {
-        if (timeToEmit()) {
-            lastEmit = std::chrono::steady_clock::now();
-            dispatcher.emit();
-        }
-    }
-}
-
-bool UploadStage1Resolving::Dispatcher::timeToEmit() const {
-    auto now = std::chrono::steady_clock::now();
-    return std::chrono::duration_cast<std::chrono::seconds>(now - lastEmit).count() > 0;
-}
-

@@ -36,8 +36,13 @@ namespace arc {
         try {
             const auto fn = endsWith(filename, ".db") ? filename : filename+".db";
 
-            m_dbhandle = std::make_unique<sqlite::database>(fn);
+            m_dbhandle = std::make_unique<sqlite::database>(fn, sqlite::sqlite_config{sqlite::OpenFlags::READWRITE | sqlite::OpenFlags::FULLMUTEX});
             settings = std::make_unique<Settings>(m_dbhandle);
+
+            if (!sqlite3_threadsafe())
+                throw std::runtime_error("sqlite3 is not thread safe");
+
+            sqlite3_config(SQLITE_CONFIG_SERIALIZED);
 
             Signals::instance().update_main_window.emit();
             Signals::instance().update_tree.emit();
@@ -45,6 +50,8 @@ namespace arc {
             Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to open archive %1", filename));
             dlg.set_secondary_text(e.what());
             dlg.run();
+        } catch (const std::exception& e) {
+            assert_fail(e);
         }
     }
 
