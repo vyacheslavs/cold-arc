@@ -71,7 +71,6 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/newfolder.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/uploaddialog.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/updlg.glade
-        DEPENDS ${PROJECT_SOURCE_DIR}/res/progress.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-solid-900.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-regular-400.otf
