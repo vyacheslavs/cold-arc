@@ -1,4 +1,3 @@
-PRAGMA encoding = "UTF-8";
 DROP TABLE IF EXISTS db_settings;
 
 CREATE TABLE IF NOT EXISTS db_settings (

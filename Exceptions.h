@@ -13,9 +13,4 @@ public:
     WrongDatabaseVersion(uint64_t vnow, uint64_t vexpected) : std::runtime_error(Glib::ustring::compose("Wrong databse version, supplied %1, expected %2", vnow, vexpected)) {}
 };
 
-class InsertConstraint : public std::runtime_error {
-public:
-    InsertConstraint() : std::runtime_error("Insert failed, constraint failure") {}
-};
-
 #endif //COLD_ARC_GTK_EXCEPTIONS_H

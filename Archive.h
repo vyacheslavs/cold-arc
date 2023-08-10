@@ -8,7 +8,7 @@
 #include <glibmm/ustring.h>
 #include <memory>
 #include <optional>
-#include "SqLiteHandle.h"
+#include "sqlite_modern_cpp.h"
 
 namespace arc {
 
@@ -30,22 +30,25 @@ namespace arc {
 
             template<typename F>
             void walkTree(F callback, uint64_t parent_id) {
-                if (!m_dbhandle)
-                    return;
-                m_dbhandle->select(Glib::ustring::compose("SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=%1", parent_id),
-                                   [&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk, sqlite3_uint64 dt) {
-                    callback(id, typ, name, hash, lnk, dt, parent_id);
-                    walkTree(callback, id);
-                });
+                *m_dbhandle
+                    << "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=?"
+                    << parent_id
+                    >> [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk, sqlite3_uint64 dt) {
+                        callback(id, typ, name, hash, lnk, dt, parent_id);
+                        walkTree(callback, id);
+                    };
             }
 
             template<typename F>
             void walkRoot(F callback, uint64_t id) {
                 callback(id);
-                m_dbhandle->select(Glib::ustring::compose("select parent_id FROM arc_tree WHERE id=%1", id), [&](sqlite3_uint64 parent_id) {
+                *m_dbhandle
+                    << "SELECT parent_id FROM arc_tree WHERE id=?"
+                    << id
+                    >> [&](sqlite3_uint64 parent_id) {
                     if (parent_id != 0)
                         walkRoot(callback, parent_id);
-                });
+                    };
             }
 
             [[nodiscard]] bool hasActiveArchive() const;
@@ -77,7 +80,7 @@ namespace arc {
 
             class Settings {
                 public:
-                    explicit Settings(std::unique_ptr<SqLiteHandle>& _settings);
+                    explicit Settings(std::unique_ptr<sqlite::database>& _settings);
                     [[nodiscard]] const Glib::ustring& name() const;
                     [[nodiscard]] const std::unique_ptr<Media>& media() const;
                     void updateName(const Glib::ustring& name);
@@ -86,13 +89,13 @@ namespace arc {
                 private:
                     Glib::ustring m_name;
                     sqlite3_uint64 m_currentMediaId {0};
-                    std::unique_ptr<SqLiteHandle>& m_dbhandle;
+                    std::unique_ptr<sqlite::database>& m_dbhandle;
                     std::unique_ptr<Media> m_currentMedia;
 
                     friend class Archive;
             };
 
-            std::unique_ptr<SqLiteHandle> m_dbhandle;
+            std::unique_ptr<sqlite::database> m_dbhandle;
 
     public:
             std::unique_ptr<Settings> settings;
