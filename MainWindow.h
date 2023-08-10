@@ -7,8 +7,6 @@
 
 #include <gtkmm-3.0/gtkmm.h>
 #include "FolderModelColumns.h"
-#include "ProgressWindow.h"
-#include "ProgressInfo.h"
 
 class MainWindow : public Gtk::Window {
 public:
@@ -23,10 +21,8 @@ private:
     Gtk::ToolButton* m_new_archive_button;
     Gtk::ToolButton* m_archive_settings_button;
     Gtk::ToolButton* m_add_new_media_button;
-    Gtk::ToolButton* m_show_progress_button;
     Gtk::TreeView* m_tree;
     std::unordered_map<uint64_t, Gtk::TreeIter> m_tree_fast_access;
-    std::unique_ptr<ProgressWindow> m_progress_window;
 
     void onNewArchiveButtonClicked();
     void onOpenArchiveButtonClicked();
@@ -36,7 +32,7 @@ private:
     void updateUI();
     void updateTree();
     void onUploadButtonClicked();
-    void onUploadProgress(const ProgressInfo&);
+    uint64_t currentFolderParentId();
 
     template <typename A, typename B, typename C>
     void allocateTreeNode(A it, B id, C name) {

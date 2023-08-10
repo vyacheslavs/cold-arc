@@ -2,7 +2,6 @@
 // Created by developer on 8/5/23.
 //
 
-#include <iostream>
 #include "MainWindow.h"
 #include "Archive.h"
 #include "ArchiveSettingsDialog.h"
@@ -12,8 +11,11 @@
 #include "NewFolderDialog.h"
 #include "FolderModelColumns.h"
 #include "UploadChooserDialog.h"
+#include "UploadDialog.h"
 
-MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
+MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder) : Gtk::Window(win),
+                                                                                                      m_builder(
+                                                                                                              builder) {
 
     auto applyFontAwesome = [&](auto widget) {
         auto desc = widget->get_pango_context()->get_font_description();
@@ -30,7 +32,6 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_archive_settings_button = findWidget<Gtk::ToolButton>("settings_button", m_builder);
     m_add_new_media_button = findWidget<Gtk::ToolButton>("new_media_btn", m_builder);
     m_tree = findWidget<Gtk::TreeView>("treeview", m_builder);
-    m_show_progress_button = findWidget<Gtk::ToolButton>("show_progress", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -49,14 +50,9 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
     Signals::instance().update_tree.connect(sigc::mem_fun(this, &MainWindow::updateTree));
-    Signals::instance().upload_progress.connect(sigc::mem_fun(this, &MainWindow::onUploadProgress));
 
     FolderModelColumns cols;
     m_tree->append_column("Folder", cols.folder);
-
-    m_progress_window.reset(findWidgetDerived<ProgressWindow>("progress_win", builder));
-    m_show_progress_button->signal_clicked().connect(sigc::mem_fun(m_progress_window.get(), &ProgressWindow::doShow));
-    m_show_progress_button->hide();
 
     updateUI();
     updateTree();
@@ -111,7 +107,8 @@ void MainWindow::updateUI() {
     if (arc::Archive::instance().hasActiveArchive()) {
         title = Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name());
         if (arc::Archive::instance().hasCurrentMedia() && arc::Archive::instance().settings->media()) {
-            title += Glib::ustring::compose(" %1 / %2", arc::Archive::instance().settings->media()->name(),arc::Archive::instance().settings->media()->serial());
+            title += Glib::ustring::compose(" %1 / %2", arc::Archive::instance().settings->media()->name(),
+                                            arc::Archive::instance().settings->media()->serial());
         }
     }
     set_title(title);
@@ -126,29 +123,26 @@ void MainWindow::onNewMediaButtonClicked() {
 }
 
 void MainWindow::onCreateFolderClicked() {
-    uint64_t parentId = 1;
-    Glib::ustring val;
-
-    if (m_tree->get_selection()->get_selected()) {
-        auto row = *(m_tree->get_selection()->get_selected());
-        FolderModelColumns cols;
-        parentId = row[cols.id];
-    }
-
-    NewFolderDialog::run(parentId);
+    NewFolderDialog::run(currentFolderParentId());
 }
 
 void MainWindow::updateTree() {
+
+    if (!arc::Archive::instance().hasActiveArchive())
+        return;
+
     auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
     items->clear();
 
-    arc::Archive::instance().walkTree([&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk, sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
-        if (Glib::ustring(typ) == "folder")
-            allocateTreeNodeUsingParentId(name, id, parent_id);
-    });
+    arc::Archive::instance().walkTree(
+            [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
+                sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
+                if (Glib::ustring(typ) == "folder")
+                    allocateTreeNodeUsingParentId(name, id, parent_id);
+            });
 }
 
-void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64_t id, uint64_t parent_id) {
+void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64_t id, uint64_t parent_id) {
     auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
 
     if (parent_id == 0) {
@@ -162,16 +156,18 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64
 }
 
 void MainWindow::onUploadButtonClicked() {
-    UploadChooserDialog::run();
+    auto files = UploadChooserDialog::run();
+    if (!files.empty())
+        UploadDialog::run(currentFolderParentId(), std::move(files));
 }
 
-void MainWindow::onUploadProgress(const ProgressInfo & prog) {
-    if (prog.upload_in_progress) {
-        m_show_progress_button->show();
-        m_progress_window->tryShow();
-    } else {
-        m_show_progress_button->hide();
-        m_progress_window->hide();
+uint64_t MainWindow::currentFolderParentId() {
+    uint64_t parentId = 1;
+    if (m_tree->get_selection()->get_selected()) {
+        auto row = *(m_tree->get_selection()->get_selected());
+        FolderModelColumns cols;
+        parentId = row[cols.id];
     }
+    return parentId;
 }
 

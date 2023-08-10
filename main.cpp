@@ -16,7 +16,6 @@ int main(int argc, char** argv) {
         addFont("awesome-free-brands-regular-400.otf");
 
         Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_resource("/main/glade.glade");
-        builder->add_from_resource("/main/progress.glade");
 
         std::unique_ptr<MainWindow> win (findWidgetDerived<MainWindow>("main", builder));
         app->run(*win);

@@ -7,13 +7,15 @@
 
 #include <gtkmm-3.0/gtkmm.h>
 
+#include "UploadFilesCollection.h"
+
 class UploadChooserDialog : public Gtk::Dialog {
     public:
 
     UploadChooserDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
-    static void run();
+    [[nodiscard]] static UploadFilesCollection run();
 
-    std::vector< Glib::RefPtr<Gio::File> > getFiles() const;
+    UploadFilesCollection getFiles() const;
 
     private:
 

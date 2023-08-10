@@ -7,7 +7,6 @@
 
 #include <sigc++/sigc++.h>
 #include <gtkmm-3.0/gtkmm.h>
-#include "ProgressInfo.h"
 
 class Signals {
     public:
@@ -17,7 +16,6 @@ class Signals {
         sigc::signal<void> update_tree;
         sigc::signal<void(const Glib::ustring& folder_name, uint64_t id, uint64_t parentId)> new_folder;
         sigc::signal<void(const std::vector<Glib::RefPtr<Gio::File> >&)> upload_files;
-        sigc::signal<void(const ProgressInfo&)> upload_progress;
 };
 
 

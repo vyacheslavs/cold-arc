@@ -1,4 +1,3 @@
-PRAGMA encoding = "UTF-8";
 DROP TABLE IF EXISTS db_settings;
 
 CREATE TABLE IF NOT EXISTS db_settings (
@@ -18,7 +17,7 @@ CREATE TABLE IF NOT EXISTS arc_tree(
     hash      TEXT,
     lnk       TEXT,
     dt        INTEGER NOT NULL, /* date when put to database */
-    dt_org    INTEGER,          /* original mtime */
+    dt_org    INTEGER,          /* original m_mtime */
     perm      INTEGER,          /* original permissions */
     UNIQUE (name, parent_id)
 );
@@ -39,5 +38,5 @@ DROP TABLE IF EXISTS arc_tree_to_media;
 CREATE TABLE IF NOT EXISTS arc_tree_to_media (
     arc_tree_id  INTEGER NOT NULL,
     arc_media_id INTEGER NOT NULL,
-    PRIMARY KEY (arc_tree_id, arc_media_id)
+    UNIQUE (arc_tree_id, arc_media_id)
 );
