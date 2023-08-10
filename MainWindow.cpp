@@ -15,7 +15,7 @@
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder) : Gtk::Window(win),
                                                                                                       m_builder(
-                                                                                                              builder) {
+                                                                                                          builder) {
 
     auto applyFontAwesome = [&](auto widget) {
         auto desc = widget->get_pango_context()->get_font_description();
@@ -135,11 +135,10 @@ void MainWindow::updateTree() {
     items->clear();
 
     arc::Archive::instance().walkTree(
-            [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
-                sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
-                if (Glib::ustring(typ) == "folder")
-                    allocateTreeNodeUsingParentId(name, id, parent_id);
-            });
+        [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
+            sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
+            allocateTreeNodeUsingParentId(name, id, parent_id);
+        }, true);
 }
 
 void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64_t id, uint64_t parent_id) {
