@@ -15,7 +15,7 @@ public:
     UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder,
                  uint64_t current_folder_parent_id, UploadFilesCollection&& files);
 
-    static void run(uint64_t current_folder_parent_id, UploadFilesCollection&& files);
+    static bool run(uint64_t current_folder_parent_id, UploadFilesCollection&& files);
 
 private:
 
@@ -36,6 +36,7 @@ private:
     Gtk::Button* m_btn_close;
     std::vector<UploadFileInfo> m_ready_files;
     uint64_t m_current_folder_parent_id;
+    bool m_need_tree_reload {false};
 };
 
 

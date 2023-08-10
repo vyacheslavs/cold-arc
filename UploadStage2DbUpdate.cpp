@@ -13,12 +13,14 @@ UploadStage2DbUpdate::UploadStage2DbUpdate(std::vector<UploadFileInfo>&& files, 
 
 void UploadStage2DbUpdate::stage2Main() {
 
+    std::unique_ptr<arc::Archive> m_db(arc::Archive::instance().clone());
+
     for (const auto& item: m_files) {
         if (item.isSkipped())
             continue;
 
-        auto file_folder = arc::Archive::instance().createPath(item.getFolder(), m_parentId);
-        arc::Archive::instance().createFile(item.getBasename(), item, file_folder);
+        auto file_folder = m_db->createPath(item.getFolder(), m_parentId, true);
+        m_db->createFile(item.getBasename(), item, file_folder);
 
         if (m_dispatcher.timeToEmit()) {
             {

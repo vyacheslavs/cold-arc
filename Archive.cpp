@@ -38,6 +38,7 @@ namespace arc {
 
             m_dbhandle = std::make_unique<sqlite::database>(fn, sqlite::sqlite_config{sqlite::OpenFlags::READWRITE | sqlite::OpenFlags::FULLMUTEX});
             settings = std::make_unique<Settings>(m_dbhandle);
+            m_dbname = filename;
 
             if (!sqlite3_threadsafe())
                 throw std::runtime_error("sqlite3 is not thread safe");
@@ -92,7 +93,8 @@ namespace arc {
                 } catch (const sqlite::exceptions::constraint& e) {}
             }, idx);
 
-            Signals::instance().new_folder.emit(name, idx, parentId);
+            if (!quiet)
+                Signals::instance().new_folder.emit(name, idx, parentId);
             return idx;
         } catch (const sqlite::exceptions::constraint&) {
             if (!quiet) {
@@ -110,17 +112,19 @@ namespace arc {
                 assert_fail(e);
             }
             return folder_id;
+        } catch (const std::exception& e) {
+            assert_fail(e);
         }
     }
 
-    uint64_t Archive::createPath(const Glib::ustring& path, uint64_t parentId) {
+    uint64_t Archive::createPath(const Glib::ustring& path, uint64_t parentId, bool quiet) {
         if (path.empty())
             return parentId;
 
         std::filesystem::path fspath(path);
         for (const auto& particle : fspath) {
             if (particle != "/")
-                parentId = createFolder(particle.c_str(), parentId, true);
+                parentId = createFolder(particle.c_str(), parentId, quiet);
         }
         return parentId;
     }
@@ -145,6 +149,15 @@ namespace arc {
             } catch (const sqlite::exceptions::constraint& e) {}
         }, idx);
         return 0;
+    }
+
+    Archive* Archive::clone() {
+        Archive* newArchive = new Archive();
+        newArchive->m_dbhandle = std::make_unique<sqlite::database>(
+            Archive::instance().m_dbname, sqlite::sqlite_config{sqlite::OpenFlags::READWRITE | sqlite::OpenFlags::FULLMUTEX});
+        newArchive->settings = std::make_unique<Settings>(newArchive->m_dbhandle);
+        newArchive->m_dbname = Archive::instance().m_dbname;
+        return newArchive;
     }
 
     Archive::Settings::Settings(std::unique_ptr<sqlite::database> &_settings) : m_dbhandle(_settings) {

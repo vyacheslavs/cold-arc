@@ -30,6 +30,8 @@ UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<
     m_btn_next->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onNextButtonClicked));
     m_btn_next->set_sensitive(false);
     m_btn_close->set_sensitive(false);
+    m_remove_button->set_sensitive(false);
+    m_remove_all_skipped->set_sensitive(false);
 
     UploadListColumns cols;
     m_tree->append_column("Status", cols.status);
@@ -42,9 +44,12 @@ UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<
     m_store = findObject<Gtk::ListStore>("resolve_tree_list_store", builder);
 }
 
-void UploadDialog::run(uint64_t current_folder_parent_id, UploadFilesCollection&& files) {
+bool UploadDialog::run(uint64_t current_folder_parent_id, UploadFilesCollection&& files) {
+    bool ret = false;
     runDialog<UploadDialog>("/main/updlg.glade", "upload_dialog", [&](UploadDialog* dlg, int rc) {
+        ret = dlg->m_need_tree_reload;
     }, current_folder_parent_id, files);
+    return ret;
 }
 
 void UploadDialog::onStage1Notification(const UploadFileInfo& notification) {
@@ -94,6 +99,8 @@ void UploadDialog::onStage1Notification(const UploadFileInfo& notification) {
         m_progress->set_text("Complete");
         m_btn_close->set_sensitive(true);
         m_btn_next->set_sensitive(!m_store->children().empty());
+        m_remove_button->set_sensitive(true);
+        m_remove_all_skipped->set_sensitive(true);
     }
 }
 
@@ -124,8 +131,12 @@ void UploadDialog::onRemoveErrButtonClicked() {
 
 void UploadDialog::onNextButtonClicked() {
 
+    onRemoveErrButtonClicked();
+
     m_btn_next->set_sensitive(false);
     m_btn_close->set_sensitive(false);
+    m_remove_button->set_sensitive(false);
+    m_remove_all_skipped->set_sensitive(false);
 
     m_stage2 = std::make_unique<UploadStage2DbUpdate>(std::move(m_ready_files), m_current_folder_parent_id);
     m_stage2->signal_update_notification(sigc::mem_fun(this, &UploadDialog::onStage2Update));
@@ -134,13 +145,23 @@ void UploadDialog::onNextButtonClicked() {
 
 void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut) {
     if (id>0) {
+        UploadListColumns cols;
+        for (auto it = m_store->children().begin(); it != m_store->children().end();) {
+            auto index = (*it)[cols.data];
+            if (index < id)
+                it = m_store->erase(it);
+            else
+                break;
+        }
         m_progress->set_fraction(static_cast<double>(id) / static_cast<double>(total));
         m_progress->set_text(Glib::ustring());
     }
     if (shut) {
+        m_store->clear();
         m_progress->set_fraction(1);
         m_progress->set_text("Upload complete");
         m_btn_close->set_sensitive(true);
+        m_need_tree_reload = true;
     }
 }
 
