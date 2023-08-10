@@ -30,7 +30,6 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     m_archive_settings_button = findWidget<Gtk::ToolButton>("settings_button", m_builder);
     m_add_new_media_button = findWidget<Gtk::ToolButton>("new_media_btn", m_builder);
     m_tree = findWidget<Gtk::TreeView>("treeview", m_builder);
-    m_show_progress_button = findWidget<Gtk::ToolButton>("show_progress", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -49,14 +48,9 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk:
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
     Signals::instance().update_tree.connect(sigc::mem_fun(this, &MainWindow::updateTree));
-    Signals::instance().upload_progress.connect(sigc::mem_fun(this, &MainWindow::onUploadProgress));
 
     FolderModelColumns cols;
     m_tree->append_column("Folder", cols.folder);
-
-    m_progress_window.reset(findWidgetDerived<ProgressWindow>("progress_win", builder));
-    m_show_progress_button->signal_clicked().connect(sigc::mem_fun(m_progress_window.get(), &ProgressWindow::doShow));
-    m_show_progress_button->hide();
 
     updateUI();
     updateTree();
@@ -165,15 +159,5 @@ void MainWindow::onUploadButtonClicked() {
     auto files = UploadChooserDialog::run();
     if (!files.empty())
         UploadDialog::run(std::move(files));
-}
-
-void MainWindow::onUploadProgress(const ProgressInfo & prog) {
-    if (prog.upload_in_progress) {
-        m_show_progress_button->show();
-        m_progress_window->tryShow();
-    } else {
-        m_show_progress_button->hide();
-        m_progress_window->hide();
-    }
 }
 

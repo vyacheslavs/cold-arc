@@ -43,10 +43,6 @@ add_executable(cold_arc_gtk main.cpp
         FolderModelColumns.h
         UploadChooserDialog.cpp
         UploadChooserDialog.h
-        ProgressWindow.cpp
-        ProgressWindow.h
-        ProgressInfo.cpp
-        ProgressInfo.h
         UploadDialog.cpp
         UploadDialog.h
         UploadFilesCollection.h

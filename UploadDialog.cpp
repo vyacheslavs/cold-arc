@@ -17,9 +17,14 @@ UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<
     m_progress = findWidget<Gtk::ProgressBar>("progress", builder);
     m_remove_button = findWidget<Gtk::ToolButton>("btn_remove", builder);
     m_remove_all_skipped = findWidget<Gtk::ToolButton>("btn_remove_err", builder);
+    m_btn_next = findWidget<Gtk::Button>("btn_next", builder);
+    m_btn_close = findWidget<Gtk::Button>("btn_close", builder);
 
     m_remove_button->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onRemoveButtonClicked));
     m_remove_all_skipped->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onRemoveErrButtonClicked));
+    m_btn_next->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onNextButtonClicked));
+    m_btn_next->set_sensitive(false);
+    m_btn_close->set_sensitive(false);
 
     UploadListColumns cols;
     m_tree->append_column("Status", cols.status);
@@ -77,6 +82,8 @@ void UploadDialog::onStage1Notification(const UploadStage1Notification& notifica
     } else if (notification.isThreadStopped()) {
         m_progress->set_fraction(1);
         m_progress->set_text("Complete");
+        m_btn_close->set_sensitive(true);
+        m_btn_next->set_sensitive(!m_store->children().empty());
     }
 }
 
@@ -88,6 +95,7 @@ void UploadDialog::onRemoveButtonClicked() {
         if (index>0)
             m_ready_files[index-1].skip();
         m_store->erase(selected);
+        m_btn_next->set_sensitive(!m_store->children().empty());
     }
 }
 
@@ -101,5 +109,10 @@ void UploadDialog::onRemoveErrButtonClicked() {
             ++it;
         }
     }
+    m_btn_next->set_sensitive(!m_store->children().empty());
+}
+
+void UploadDialog::onNextButtonClicked() {
+
 }
 
