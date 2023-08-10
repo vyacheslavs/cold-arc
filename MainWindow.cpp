@@ -127,11 +127,15 @@ void MainWindow::onCreateFolderClicked() {
 }
 
 void MainWindow::updateTree() {
+
+    if (!arc::Archive::instance().hasActiveArchive())
+        return;
+
     auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
     items->clear();
 
     arc::Archive::instance().walkTree(
-            [&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk,
+            [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
                 sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
                 if (Glib::ustring(typ) == "folder")
                     allocateTreeNodeUsingParentId(name, id, parent_id);

@@ -21,6 +21,7 @@ include_directories(
         ${GTKMM_INCLUDE_DIRS}
         ${SQLITE3_INCLUDE_DIRS}
         ${OPENSSL_INCLUDE_DIR}
+        sqlite_modern_cpp/hdr
 )
 
 set(CMAKE_CXX_STANDARD 17)
@@ -34,8 +35,6 @@ add_executable(cold_arc_gtk main.cpp
         ArchiveSettingsDialog.cpp
         ArchiveSettingsDialog.h
         Utils.h
-        SqLiteHandle.cpp
-        SqLiteHandle.h
         Utils.cpp
         NewMediaDialog.cpp
         NewMediaDialog.h
