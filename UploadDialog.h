@@ -19,10 +19,16 @@ public:
 private:
 
     void onStage1Notification(const UploadStage1Notification& notification);
+    void onRemoveButtonClicked();
+    void onRemoveErrButtonClicked();
+
     UploadStage1Resolving m_stage1;
     Gtk::TreeView* m_tree;
     Gtk::ListStore* m_store;
     Gtk::ProgressBar* m_progress;
+    Gtk::ToolButton* m_remove_button;
+    Gtk::ToolButton* m_remove_all_skipped;
+    std::vector<UploadStage1Notification> m_ready_files;
 };
 
 

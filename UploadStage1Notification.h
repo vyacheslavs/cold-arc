@@ -36,6 +36,7 @@ class UploadStage1Notification {
                   const std::string& basename, uint64_t size_in_bytes, uint64_t mtime,
                   const std::string& hash);
         [[nodiscard]] double fraction() const;
+        void skip();
     private:
         UploadStage1Notification() = default;
         bool m_thread_stopped {false};

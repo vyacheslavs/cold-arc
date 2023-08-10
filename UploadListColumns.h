@@ -11,12 +11,16 @@ class UploadListColumns : public Gtk::TreeModel::ColumnRecord {
     public:
         Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > status;
         Gtk::TreeModelColumn<Glib::ustring> path;
+        Gtk::TreeModelColumn<Glib::ustring> folder;
         Gtk::TreeModelColumn<Glib::ustring> reason;
+        Gtk::TreeModelColumn<gulong> data;
 
         UploadListColumns() {
             add(status);
             add(path);
+            add(folder);
             add(reason);
+            add(data);
         }
 };
 

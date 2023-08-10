@@ -8,8 +8,12 @@
       <column type="GdkPixbuf"/>
       <!-- column-name path -->
       <column type="gchararray"/>
+      <!-- column-name folder -->
+      <column type="gchararray"/>
       <!-- column-name reason -->
       <column type="gchararray"/>
+      <!-- column-name data -->
+      <column type="gulong"/>
     </columns>
   </object>
   <object class="GtkImage" id="upload-dlg-close">
@@ -140,6 +144,19 @@
                         <property name="tooltip-text" translatable="yes">Remove file</property>
                         <property name="use-underline">True</property>
                         <property name="icon-name">list-remove</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="btn_remove_err">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">Remove all skipped and error</property>
+                        <property name="use-underline">True</property>
+                        <property name="icon-name">emblem-important</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>

@@ -95,3 +95,7 @@ bool UploadStage1Notification::isFailedToHash() const {
 bool UploadStage1Notification::isFailedToOpen() const {
     return m_status == UploadStage1FileStatus::FAILED_TO_OPEN;
 }
+
+void UploadStage1Notification::skip() {
+    m_status = UploadStage1FileStatus::SKIPPED;
+}
