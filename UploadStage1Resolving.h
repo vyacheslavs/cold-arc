@@ -11,6 +11,7 @@
 #include "UploadFileInfo.h"
 #include <chrono>
 #include <optional>
+#include "Dispatcher.h"
 
 using NotificationQueue = std::list<UploadFileInfo>;
 using NotificationQueueSafe = BodyGuard<NotificationQueue>;
@@ -20,26 +21,12 @@ class UploadStage1Resolving {
         explicit UploadStage1Resolving(UploadFilesCollection&& files);
         void signal_upload_notification(sigc::slot<void(const UploadFileInfo&)>&& slot);
     private:
-        enum class DispatcherEmitPolicy {
-            Force,
-            Throttled,
-            NoEmit,
-        };
-
-        struct Dispatcher {
-            sigc::connection connect(sigc::slot<void>&& slot);
-            void emit(DispatcherEmitPolicy policy = DispatcherEmitPolicy::Force);
-            bool timeToEmit() const;
-            Glib::Dispatcher dispatcher;
-            std::chrono::time_point<std::chrono::steady_clock> lastEmit;
-        } m_dispatcher;
-
         std::unique_ptr<std::thread> m_stage1_thread;
         UploadFilesCollection m_files;
         NotificationQueueSafe m_stage1_notification_queue;
         std::set<std::string> m_root_folders;
-
         sigc::signal<void(const UploadFileInfo&)> m_gui_slot;
+        Dispatcher m_dispatcher;
 
         void stage1Main();
         void onDispatcherNotification();

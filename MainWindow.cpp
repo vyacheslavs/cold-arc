@@ -157,8 +157,9 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64
 
 void MainWindow::onUploadButtonClicked() {
     auto files = UploadChooserDialog::run();
-    if (!files.empty())
-        UploadDialog::run(currentFolderParentId(), std::move(files));
+    if (!files.empty() && UploadDialog::run(currentFolderParentId(), std::move(files))) {
+        Signals::instance().update_tree.emit();
+    }
 }
 
 uint64_t MainWindow::currentFolderParentId() {
