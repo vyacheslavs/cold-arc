@@ -42,6 +42,7 @@ private:
         FolderModelColumns cols;
         row[cols.folder] = name;
         row[cols.id] = id;
+        row[cols.status] = Gdk::Pixbuf::create_from_resource(id == 1 ? "/icons/ca-root.svg" : "/icons/ca-folder.svg");
     }
 
     void allocateTreeNodeUsingParentId(const Glib::ustring &folderName, uint64_t id, uint64_t parentId);

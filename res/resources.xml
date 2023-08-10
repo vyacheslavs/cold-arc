@@ -20,5 +20,7 @@
         <file>ca-check.svg</file>
         <file>ca-skipped.svg</file>
         <file>ca-error.svg</file>
+        <file>ca-root.svg</file>
+        <file>ca-folder.svg</file>
     </gresource>
 </gresources>

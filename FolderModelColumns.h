@@ -8,11 +8,16 @@
 #include <gtkmm-3.0/gtkmm.h>
 
 class FolderModelColumns : public Gtk::TreeModel::ColumnRecord {
-public:
-    Gtk::TreeModelColumn<Glib::ustring>                folder;
-    Gtk::TreeModelColumn<gulong>                       id;
+    public:
+        Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > status;
+        Gtk::TreeModelColumn<Glib::ustring> folder;
+        Gtk::TreeModelColumn<gulong> id;
 
-    FolderModelColumns() { add(folder); add(id); }
+        FolderModelColumns() {
+            add(status);
+            add(folder);
+            add(id);
+        }
 };
 
 

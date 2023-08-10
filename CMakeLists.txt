@@ -87,6 +87,8 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-skipped.svg
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-error.svg
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-close-button.svg
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-root.svg
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-folder.svg
 )
 
 add_custom_target(resources

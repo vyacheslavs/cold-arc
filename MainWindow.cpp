@@ -51,8 +51,18 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
     Signals::instance().update_tree.connect(sigc::mem_fun(this, &MainWindow::updateTree));
 
+    Gtk::CellRendererText* textRenderer = Gtk::manage(new Gtk::CellRendererText);
+    auto* iconRenderer = Gtk::manage(new Gtk::CellRendererPixbuf);
+    Gtk::TreeView::Column* pColumn = Gtk::manage(new Gtk::TreeView::Column(
+        "Folder"));
+    pColumn->pack_start(*iconRenderer, false);
+    pColumn->pack_start(*textRenderer, true);
+
+    m_tree->append_column(*pColumn);
+
     FolderModelColumns cols;
-    m_tree->append_column("Folder", cols.folder);
+    pColumn->add_attribute(textRenderer->property_text(), cols.folder);
+    pColumn->add_attribute(iconRenderer->property_pixbuf(), cols.status);
 
     updateUI();
     updateTree();
