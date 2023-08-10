@@ -29,19 +29,19 @@ namespace arc {
             uint64_t createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId = 1);
 
             template<typename F>
-            void walkTree(F callback) {
-                walkTree(callback, 0);
+            void walkTree(F callback, bool folders_only = false) {
+                walkTree(callback, 0, folders_only);
             }
 
             template<typename F>
-            void walkTree(F callback, uint64_t parent_id) {
+            void walkTree(F callback, uint64_t parent_id, bool folders_only = false) {
                 try {
                     *m_dbhandle
-                        << "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=?"
+                        << (folders_only ? "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=? and typ='folder'" : "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=?")
                         << parent_id
                         >> [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk, sqlite3_uint64 dt) {
                             callback(id, typ, name, hash, lnk, dt, parent_id);
-                            walkTree(callback, id);
+                            walkTree(callback, id, folders_only);
                         };
                 } catch (const std::runtime_error& e) {
                     assert_fail(e);
