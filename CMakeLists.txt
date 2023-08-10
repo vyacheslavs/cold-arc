@@ -7,6 +7,11 @@ pkg_check_modules(SQLITE3 sqlite3)
 find_package(OpenSSL REQUIRED)
 find_package(Fontconfig)
 
+set(EXPECTED_BUILD_TESTS OFF)
+set(EXPECTED_BUILD_PACKAGE_DEB OFF)
+
+add_subdirectory("expected")
+
 link_directories(
         ${GTKMM_LIBRARY_DIRS}
         ${SQLITE3_LIBRARY_DIRS}
@@ -16,7 +21,6 @@ include_directories(
         ${GTKMM_INCLUDE_DIRS}
         ${SQLITE3_INCLUDE_DIRS}
         ${OPENSSL_INCLUDE_DIR}
-        ${PROJECT_SOURCE_DIR}/expected/include
 )
 
 set(CMAKE_CXX_STANDARD 17)
@@ -50,7 +54,6 @@ add_executable(cold_arc_gtk main.cpp
         UploadStage1Resolving.h
         UploadStage1Notification.cpp
         UploadStage1Notification.h
-        expected/include/tl/expected.hpp
         UploadListColumns.h
 )
 
@@ -59,6 +62,7 @@ target_link_libraries(cold_arc_gtk
         ${SQLITE3_LIBRARIES}
         ${OPENSSL_LIBRARIES}
         ${Fontconfig_LIBRARIES}
+        expected
 )
 
 add_custom_command(
