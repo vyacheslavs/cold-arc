@@ -5,11 +5,16 @@
 #include "UploadDialog.h"
 #include "Utils.h"
 #include "UploadListColumns.h"
+#include "Archive.h"
 
 #include <iostream>
 
 UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder,
-                           UploadFilesCollection&& files) : Gtk::Dialog(win), m_stage1(std::move(files)) {
+    uint64_t current_folder_parent_id, UploadFilesCollection&& files) : Gtk::Dialog(win),
+                                                                        m_stage1(std::move(
+                                                                            files)),
+                                                                        m_current_folder_parent_id(
+                                                                            current_folder_parent_id) {
 
     m_stage1.signal_upload_notification(sigc::mem_fun(this, &UploadDialog::onStage1Notification));
 
@@ -37,9 +42,9 @@ UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<
     m_store = findObject<Gtk::ListStore>("resolve_tree_list_store", builder);
 }
 
-void UploadDialog::run(UploadFilesCollection&& files) {
+void UploadDialog::run(uint64_t current_folder_parent_id, UploadFilesCollection&& files) {
     runDialog<UploadDialog>("/main/updlg.glade", "upload_dialog", [&](UploadDialog* dlg, int rc) {
-    }, files);
+    }, current_folder_parent_id, files);
 }
 
 void UploadDialog::onStage1Notification(const UploadStage1Notification& notification) {
@@ -92,8 +97,8 @@ void UploadDialog::onRemoveButtonClicked() {
     auto selected = m_tree->get_selection()->get_selected();
     if (selected) {
         auto index = (*selected)[cols.data];
-        if (index>0)
-            m_ready_files[index-1].skip();
+        if (index > 0)
+            m_ready_files[index - 1].skip();
         m_store->erase(selected);
         m_btn_next->set_sensitive(!m_store->children().empty());
     }
@@ -113,6 +118,24 @@ void UploadDialog::onRemoveErrButtonClicked() {
 }
 
 void UploadDialog::onNextButtonClicked() {
+    UploadListColumns cols;
+
+    auto iterate_files = [&](auto callback) {
+        for (const auto & it : m_store->children()) {
+            auto index = it[cols.data];
+            if (index>0) {
+                const auto& file_info = m_ready_files[index-1];
+                if (!file_info.isSkipped()) {
+                    callback(file_info);
+                }
+            }
+        }
+    };
+
+    iterate_files([&](const UploadStage1Notification& file_info) {
+        auto file_folder = arc::Archive::instance().createPath(file_info.getFolder(), m_current_folder_parent_id);
+        std::cout << file_info.getPath() << " will be created on top of " << file_folder << "\n";
+    });
 
 }
 

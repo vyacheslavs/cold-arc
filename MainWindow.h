@@ -32,6 +32,7 @@ private:
     void updateUI();
     void updateTree();
     void onUploadButtonClicked();
+    uint64_t currentFolderParentId();
 
     template <typename A, typename B, typename C>
     void allocateTreeNode(A it, B id, C name) {

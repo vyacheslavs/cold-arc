@@ -20,7 +20,8 @@ namespace arc {
             void newArchive(const Glib::ustring& filename);
             void openArchive(const Glib::ustring& filename);
             void newMedia(const Glib::ustring& name, const Glib::ustring& serial, int capacity);
-            void createFolder(const Glib::ustring &name, uint64_t parentId = 0);
+            void createFolder(const Glib::ustring &name, uint64_t parentId = 1);
+            uint64_t createPath(const Glib::ustring& path, uint64_t parentId = 1);
 
             template<typename F>
             void walkTree(F callback) {

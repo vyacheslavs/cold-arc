@@ -13,7 +13,9 @@
 #include "UploadChooserDialog.h"
 #include "UploadDialog.h"
 
-MainWindow::MainWindow(Gtk::Window::BaseObjectType *win, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(win), m_builder(builder) {
+MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder) : Gtk::Window(win),
+                                                                                                      m_builder(
+                                                                                                              builder) {
 
     auto applyFontAwesome = [&](auto widget) {
         auto desc = widget->get_pango_context()->get_font_description();
@@ -105,7 +107,8 @@ void MainWindow::updateUI() {
     if (arc::Archive::instance().hasActiveArchive()) {
         title = Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name());
         if (arc::Archive::instance().hasCurrentMedia() && arc::Archive::instance().settings->media()) {
-            title += Glib::ustring::compose(" %1 / %2", arc::Archive::instance().settings->media()->name(),arc::Archive::instance().settings->media()->serial());
+            title += Glib::ustring::compose(" %1 / %2", arc::Archive::instance().settings->media()->name(),
+                                            arc::Archive::instance().settings->media()->serial());
         }
     }
     set_title(title);
@@ -120,29 +123,22 @@ void MainWindow::onNewMediaButtonClicked() {
 }
 
 void MainWindow::onCreateFolderClicked() {
-    uint64_t parentId = 1;
-    Glib::ustring val;
-
-    if (m_tree->get_selection()->get_selected()) {
-        auto row = *(m_tree->get_selection()->get_selected());
-        FolderModelColumns cols;
-        parentId = row[cols.id];
-    }
-
-    NewFolderDialog::run(parentId);
+    NewFolderDialog::run(currentFolderParentId());
 }
 
 void MainWindow::updateTree() {
     auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
     items->clear();
 
-    arc::Archive::instance().walkTree([&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk, sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
-        if (Glib::ustring(typ) == "folder")
-            allocateTreeNodeUsingParentId(name, id, parent_id);
-    });
+    arc::Archive::instance().walkTree(
+            [&](sqlite3_uint64 id, const char* typ, const char* name, const char* hash, const char* lnk,
+                sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
+                if (Glib::ustring(typ) == "folder")
+                    allocateTreeNodeUsingParentId(name, id, parent_id);
+            });
 }
 
-void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64_t id, uint64_t parent_id) {
+void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64_t id, uint64_t parent_id) {
     auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
 
     if (parent_id == 0) {
@@ -158,6 +154,16 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring &name, uint64
 void MainWindow::onUploadButtonClicked() {
     auto files = UploadChooserDialog::run();
     if (!files.empty())
-        UploadDialog::run(std::move(files));
+        UploadDialog::run(currentFolderParentId(), std::move(files));
+}
+
+uint64_t MainWindow::currentFolderParentId() {
+    uint64_t parentId = 1;
+    if (m_tree->get_selection()->get_selected()) {
+        auto row = *(m_tree->get_selection()->get_selected());
+        FolderModelColumns cols;
+        parentId = row[cols.id];
+    }
+    return parentId;
 }
 

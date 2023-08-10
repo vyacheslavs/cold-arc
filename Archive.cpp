@@ -13,6 +13,7 @@
 #include "Signals.h"
 #include "Exceptions.h"
 #include <ctime>
+#include <filesystem>
 
 namespace arc {
     Archive &Archive::instance() {
@@ -95,6 +96,21 @@ namespace arc {
             dlg.set_secondary_text("Probably such folder already exists");
             dlg.run();
         }
+    }
+
+    uint64_t Archive::createPath(const Glib::ustring& path, uint64_t parentId) {
+        if (path.empty())
+            return parentId;
+
+        std::filesystem::path fspath(path);
+        for (const auto& particle : fspath) {
+            if (particle != "/") {
+                std::cout << "["<<particle<<"]\n";
+                
+            }
+        }
+
+        return parentId;
     }
 
     template <>

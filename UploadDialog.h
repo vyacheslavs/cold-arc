@@ -12,9 +12,9 @@
 class UploadDialog : public Gtk::Dialog {
 public:
     UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder,
-                 UploadFilesCollection&& files);
+                 uint64_t current_folder_parent_id, UploadFilesCollection&& files);
 
-    static void run(UploadFilesCollection&& files);
+    static void run(uint64_t current_folder_parent_id, UploadFilesCollection&& files);
 
 private:
 
@@ -32,6 +32,7 @@ private:
     Gtk::Button* m_btn_next;
     Gtk::Button* m_btn_close;
     std::vector<UploadStage1Notification> m_ready_files;
+    uint64_t m_current_folder_parent_id;
 };
 
 
