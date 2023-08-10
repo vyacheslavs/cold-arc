@@ -23,8 +23,10 @@ UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<
 
     UploadListColumns cols;
     m_tree->append_column("Status", cols.status);
-    m_tree->append_column("Path", cols.path);
     m_tree->append_column("Folder", cols.folder);
+    m_tree->append_column("Path", cols.path);
+    m_tree->append_column("SHA256", cols.hash);
+    m_tree->append_column("Size", cols.size);
     m_tree->append_column("Info", cols.reason);
 
     m_store = findObject<Gtk::ListStore>("resolve_tree_list_store", builder);
@@ -44,6 +46,9 @@ void UploadDialog::onStage1Notification(const UploadStage1Notification& notifica
         row[cols.path] = notification.getBasename();
         row[cols.reason] = "OK";
         row[cols.data] = m_ready_files.size();
+        row[cols.folder] = notification.getFolder();
+        row[cols.hash] = notification.getHash();
+        row[cols.size] = notification.getSize();
         m_progress->set_fraction(notification.fraction());
     } else if (notification.isSkipped()) {
         auto row = *m_store->insert(m_store->children().begin());

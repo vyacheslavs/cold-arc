@@ -40,7 +40,7 @@ UploadStage1Notification UploadStage1Notification::failedToHash(const std::strin
 UploadStage1Notification
 UploadStage1Notification::processed(uint64_t fraction, uint64_t total, const std::string& path,
                                     const std::string& basename, uint64_t size_in_bytes, uint64_t mtime,
-                                    const std::string& hash) {
+                                    const std::string& hash, const std::string& folder) {
     UploadStage1Notification ret;
     ret.m_path = path;
     ret.m_basename = basename;
@@ -49,6 +49,7 @@ UploadStage1Notification::processed(uint64_t fraction, uint64_t total, const std
     ret.m_size_in_bytes = size_in_bytes;
     ret.m_mtime = mtime;
     ret.m_hash = hash;
+    ret.m_hiera = folder;
     ret.m_status = UploadStage1FileStatus::PROCESSED;
     return ret;
 }
@@ -98,4 +99,16 @@ bool UploadStage1Notification::isFailedToOpen() const {
 
 void UploadStage1Notification::skip() {
     m_status = UploadStage1FileStatus::SKIPPED;
+}
+
+const std::string& UploadStage1Notification::getFolder() const {
+    return m_hiera;
+}
+
+const std::string& UploadStage1Notification::getHash() const {
+    return m_hash;
+}
+
+uint64_t UploadStage1Notification::getSize() const {
+    return m_size_in_bytes;
 }

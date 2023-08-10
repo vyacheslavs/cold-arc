@@ -4,8 +4,8 @@
 
 #include "UploadStage1Resolving.h"
 #include <memory>
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 
 UploadStage1Resolving::UploadStage1Resolving(UploadFilesCollection&& files) : m_files(std::move(files)) {
     m_dispatcher.connect(sigc::mem_fun(this, &UploadStage1Resolving::onDispatcherNotification));
@@ -14,13 +14,16 @@ UploadStage1Resolving::UploadStage1Resolving(UploadFilesCollection&& files) : m_
 
 void UploadStage1Resolving::stage1Main() {
     uint64_t index = 0;
+
     for (; index < m_files.size(); ++index) {
         auto& item = m_files[index];
         auto file_type = item->query_file_type(Gio::FILE_QUERY_INFO_NOFOLLOW_SYMLINKS);
-        if (file_type == Gio::FILE_TYPE_REGULAR)
+
+        if (file_type == Gio::FILE_TYPE_REGULAR) {
             processRegularFile(item, index, m_files.size());
-        else if (file_type == Gio::FILE_TYPE_DIRECTORY) {
+        } else if (file_type == Gio::FILE_TYPE_DIRECTORY) {
             // list this directory and add them to m_files
+            m_root_folders.insert(std::filesystem::path(item->get_path()).parent_path());
             for (const auto& sub : std::filesystem::directory_iterator(item->get_path())) {
                 m_files.push_back(Gio::File::create_for_path(sub.path()));
             }
@@ -67,10 +70,11 @@ void UploadStage1Resolving::processRegularFile(const Glib::RefPtr<Gio::File>& fi
         enqueueNotification(UploadStage1Notification::failedToHash(file->get_path()));
         return;
     }
+
     enqueueNotification(
             UploadStage1Notification::processed(fraction, total, file->get_path(), file->get_basename(), size_in_bytes,
                                                 dt_mtime,
-                                                res.value()));
+                                                res.value(), guessFolder(file->get_path())));
 }
 
 void UploadStage1Resolving::enqueueNotification(UploadStage1Notification&& notification, DispatcherEmitPolicy policy) {
@@ -83,6 +87,24 @@ void UploadStage1Resolving::enqueueNotification(UploadStage1Notification&& notif
 
 void UploadStage1Resolving::signal_upload_notification(sigc::slot<void(const UploadStage1Notification&)>&& slot) {
     m_gui_slot.connect(std::move(slot));
+}
+
+std::string UploadStage1Resolving::guessFolder(const std::string& path) {
+
+    std::string folder = std::filesystem::path(path).parent_path();
+    bool root_folder_found = false;
+    for (const auto& root_folder : m_root_folders) {
+        if (folder.rfind(root_folder, 0) == 0) {
+            folder = folder.substr(root_folder.length());
+            root_folder_found = true;
+            break;
+        }
+    }
+    if (!root_folder_found) {
+        m_root_folders.insert(folder);
+        folder = "";
+    }
+    return folder;
 }
 
 sigc::connection UploadStage1Resolving::Dispatcher::connect(sigc::slot<void>&& slot) {
