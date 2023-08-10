@@ -28,12 +28,12 @@ void UploadStage1Resolving::stage1Main() {
                 m_files.push_back(Gio::File::create_for_path(sub.path()));
             }
         } else {
-            enqueueNotification(UploadStage1Notification::skipped(item->get_path()));
+            enqueueNotification(UploadFileInfo::skipped(item->get_path()));
         }
     }
 
     // send that thread is stopped
-    enqueueNotification(UploadStage1Notification::threadStoppedNotification());
+    enqueueNotification(UploadFileInfo::threadStoppedNotification());
 }
 
 void UploadStage1Resolving::onDispatcherNotification() {
@@ -57,27 +57,27 @@ void UploadStage1Resolving::onDispatcherNotification() {
 void UploadStage1Resolving::processRegularFile(const Glib::RefPtr<Gio::File>& file, uint64_t fraction, uint64_t total) {
     struct stat st{};
     if (stat(file->get_path().c_str(), &st) < 0) {
-        enqueueNotification(UploadStage1Notification::failedToOpen(file->get_path()));
+        enqueueNotification(UploadFileInfo::failedToOpen(file->get_path()));
         return;
     }
     uint64_t size_in_bytes = st.st_size;
     uint64_t dt_mtime = st.st_mtim.tv_sec;
     auto res = calculateSha256(file->get_path(), size_in_bytes, [&](uint64_t fraction) {
-        enqueueNotification(UploadStage1Notification::hashing(fraction, size_in_bytes, file->get_basename()),
+        enqueueNotification(UploadFileInfo::hashing(fraction, size_in_bytes, file->get_basename()),
                             DispatcherEmitPolicy::Throttled);
     });
     if (!res) {
-        enqueueNotification(UploadStage1Notification::failedToHash(file->get_path()));
+        enqueueNotification(UploadFileInfo::failedToHash(file->get_path()));
         return;
     }
 
     enqueueNotification(
-            UploadStage1Notification::processed(fraction, total, file->get_path(), file->get_basename(), size_in_bytes,
-                                                dt_mtime,
-                                                res.value(), guessFolder(file->get_path())));
+        UploadFileInfo::processed(fraction, total, file->get_path(), file->get_basename(), size_in_bytes,
+                                  dt_mtime,
+                                  res.value(), guessFolder(file->get_path())));
 }
 
-void UploadStage1Resolving::enqueueNotification(UploadStage1Notification&& notification, DispatcherEmitPolicy policy) {
+void UploadStage1Resolving::enqueueNotification(UploadFileInfo&& notification, DispatcherEmitPolicy policy) {
     if (m_dispatcher.timeToEmit() || policy == DispatcherEmitPolicy::Force){
         auto acc = m_stage1_notification_queue.access();
         acc->push_back(std::move(notification));
@@ -85,7 +85,7 @@ void UploadStage1Resolving::enqueueNotification(UploadStage1Notification&& notif
     m_dispatcher.emit(policy);
 }
 
-void UploadStage1Resolving::signal_upload_notification(sigc::slot<void(const UploadStage1Notification&)>&& slot) {
+void UploadStage1Resolving::signal_upload_notification(sigc::slot<void(const UploadFileInfo&)>&& slot) {
     m_gui_slot.connect(std::move(slot));
 }
 

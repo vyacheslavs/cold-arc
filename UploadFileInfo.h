@@ -2,12 +2,12 @@
 // Created by developer on 8/9/23.
 //
 
-#ifndef COLD_ARC_GTK_UPLOADSTAGE1NOTIFICATION_H
-#define COLD_ARC_GTK_UPLOADSTAGE1NOTIFICATION_H
+#ifndef COLD_ARC_GTK_UPLOADFILEINFO_H
+#define COLD_ARC_GTK_UPLOADFILEINFO_H
 
 #include <string>
 
-enum class UploadStage1FileStatus {
+enum class UploadFileStatus {
     UNKNOWN,
     HASHING,
     PROCESSED,
@@ -16,7 +16,7 @@ enum class UploadStage1FileStatus {
     SKIPPED,
 };
 
-class UploadStage1Notification {
+class UploadFileInfo {
 public:
     [[nodiscard]] bool isThreadStopped() const;
 
@@ -38,20 +38,22 @@ public:
 
     [[nodiscard]] const std::string& getHash() const;
 
+    [[nodiscard]] uint64_t getMtime() const;
+
     [[nodiscard]] uint64_t getSize() const;
 
-    [[nodiscard]] static UploadStage1Notification threadStoppedNotification();
+    [[nodiscard]] static UploadFileInfo threadStoppedNotification();
 
-    [[nodiscard]] static UploadStage1Notification skipped(const std::string& path);
+    [[nodiscard]] static UploadFileInfo skipped(const std::string& path);
 
-    [[nodiscard]] static UploadStage1Notification failedToOpen(const std::string& path);
+    [[nodiscard]] static UploadFileInfo failedToOpen(const std::string& path);
 
-    [[nodiscard]] static UploadStage1Notification failedToHash(const std::string& path);
+    [[nodiscard]] static UploadFileInfo failedToHash(const std::string& path);
 
-    [[nodiscard]] static UploadStage1Notification
+    [[nodiscard]] static UploadFileInfo
     hashing(uint64_t fraction, uint64_t total, const std::string& basename);
 
-    [[nodiscard]] static UploadStage1Notification
+    [[nodiscard]] static UploadFileInfo
     processed(uint64_t fraction, uint64_t total, const std::string& path,
               const std::string& basename, uint64_t size_in_bytes, uint64_t mtime,
               const std::string& hash, const std::string& folder);
@@ -61,10 +63,10 @@ public:
     void skip();
 
 private:
-    UploadStage1Notification() = default;
+    UploadFileInfo() = default;
 
     bool m_thread_stopped{false};
-    UploadStage1FileStatus m_status{UploadStage1FileStatus::UNKNOWN};
+    UploadFileStatus m_status{UploadFileStatus::UNKNOWN};
     std::string m_path;
     std::string m_basename;
     std::string m_hash;
@@ -77,4 +79,4 @@ private:
 };
 
 
-#endif //COLD_ARC_GTK_UPLOADSTAGE1NOTIFICATION_H
+#endif //COLD_ARC_GTK_UPLOADFILEINFO_H

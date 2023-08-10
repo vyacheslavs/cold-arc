@@ -8,7 +8,10 @@
 #include <glibmm/ustring.h>
 #include <memory>
 #include <optional>
+#include <cstdint>
 #include "sqlite_modern_cpp.h"
+#include "UploadFileInfo.h"
+#include "Utils.h"
 
 namespace arc {
 
@@ -20,8 +23,9 @@ namespace arc {
             void newArchive(const Glib::ustring& filename);
             void openArchive(const Glib::ustring& filename);
             void newMedia(const Glib::ustring& name, const Glib::ustring& serial, int capacity);
-            void createFolder(const Glib::ustring &name, uint64_t parentId = 1);
+            uint64_t createFolder(const Glib::ustring& name, uint64_t parentId = 1, bool quiet = false);
             uint64_t createPath(const Glib::ustring& path, uint64_t parentId = 1);
+            uint64_t createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId = 1);
 
             template<typename F>
             void walkTree(F callback) {
@@ -30,25 +34,33 @@ namespace arc {
 
             template<typename F>
             void walkTree(F callback, uint64_t parent_id) {
-                *m_dbhandle
-                    << "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=?"
-                    << parent_id
-                    >> [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk, sqlite3_uint64 dt) {
-                        callback(id, typ, name, hash, lnk, dt, parent_id);
-                        walkTree(callback, id);
-                    };
+                try {
+                    *m_dbhandle
+                        << "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=?"
+                        << parent_id
+                        >> [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk, sqlite3_uint64 dt) {
+                            callback(id, typ, name, hash, lnk, dt, parent_id);
+                            walkTree(callback, id);
+                        };
+                } catch (const std::runtime_error& e) {
+                    assert_fail(e);
+                }
             }
 
             template<typename F>
             void walkRoot(F callback, uint64_t id) {
                 callback(id);
-                *m_dbhandle
-                    << "SELECT parent_id FROM arc_tree WHERE id=?"
-                    << id
-                    >> [&](sqlite3_uint64 parent_id) {
-                    if (parent_id != 0)
-                        walkRoot(callback, parent_id);
-                    };
+                try {
+                    *m_dbhandle
+                        << "SELECT parent_id FROM arc_tree WHERE id=?"
+                        << id
+                        >> [&](sqlite3_uint64 parent_id) {
+                            if (parent_id != 0)
+                                walkRoot(callback, parent_id);
+                        };
+                } catch (const std::runtime_error& e) {
+                    assert_fail(e);
+                }
             }
 
             [[nodiscard]] bool hasActiveArchive() const;

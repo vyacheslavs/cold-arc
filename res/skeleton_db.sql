@@ -38,5 +38,5 @@ DROP TABLE IF EXISTS arc_tree_to_media;
 CREATE TABLE IF NOT EXISTS arc_tree_to_media (
     arc_tree_id  INTEGER NOT NULL,
     arc_media_id INTEGER NOT NULL,
-    PRIMARY KEY (arc_tree_id, arc_media_id)
+    UNIQUE (arc_tree_id, arc_media_id)
 );

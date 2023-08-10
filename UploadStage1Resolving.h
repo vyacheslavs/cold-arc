@@ -8,17 +8,17 @@
 #include <thread>
 #include "UploadFilesCollection.h"
 #include "Utils.h"
-#include "UploadStage1Notification.h"
+#include "UploadFileInfo.h"
 #include <chrono>
 #include <optional>
 
-using NotificationQueue = std::list<UploadStage1Notification>;
+using NotificationQueue = std::list<UploadFileInfo>;
 using NotificationQueueSafe = BodyGuard<NotificationQueue>;
 
 class UploadStage1Resolving {
     public:
         explicit UploadStage1Resolving(UploadFilesCollection&& files);
-        void signal_upload_notification(sigc::slot<void(const UploadStage1Notification&)>&& slot);
+        void signal_upload_notification(sigc::slot<void(const UploadFileInfo&)>&& slot);
     private:
         enum class DispatcherEmitPolicy {
             Force,
@@ -39,11 +39,11 @@ class UploadStage1Resolving {
         NotificationQueueSafe m_stage1_notification_queue;
         std::set<std::string> m_root_folders;
 
-        sigc::signal<void(const UploadStage1Notification&)> m_gui_slot;
+        sigc::signal<void(const UploadFileInfo&)> m_gui_slot;
 
         void stage1Main();
         void onDispatcherNotification();
-        void enqueueNotification(UploadStage1Notification&& notification, DispatcherEmitPolicy policy = DispatcherEmitPolicy::Force);
+        void enqueueNotification(UploadFileInfo&& notification, DispatcherEmitPolicy policy = DispatcherEmitPolicy::Force);
         std::string guessFolder(const std::string& path);
 
     void processRegularFile(const Glib::RefPtr<Gio::File>& file, uint64_t fraction, uint64_t total);

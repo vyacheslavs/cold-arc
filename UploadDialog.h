@@ -18,7 +18,7 @@ public:
 
 private:
 
-    void onStage1Notification(const UploadStage1Notification& notification);
+    void onStage1Notification(const UploadFileInfo& notification);
     void onRemoveButtonClicked();
     void onRemoveErrButtonClicked();
     void onNextButtonClicked();
@@ -31,7 +31,7 @@ private:
     Gtk::ToolButton* m_remove_all_skipped;
     Gtk::Button* m_btn_next;
     Gtk::Button* m_btn_close;
-    std::vector<UploadStage1Notification> m_ready_files;
+    std::vector<UploadFileInfo> m_ready_files;
     uint64_t m_current_folder_parent_id;
 };
 

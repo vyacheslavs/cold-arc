@@ -51,8 +51,8 @@ add_executable(cold_arc_gtk main.cpp
         UploadFilesCollection.h
         UploadStage1Resolving.cpp
         UploadStage1Resolving.h
-        UploadStage1Notification.cpp
-        UploadStage1Notification.h
+        UploadFileInfo.cpp
+        UploadFileInfo.h
         UploadListColumns.h
 )
 

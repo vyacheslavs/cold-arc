@@ -10,6 +10,7 @@
 #include "Exceptions.h"
 #include <ctime>
 #include <filesystem>
+#include <cstdint>
 
 namespace arc {
     Archive &Archive::instance() {
@@ -48,10 +49,11 @@ namespace arc {
     }
 
     void Archive::newMedia(const Glib::ustring &name, const Glib::ustring &serial, int capacity) {
-        *m_dbhandle
-            << "INSERT INTO arc_media (name, serial, capacity, occupied, locked) VALUES (?,?,?,0,0)"
-            << name.operator std::string() << serial.operator std::string() << capacity;
-
+        {
+            *m_dbhandle
+                << "INSERT INTO arc_media (name, serial, capacity, occupied, locked) VALUES (?,?,?,0,0)"
+                << name.operator std::string() << serial.operator std::string() << capacity;
+        }
         settings->m_currentMedia = std::make_unique<Media>(name, serial, capacity);
         settings->updateCurrentMedia(m_dbhandle->last_insert_rowid());
     }
@@ -66,26 +68,41 @@ namespace arc {
         return settings->m_currentMediaId > 0;
     }
 
-    void Archive::createFolder(const Glib::ustring &name, uint64_t parentId) {
+    uint64_t Archive::createFolder(const Glib::ustring& name, uint64_t parentId, bool quiet) {
         try {
-            *m_dbhandle
-                << "INSERT INTO arc_tree (parent_id, typ, name, dt) VALUES (?,?,?,?)"
-                << parentId << "folder" << name.operator std::string() << std::time(nullptr);
-            auto idx = m_dbhandle->last_insert_rowid();
+            {
+                *m_dbhandle
+                    << "INSERT INTO arc_tree (parent_id, typ, name, dt) VALUES (?,?,?,?)"
+                    << parentId << "folder" << name.operator std::string() << std::time(nullptr);
+            }
 
+            auto idx = m_dbhandle->last_insert_rowid();
             walkRoot([&](sqlite3_uint64 id) {
                 try {
                     *m_dbhandle
-                        << "INSERT INTO arc_tree_to_media (arc_tree_to_media, arc_media_id) VALUES (?,?)"
+                        << "INSERT INTO arc_tree_to_media (arc_tree_id, arc_media_id) VALUES (?,?)"
                         << id << settings->m_currentMediaId;
-                } catch (const sqlite::exceptions::constraint& e) {} // ignore constraint errors
+                } catch (const sqlite::exceptions::constraint& e) {}
             }, idx);
 
             Signals::instance().new_folder.emit(name, idx, parentId);
+            return idx;
         } catch (const sqlite::exceptions::constraint&) {
-            Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to create a new folder: %1", name));
-            dlg.set_secondary_text("Probably such folder already exists");
-            dlg.run();
+            if (!quiet) {
+                Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to create a new folder: %1", name));
+                dlg.set_secondary_text("Probably such folder already exists");
+                dlg.run();
+            }
+            sqlite3_uint64 folder_id;
+            try {
+                *m_dbhandle
+                    << "SELECT id FROM arc_tree WHERE name=? AND parent_id=?"
+                    << name.operator std::string() << parentId
+                    >> folder_id;
+            } catch (const std::runtime_error& e) {
+                assert_fail(e);
+            }
+            return folder_id;
         }
     }
 
@@ -95,13 +112,32 @@ namespace arc {
 
         std::filesystem::path fspath(path);
         for (const auto& particle : fspath) {
-            if (particle != "/") {
-                std::cout << "["<<particle<<"]\n";
-
-            }
+            if (particle != "/")
+                parentId = createFolder(particle.c_str(), parentId, true);
         }
-
         return parentId;
+    }
+
+    uint64_t Archive::createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId) {
+        sqlite3_uint64 idx;
+        try {
+            *m_dbhandle
+                << "INSERT INTO arc_tree (parent_id, typ, name, hash, lnk, dt, dt_org) VALUES (?, 'file', ?, ?, ?, ?, ?)"
+                << parentId << name.operator std::string() << file_info.getHash() << file_info.getPath()
+                << std::time(nullptr) << file_info.getMtime();
+        } catch (const sqlite::exceptions::constraint&) { // ignore constraint errors
+        } catch (const std::exception& e) {
+            assert_fail(e);
+        }
+        idx = m_dbhandle->last_insert_rowid();
+        walkRoot([&](sqlite3_uint64 id) {
+            try {
+                *m_dbhandle
+                    << "INSERT INTO arc_tree_to_media (arc_tree_id, arc_media_id) VALUES (?,?)"
+                    << id << settings->m_currentMediaId;
+            } catch (const sqlite::exceptions::constraint& e) {}
+        }, idx);
+        return 0;
     }
 
     Archive::Settings::Settings(std::unique_ptr<sqlite::database> &_settings) : m_dbhandle(_settings) {
@@ -127,17 +163,21 @@ namespace arc {
 
     void Archive::Settings::updateName(const Glib::ustring &name) {
         m_name = name;
-        *m_dbhandle
-            << "UPDATE db_settings SET name=?"
-            << name.operator std::string();
+        {
+            *m_dbhandle
+                << "UPDATE db_settings SET name=?"
+                << name.operator std::string();
+        }
         Signals::instance().update_main_window.emit();
     }
 
     void Archive::Settings::updateCurrentMedia(sqlite3_uint64 id) {
         m_currentMediaId = id;
-        *m_dbhandle
-            << "UPDATE db_settings SET current_media=?"
-            << id;
+        {
+            *m_dbhandle
+                << "UPDATE db_settings SET current_media=?"
+                << id;
+        }
         Signals::instance().update_main_window.emit();
     }
 
