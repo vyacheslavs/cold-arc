@@ -24,6 +24,7 @@ namespace arc {
             void newArchive(const Glib::ustring& filename);
             void openArchive(const Glib::ustring& filename);
             void newMedia(const Glib::ustring& name, const Glib::ustring& serial, int capacity);
+            void init(const Glib::ustring& filename);
             uint64_t createFolder(const Glib::ustring& name, uint64_t parentId = 1, bool quiet = false);
             uint64_t createPath(const Glib::ustring& path, uint64_t parentId = 1, bool quiet = false);
             uint64_t createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId = 1);
