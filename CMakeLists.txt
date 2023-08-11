@@ -119,4 +119,4 @@ add_dependencies(cold_arc_gtk resources)
 
 install(TARGETS cold_arc_gtk DESTINATION bin)
 install(FILES flatpak/so.ldd.ColdArc.metainfo.xml DESTINATION /usr/share/metainfo)
-install(FILES res/ca-icon.svg /app/share/icons/hicolor/scalable/apps/so.ldd.ColdArc.svg)
+install(FILES res/ca-icon.svg DESTINATION /app/share/icons/hicolor/scalable/apps/so.ldd.ColdArc.svg)
