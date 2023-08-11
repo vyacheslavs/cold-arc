@@ -9,6 +9,7 @@ find_package(Fontconfig)
 
 set(EXPECTED_BUILD_TESTS OFF)
 set(EXPECTED_BUILD_PACKAGE_DEB OFF)
+set(COLD_ARC_DB_VERSION 10)
 
 add_subdirectory("expected")
 
@@ -62,6 +63,8 @@ add_executable(cold_arc_gtk main.cpp
         MediaListColumns.h
 )
 
+target_compile_definitions(cold_arc_gtk PRIVATE COLD_ARC_DB_VERSION=${COLD_ARC_DB_VERSION})
+
 target_link_libraries(cold_arc_gtk
         ${GTKMM_LIBRARIES}
         ${SQLITE3_LIBRARIES}
@@ -104,6 +107,7 @@ add_custom_command(
         OUTPUT ${PROJECT_SOURCE_DIR}/res/skeleton.db
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/res
         COMMAND cat ${PROJECT_SOURCE_DIR}/res/skeleton_db.sql | sqlite3 ${PROJECT_SOURCE_DIR}/res/skeleton.db
+        COMMAND echo "UPDATE db_settings SET version=${COLD_ARC_DB_VERSION}" | sqlite3 ${PROJECT_SOURCE_DIR}/res/skeleton.db
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton_db.sql
 )
 

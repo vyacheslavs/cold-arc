@@ -36,9 +36,7 @@ namespace arc {
         try {
             const auto fn = endsWith(filename, ".db") ? filename : filename+".db";
 
-            m_dbhandle = std::make_unique<sqlite::database>(fn, sqlite::sqlite_config{sqlite::OpenFlags::READWRITE | sqlite::OpenFlags::FULLMUTEX});
-            settings = std::make_unique<Settings>(m_dbhandle);
-            m_dbname = filename;
+            init(fn);
 
             if (!sqlite3_threadsafe())
                 throw std::runtime_error("sqlite3 is not thread safe");
@@ -155,11 +153,22 @@ namespace arc {
 
     std::unique_ptr<Archive> Archive::clone() {
         std::unique_ptr<Archive> newArchive (new Archive());
-        newArchive->m_dbhandle = std::make_unique<sqlite::database>(
-            Archive::instance().m_dbname, sqlite::sqlite_config{sqlite::OpenFlags::READWRITE | sqlite::OpenFlags::FULLMUTEX});
-        newArchive->settings = std::make_unique<Settings>(newArchive->m_dbhandle);
-        newArchive->m_dbname = Archive::instance().m_dbname;
+        newArchive->init(Archive::instance().m_dbname);
         return std::move(newArchive);
+    }
+
+    void Archive::init(const Glib::ustring& filename) {
+        m_dbhandle = std::make_unique<sqlite::database>(filename, sqlite::sqlite_config{sqlite::OpenFlags::READWRITE | sqlite::OpenFlags::FULLMUTEX});
+        settings = std::make_unique<Settings>(m_dbhandle);
+        m_dbname = filename;
+
+        sqlite3_uint64 v;
+        *m_dbhandle
+            << "SELECT version FROM db_settings"
+            >> v;
+
+        if (v != COLD_ARC_DB_VERSION)
+            throw WrongDatabaseVersion(COLD_ARC_DB_VERSION, v);
     }
 
     Archive::Settings::Settings(std::unique_ptr<sqlite::database> &_settings) : m_dbhandle(_settings) {
