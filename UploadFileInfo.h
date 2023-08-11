@@ -38,6 +38,8 @@ public:
 
     [[nodiscard]] const std::string& getHash() const;
 
+    [[nodiscard]] uint32_t getMode() const;
+
     [[nodiscard]] uint64_t getMtime() const;
 
     [[nodiscard]] uint64_t getSize() const;
@@ -56,7 +58,7 @@ public:
     [[nodiscard]] static UploadFileInfo
     processed(uint64_t fraction, uint64_t total, const std::string& path,
               const std::string& basename, uint64_t size_in_bytes, uint64_t mtime,
-              const std::string& hash, const std::string& folder);
+              const std::string& hash, const std::string& folder, uint32_t mode);
 
     [[nodiscard]] double fraction() const;
 
@@ -76,6 +78,7 @@ private:
     uint64_t m_progress_fraction{0};
     uint64_t m_size_in_bytes{0};
     uint64_t m_mtime{0};
+    uint32_t m_mode{0};
 };
 
 

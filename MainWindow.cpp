@@ -265,9 +265,8 @@ void MainWindow::onMediaToggle(const Glib::ustring& path) {
     MediaListColumns cols;
     auto it = m_media_store->get_iter(path);
     if (it != m_media_store->children().end()) {
-        auto row = *it;
+        const auto& row = *it;
         row[cols.checkbox] = !row[cols.checkbox];
-        std::cout << row[cols.name] << " toggled\n";
     }
 }
 

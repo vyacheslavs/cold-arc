@@ -24,7 +24,7 @@ void UploadStage1Resolving::stage1Main() {
         } else if (file_type == Gio::FILE_TYPE_DIRECTORY) {
             // list this directory and add them to m_files
             m_root_folders.insert(std::filesystem::path(item->get_path()).parent_path());
-            for (const auto& sub : std::filesystem::directory_iterator(item->get_path())) {
+            for (const auto& sub: std::filesystem::directory_iterator(item->get_path())) {
                 m_files.push_back(Gio::File::create_for_path(sub.path()));
             }
         } else {
@@ -62,6 +62,7 @@ void UploadStage1Resolving::processRegularFile(const Glib::RefPtr<Gio::File>& fi
     }
     uint64_t size_in_bytes = st.st_size;
     uint64_t dt_mtime = st.st_mtim.tv_sec;
+    auto mode = st.st_mode;
     auto res = calculateSha256(file->get_path(), size_in_bytes, [&](uint64_t fraction) {
         enqueueNotification(UploadFileInfo::hashing(fraction, size_in_bytes, file->get_basename()),
                             DispatcherEmitPolicy::Throttled);
@@ -74,11 +75,11 @@ void UploadStage1Resolving::processRegularFile(const Glib::RefPtr<Gio::File>& fi
     enqueueNotification(
         UploadFileInfo::processed(fraction, total, file->get_path(), file->get_basename(), size_in_bytes,
                                   dt_mtime,
-                                  res.value(), guessFolder(file->get_path())));
+                                  res.value(), guessFolder(file->get_path()), mode));
 }
 
 void UploadStage1Resolving::enqueueNotification(UploadFileInfo&& notification, DispatcherEmitPolicy policy) {
-    if (m_dispatcher.timeToEmit() || policy == DispatcherEmitPolicy::Force){
+    if (m_dispatcher.timeToEmit() || policy == DispatcherEmitPolicy::Force) {
         auto acc = m_stage1_notification_queue.access();
         acc->push_back(std::move(notification));
     }
@@ -93,7 +94,7 @@ std::string UploadStage1Resolving::guessFolder(const std::string& path) {
 
     std::string folder = std::filesystem::path(path).parent_path();
     bool root_folder_found = false;
-    for (const auto& root_folder : m_root_folders) {
+    for (const auto& root_folder: m_root_folders) {
         if (folder.rfind(root_folder, 0) == 0) {
             folder = folder.substr(root_folder.length());
             root_folder_found = true;

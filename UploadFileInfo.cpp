@@ -40,7 +40,7 @@ UploadFileInfo UploadFileInfo::failedToHash(const std::string& path) {
 UploadFileInfo
 UploadFileInfo::processed(uint64_t fraction, uint64_t total, const std::string& path,
                                     const std::string& basename, uint64_t size_in_bytes, uint64_t mtime,
-                                    const std::string& hash, const std::string& folder) {
+                                    const std::string& hash, const std::string& folder, uint32_t mode) {
     UploadFileInfo ret;
     ret.m_path = path;
     ret.m_basename = basename;
@@ -50,6 +50,7 @@ UploadFileInfo::processed(uint64_t fraction, uint64_t total, const std::string& 
     ret.m_mtime = mtime;
     ret.m_hash = hash;
     ret.m_hiera = folder;
+    ret.m_mode = mode;
     ret.m_status = UploadFileStatus::PROCESSED;
     return ret;
 }
@@ -115,4 +116,8 @@ uint64_t UploadFileInfo::getSize() const {
 
 uint64_t UploadFileInfo::getMtime() const {
     return m_mtime;
+}
+
+uint32_t UploadFileInfo::getMode() const {
+    return m_mode;
 }
