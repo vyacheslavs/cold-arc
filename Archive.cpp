@@ -153,13 +153,13 @@ namespace arc {
         return 0;
     }
 
-    Archive* Archive::clone() {
-        Archive* newArchive = new Archive();
+    std::unique_ptr<Archive> Archive::clone() {
+        std::unique_ptr<Archive> newArchive (new Archive());
         newArchive->m_dbhandle = std::make_unique<sqlite::database>(
             Archive::instance().m_dbname, sqlite::sqlite_config{sqlite::OpenFlags::READWRITE | sqlite::OpenFlags::FULLMUTEX});
         newArchive->settings = std::make_unique<Settings>(newArchive->m_dbhandle);
         newArchive->m_dbname = Archive::instance().m_dbname;
-        return newArchive;
+        return std::move(newArchive);
     }
 
     Archive::Settings::Settings(std::unique_ptr<sqlite::database> &_settings) : m_dbhandle(_settings) {

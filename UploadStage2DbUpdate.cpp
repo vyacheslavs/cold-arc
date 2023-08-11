@@ -13,7 +13,7 @@ UploadStage2DbUpdate::UploadStage2DbUpdate(std::vector<UploadFileInfo>&& files, 
 
 void UploadStage2DbUpdate::stage2Main() {
 
-    std::unique_ptr<arc::Archive> m_db(arc::Archive::instance().clone());
+    std::unique_ptr<arc::Archive> m_db(arc::Archive::clone());
 
     for (const auto& item: m_files) {
         if (item.isSkipped())

@@ -20,7 +20,7 @@ namespace arc {
             Archive() = default;
         public:
             static Archive& instance();
-            [[nodiscard]] Archive* clone();
+            [[nodiscard]] static std::unique_ptr<Archive> clone();
             void newArchive(const Glib::ustring& filename);
             void openArchive(const Glib::ustring& filename);
             void newMedia(const Glib::ustring& name, const Glib::ustring& serial, int capacity);
