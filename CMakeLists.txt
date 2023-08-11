@@ -118,5 +118,5 @@ add_custom_target(skeleton_db
 add_dependencies(cold_arc_gtk resources)
 
 install(TARGETS cold_arc_gtk DESTINATION bin)
-install(FILES flatpak/so.ldd.ColdArc.metainfo.xml DESTINATION /app/share/metainfo)
-install(FILES res/ca-icon.svg DESTINATION /app/share/icons/hicolor/scalable/apps/so.ldd.ColdArc.svg)
+install(FILES flatpak/so.ldd.Coldarc.metainfo.xml DESTINATION /app/share/metainfo)
+install(FILES res/ca-icon.svg DESTINATION /app/share/icons/hicolor/scalable/apps/so.ldd.Coldarc.svg)
