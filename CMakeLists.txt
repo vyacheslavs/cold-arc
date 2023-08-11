@@ -112,3 +112,5 @@ add_custom_target(skeleton_db
 )
 
 add_dependencies(cold_arc_gtk resources)
+
+install(TARGETS cold_arc_gtk DESTINATION bin)

@@ -9,6 +9,7 @@ run:
 	 --env="DISPLAY" \
 	 --ipc=host \
 	 --hostname cold-arc \
+	 --privileged \
 	 --volume="$(HOME)/.Xauthority:/home/developer/.Xauthority:rw" \
 	 --volume="/tmp/.X11-unix:/tmp/.X11-unix" \
 	 cold-arc-devenv
