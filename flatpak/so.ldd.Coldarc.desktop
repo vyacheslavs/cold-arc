@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Cold Archive
-Exec=/usr/bin/flatpak run so.ldd.Coldarc
+Exec=cold_arc_gtk
 Type=Application
 Icon=so.ldd.Coldarc
 Categories=GTK;Office
