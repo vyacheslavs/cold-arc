@@ -59,6 +59,7 @@ add_executable(cold_arc_gtk main.cpp
         Dispatcher.cpp
         Dispatcher.h
         ContentsModelColumns.h
+        MediaListColumns.h
 )
 
 target_link_libraries(cold_arc_gtk

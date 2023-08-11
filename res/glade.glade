@@ -21,6 +21,20 @@
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="liststore2">
+    <columns>
+      <!-- column-name active_icon -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name checkbox -->
+      <column type="gint"/>
+      <!-- column-name capacity -->
+      <column type="guint64"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name serial -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkLabel" id="new_archive">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -223,9 +237,10 @@
                         <property name="can-focus">True</property>
                         <property name="shadow-type">in</property>
                         <child>
-                          <object class="GtkTreeView">
+                          <object class="GtkTreeView" id="mediaview">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
+                            <property name="model">liststore2</property>
                             <child internal-child="selection">
                               <object class="GtkTreeSelection"/>
                             </child>

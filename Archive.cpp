@@ -47,6 +47,7 @@ namespace arc {
 
             Signals::instance().update_main_window.emit();
             Signals::instance().update_tree.emit();
+            Signals::instance().update_media_view.emit();
         } catch (const WrongDatabaseVersion& e) {
             Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to open archive %1", filename));
             dlg.set_secondary_text(e.what());
@@ -64,6 +65,7 @@ namespace arc {
         }
         settings->m_currentMedia = std::make_unique<Media>(name, serial, capacity);
         settings->updateCurrentMedia(m_dbhandle->last_insert_rowid());
+        Signals::instance().update_media_view.emit();
     }
 
     bool Archive::hasActiveArchive() const {
@@ -203,6 +205,10 @@ namespace arc {
 
     const std::unique_ptr<Archive::Media> &Archive::Settings::media() const {
         return m_currentMedia;
+    }
+
+    sqlite3_uint64 Archive::Settings::mediaId() const {
+        return m_currentMediaId;
     }
 
     const Glib::ustring &Archive::Media::name() const {
