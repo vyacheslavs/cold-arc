@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS arc_tree(
     parent_id INTEGER,
     typ       TEXT NOT NULL CHECK( typ in ('folder', 'file') ),
     name      TEXT NOT NULL,
+    siz       INTEGER,
     hash      TEXT,
     lnk       TEXT,
     dt        INTEGER NOT NULL, /* date when put to database */

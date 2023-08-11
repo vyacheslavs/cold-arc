@@ -186,29 +186,7 @@
                 <property name="can-focus">True</property>
                 <property name="wide-handle">True</property>
                 <child>
-                  <object class="GtkScrolledWindow">
-                    <property name="width-request">200</property>
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="shadow-type">in</property>
-                    <child>
-                      <object class="GtkTreeView" id="treeview">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="model">treestore1</property>
-                        <property name="headers-visible">False</property>
-                        <property name="search-column">0</property>
-                        <property name="enable-tree-lines">True</property>
-                        <child internal-child="selection">
-                          <object class="GtkTreeSelection" id="selection"/>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="resize">False</property>
-                    <property name="shrink">True</property>
-                  </packing>
+                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkScrolledWindow">

@@ -20,5 +20,4 @@ class FolderModelColumns : public Gtk::TreeModel::ColumnRecord {
         }
 };
 
-
 #endif //COLD_ARC_GTK_FOLDERMODELCOLUMNS_H

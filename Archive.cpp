@@ -133,8 +133,8 @@ namespace arc {
         sqlite3_uint64 idx;
         try {
             *m_dbhandle
-                << "INSERT INTO arc_tree (parent_id, typ, name, hash, lnk, dt, dt_org) VALUES (?, 'file', ?, ?, ?, ?, ?)"
-                << parentId << name.operator std::string() << file_info.getHash() << file_info.getPath()
+                << "INSERT INTO arc_tree (parent_id, typ, name, siz, hash, lnk, dt, dt_org) VALUES (?, 'file', ?, ?, ?, ?, ?, ?)"
+                << parentId << name.operator std::string() << file_info.getSize() << file_info.getHash() << file_info.getPath()
                 << std::time(nullptr) << file_info.getMtime();
         } catch (const sqlite::exceptions::constraint&) { // ignore constraint errors
         } catch (const std::exception& e) {

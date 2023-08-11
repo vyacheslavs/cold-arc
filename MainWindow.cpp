@@ -12,6 +12,7 @@
 #include "FolderModelColumns.h"
 #include "UploadChooserDialog.h"
 #include "UploadDialog.h"
+#include "ContentsModelColumns.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder) : Gtk::Window(win),
                                                                                                       m_builder(
@@ -32,6 +33,10 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_archive_settings_button = findWidget<Gtk::ToolButton>("settings_button", m_builder);
     m_add_new_media_button = findWidget<Gtk::ToolButton>("new_media_btn", m_builder);
     m_tree = findWidget<Gtk::TreeView>("treeview", m_builder);
+    m_selection = findObject<Gtk::TreeSelection>("selection", m_builder);
+    m_tree_store = findObject<Gtk::TreeStore>("treestore1", m_builder);
+    m_contents_view = findWidget<Gtk::TreeView>("contents", m_builder);
+    m_contents_store = findObject<Gtk::ListStore>("liststore1", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -46,23 +51,42 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_add_new_media_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
     m_create_folder->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onCreateFolderClicked));
     m_upload_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onUploadButtonClicked));
+    m_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::updateContents));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
     Signals::instance().update_tree.connect(sigc::mem_fun(this, &MainWindow::updateTree));
 
-    Gtk::CellRendererText* textRenderer = Gtk::manage(new Gtk::CellRendererText);
-    auto* iconRenderer = Gtk::manage(new Gtk::CellRendererPixbuf);
-    Gtk::TreeView::Column* pColumn = Gtk::manage(new Gtk::TreeView::Column(
-        "Folder"));
-    pColumn->pack_start(*iconRenderer, false);
-    pColumn->pack_start(*textRenderer, true);
+    // init treeview
+    {
+        auto textRenderer = Gtk::manage(new Gtk::CellRendererText);
+        auto iconRenderer = Gtk::manage(new Gtk::CellRendererPixbuf);
+        Gtk::TreeView::Column* pColumn = Gtk::manage(new Gtk::TreeView::Column("Folder"));
+        pColumn->pack_start(*iconRenderer, false);
+        pColumn->pack_start(*textRenderer, true);
 
-    m_tree->append_column(*pColumn);
+        m_tree->append_column(*pColumn);
 
-    FolderModelColumns cols;
-    pColumn->add_attribute(textRenderer->property_text(), cols.folder);
-    pColumn->add_attribute(iconRenderer->property_pixbuf(), cols.status);
+        FolderModelColumns cols;
+        pColumn->add_attribute(textRenderer->property_text(), cols.folder);
+        pColumn->add_attribute(iconRenderer->property_pixbuf(), cols.status);
+    }
+
+    {
+        ContentsModelColumns cols;
+
+        auto textRenderer = Gtk::manage(new Gtk::CellRendererText);
+        auto iconRenderer = Gtk::manage(new Gtk::CellRendererPixbuf);
+        Gtk::TreeView::Column* pColumn = Gtk::manage(new Gtk::TreeView::Column("Name"));
+        pColumn->pack_start(*iconRenderer, false);
+        pColumn->pack_start(*textRenderer, true);
+        m_contents_view->append_column(*pColumn);
+        pColumn->add_attribute(textRenderer->property_text(), cols.name);
+        pColumn->add_attribute(iconRenderer->property_pixbuf(), cols.typ);
+
+        m_contents_view->append_column("Size", cols.size);
+        m_contents_view->append_column("Hash", cols.hash);
+    }
 
     updateUI();
     updateTree();
@@ -141,8 +165,8 @@ void MainWindow::updateTree() {
     if (!arc::Archive::instance().hasActiveArchive())
         return;
 
-    auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
-    items->clear();
+    m_tree_store->clear();
+    m_contents_store->clear();
 
     arc::Archive::instance().walkTree(
         [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
@@ -152,14 +176,12 @@ void MainWindow::updateTree() {
 }
 
 void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64_t id, uint64_t parent_id) {
-    auto items = findObject<Gtk::TreeStore>("treestore1", m_builder);
-
     if (parent_id == 0) {
-        allocateTreeNode(items->append(), id, name);
+        allocateTreeNode(m_tree_store->append(), id, name);
     } else {
         auto t_it = m_tree_fast_access.find(parent_id);
         if (t_it != m_tree_fast_access.end()) {
-            allocateTreeNode(items->append(t_it->second->children()), id, name);
+            allocateTreeNode(m_tree_store->append(t_it->second->children()), id, name);
         }
     }
 }
@@ -179,5 +201,24 @@ uint64_t MainWindow::currentFolderParentId() {
         parentId = row[cols.id];
     }
     return parentId;
+}
+
+void MainWindow::updateContents() {
+    if (m_selection->get_selected()) {
+        ContentsModelColumns cols;
+        auto row = *(m_tree->get_selection()->get_selected());
+
+        m_contents_store->clear();
+        arc::Archive::instance().browse([&](sqlite3_uint64 id, const std::string& typ, const std::string& name, sqlite3_uint64 size, const std::string& hash) {
+
+            auto irow = *m_contents_store->append();
+            irow[cols.name] = name;
+            irow[cols.typ] = Gdk::Pixbuf::create_from_resource(typ == "folder" ? "/icons/ca-folder-1.svg" : "/icons/ca-file.svg");
+            irow[cols.id] = id;
+            irow[cols.size] = (size == 0 ? Glib::ustring{} : Glib::ustring::compose("%1", size));
+            irow[cols.hash] = hash;
+
+        }, row[cols.id]);
+    }
 }
 

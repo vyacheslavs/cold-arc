@@ -49,6 +49,18 @@ namespace arc {
             }
 
             template<typename F>
+            void browse(F callback, uint64_t parent_id) {
+                try {
+                    *m_dbhandle
+                        << "SELECT id, typ, name, siz, hash FROM arc_tree WHERE parent_id=? ORDER BY typ DESC"
+                        << parent_id
+                        >> callback;
+                } catch (const std::exception& e) {
+                    assert_fail(e);
+                }
+            }
+
+            template<typename F>
             void walkRoot(F callback, uint64_t id) {
                 callback(id);
                 try {

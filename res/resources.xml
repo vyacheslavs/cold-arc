@@ -22,5 +22,7 @@
         <file>ca-error.svg</file>
         <file>ca-root.svg</file>
         <file>ca-folder.svg</file>
+        <file>ca-folder-1.svg</file>
+        <file>ca-file.svg</file>
     </gresource>
 </gresources>

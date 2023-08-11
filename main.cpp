@@ -21,9 +21,9 @@ int main(int argc, char** argv) {
         app->run(*win);
 
     } catch (const Glib::Exception& e) {
-        std::cout << e.what() << "\n";
+        std::cout << "error: " << e.what() << "\n";
     } catch (const std::exception& e) {
-        std::cout << e.what()<<"\n";
+        std::cout << "error: " << e.what() << "\n";
     }
     return 0;
 }

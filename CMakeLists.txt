@@ -58,6 +58,7 @@ add_executable(cold_arc_gtk main.cpp
         UploadStage2DbUpdate.h
         Dispatcher.cpp
         Dispatcher.h
+        ContentsModelColumns.h
 )
 
 target_link_libraries(cold_arc_gtk
@@ -89,6 +90,8 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-close-button.svg
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-root.svg
         DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-folder.svg
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-folder-1.svg
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/ca-file.svg
 )
 
 add_custom_target(resources
