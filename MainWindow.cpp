@@ -95,7 +95,17 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     { // init media view
         MediaListColumns cols;
         m_media_view->append_column("", cols.active_icon);
+        auto comboRenderer = Gtk::manage(new Gtk::CellRendererToggle);
+        Gtk::TreeView::Column* pColumn = Gtk::manage(new Gtk::TreeView::Column(""));
+        pColumn->pack_start(*comboRenderer, false);
+        m_media_view->append_column(*pColumn);
+        pColumn->add_attribute(comboRenderer->property_active(), cols.checkbox);
+        comboRenderer->set_activatable(true);
+        comboRenderer->signal_toggled().connect(sigc::mem_fun(this, &MainWindow::onMediaToggle));
+
         m_media_view->append_column("Name", cols.name);
+        //m_media_view->append_column("Capacity", cols.capacity);
+        m_media_view->append_column("Serial", cols.serial);
     }
 
     updateUI();
@@ -240,11 +250,24 @@ void MainWindow::updateMediaView() {
 
     m_media_store->clear();
     MediaListColumns cols;
-    arc::Archive::instance().browseMedia([&](sqlite3_uint64 id, sqlite3_uint64 capacity, const std::string& name) {
+    arc::Archive::instance().browseMedia([&](sqlite3_uint64 id, sqlite3_uint64 capacity, const std::string& name, const std::string& serial) {
         auto row = *m_media_store->append();
         if (id == arc::Archive::instance().settings->mediaId())
             row[cols.active_icon] = Gdk::Pixbuf::create_from_resource("/icons/ca-check.svg");
         row[cols.name] = name;
+        row[cols.checkbox] = 1;
+        row[cols.capacity] = capacity;
+        row[cols.serial] = serial;
     });
+}
+
+void MainWindow::onMediaToggle(const Glib::ustring& path) {
+    MediaListColumns cols;
+    auto it = m_media_store->get_iter(path);
+    if (it != m_media_store->children().end()) {
+        auto row = *it;
+        row[cols.checkbox] = !row[cols.checkbox];
+        std::cout << row[cols.name] << " toggled\n";
+    }
 }
 

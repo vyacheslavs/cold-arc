@@ -65,6 +65,7 @@ namespace arc {
         }
         settings->m_currentMedia = std::make_unique<Media>(name, serial, capacity);
         settings->updateCurrentMedia(m_dbhandle->last_insert_rowid());
+        Signals::instance().update_media_view.emit();
     }
 
     bool Archive::hasActiveArchive() const {

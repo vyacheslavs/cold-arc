@@ -26,13 +26,13 @@
       <!-- column-name active_icon -->
       <column type="GdkPixbuf"/>
       <!-- column-name checkbox -->
-      <column type="gboolean"/>
+      <column type="gint"/>
+      <!-- column-name capacity -->
+      <column type="guint64"/>
       <!-- column-name name -->
       <column type="gchararray"/>
       <!-- column-name serial -->
       <column type="gchararray"/>
-      <!-- column-name capacity -->
-      <column type="guint64"/>
     </columns>
   </object>
   <object class="GtkLabel" id="new_archive">

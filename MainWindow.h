@@ -40,6 +40,8 @@ private:
     void updateContents();
     void updateMediaView();
     void onUploadButtonClicked();
+    void onMediaToggle(const Glib::ustring& path);
+
     uint64_t currentFolderParentId();
 
     template <typename A, typename B, typename C>
