@@ -61,6 +61,17 @@ namespace arc {
             }
 
             template<typename F>
+            void browseMedia(F callback) {
+                try {
+                    *m_dbhandle
+                        << "SELECT id, capacity, name FROM arc_media"
+                        >> callback;
+                } catch (const std::exception& e) {
+                    assert_fail(e);
+                }
+            }
+
+            template<typename F>
             void walkRoot(F callback, uint64_t id) {
                 callback(id);
                 try {
@@ -107,6 +118,7 @@ namespace arc {
                 public:
                     explicit Settings(std::unique_ptr<sqlite::database>& _settings);
                     [[nodiscard]] const Glib::ustring& name() const;
+                    [[nodiscard]] sqlite3_uint64 mediaId() const;
                     [[nodiscard]] const std::unique_ptr<Media>& media() const;
                     void updateName(const Glib::ustring& name);
                     void updateCurrentMedia(sqlite3_uint64 id);

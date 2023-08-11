@@ -26,6 +26,8 @@ private:
     Gtk::TreeStore* m_tree_store;
     Gtk::TreeView* m_contents_view;
     Gtk::ListStore* m_contents_store;
+    Gtk::TreeView* m_media_view;
+    Gtk::ListStore* m_media_store;
     std::unordered_map<uint64_t, Gtk::TreeIter> m_tree_fast_access;
 
     void onNewArchiveButtonClicked();
@@ -36,6 +38,7 @@ private:
     void updateUI();
     void updateTree();
     void updateContents();
+    void updateMediaView();
     void onUploadButtonClicked();
     uint64_t currentFolderParentId();
 
