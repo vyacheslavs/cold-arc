@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>so.ldd.ColdArc</id>
+  
+  <name>ColdArc</name>
+  <summary>Application to create cold archives</summary>
+  
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>Unlicense</project_license>
+  
+  <description>
+    <p>
+      Burn cd/dvd/bluerays and store information about them in the cold archive.
+    </p>
+  </description>
+  
+  <launchable type="desktop-id">coldarchive.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://user-images.githubusercontent.com/3788341/260100175-2592ab7d-5e96-41ac-80c2-7fce8bd3a40d.png</image>
+    </screenshot>
+  </screenshots>
+</component>
