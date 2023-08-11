@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>so.ldd.ColdArc</id>
+  <id>so.ldd.Coldarc</id>
   
   <name>ColdArc</name>
   <summary>Application to create cold archives</summary>
