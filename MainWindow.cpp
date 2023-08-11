@@ -83,9 +83,11 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
         m_contents_view->append_column(*pColumn);
         pColumn->add_attribute(textRenderer->property_text(), cols.name);
         pColumn->add_attribute(iconRenderer->property_pixbuf(), cols.typ);
+        pColumn->set_resizable();
 
         m_contents_view->append_column("Size", cols.size);
         m_contents_view->append_column("Hash", cols.hash);
+
     }
 
     updateUI();

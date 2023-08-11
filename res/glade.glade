@@ -186,23 +186,56 @@
                 <property name="can-focus">True</property>
                 <property name="wide-handle">True</property>
                 <child>
-                  <object class="GtkScrolledWindow">
-                    <property name="width-request">200</property>
+                  <object class="GtkPaned">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
-                    <property name="shadow-type">in</property>
+                    <property name="orientation">vertical</property>
+                    <property name="wide-handle">True</property>
                     <child>
-                      <object class="GtkTreeView" id="treeview">
+                      <object class="GtkScrolledWindow">
+                        <property name="width-request">200</property>
+                        <property name="height-request">400</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="model">treestore1</property>
-                        <property name="headers-visible">False</property>
-                        <property name="search-column">0</property>
-                        <property name="enable-tree-lines">True</property>
-                        <child internal-child="selection">
-                          <object class="GtkTreeSelection" id="selection"/>
+                        <property name="shadow-type">in</property>
+                        <child>
+                          <object class="GtkTreeView" id="treeview">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="model">treestore1</property>
+                            <property name="headers-visible">False</property>
+                            <property name="search-column">0</property>
+                            <property name="enable-tree-lines">True</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection" id="selection"/>
+                            </child>
+                          </object>
                         </child>
                       </object>
+                      <packing>
+                        <property name="resize">False</property>
+                        <property name="shrink">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkScrolledWindow">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="shadow-type">in</property>
+                        <child>
+                          <object class="GtkTreeView">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="resize">True</property>
+                        <property name="shrink">True</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>
