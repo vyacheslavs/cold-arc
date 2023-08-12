@@ -7,6 +7,7 @@
 
 #include <gtkmm-3.0/gtkmm.h>
 #include <tl/expected.hpp>
+#include <cassert>
 
 template<typename T>
 T* findWidget(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>& builder) {
