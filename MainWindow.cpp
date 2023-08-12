@@ -47,6 +47,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_media_new_button = findWidget<Gtk::ToolButton>("new_media_button", m_builder);
     m_media_view_selection = findObject<Gtk::TreeSelection>("media_view_selection", m_builder);
     m_media_view_select_button = findWidget<Gtk::ToolButton>("select_button", m_builder);
+    m_media_view_remove_button = findWidget<Gtk::ToolButton>("remove_button", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -56,6 +57,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     applyFontAwesome(m_upload_button->get_label_widget());
     applyFontAwesome(m_media_new_button->get_label_widget(), false);
     applyFontAwesome(m_media_view_select_button->get_label_widget(), false);
+    applyFontAwesome(m_media_view_remove_button->get_label_widget(), false);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
@@ -67,6 +69,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_media_new_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
     m_media_view_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::onMediaViewSelectionChanged));
     m_media_view_select_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onMediaViewSelectButton));
+    m_media_view_remove_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onMediaViewRemoveButtonClicked));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
@@ -328,6 +331,7 @@ void MainWindow::onMediaViewSelectionChanged() {
         outcome = row[cols.id] != arc::Archive::instance().settings->media()->id();
     }
     m_media_view_select_button->set_sensitive(outcome);
+    m_media_view_remove_button->set_sensitive(outcome);
 }
 
 void MainWindow::onMediaViewSelectButton() {
@@ -338,5 +342,21 @@ void MainWindow::onMediaViewSelectButton() {
     MediaListColumns cols;
     auto new_id = (*sel)[cols.id];
     arc::Archive::instance().settings->switchMedia(new_id);
+}
+
+void MainWindow::onMediaViewRemoveButtonClicked() {
+    auto sel = m_media_view_selection->get_selected();
+    if (!sel)
+        return;
+
+    MediaListColumns cols;
+    auto media = arc::Archive::instance().settings->media()->getMedia((*sel)[cols.id]);
+    Gtk::MessageDialog dlg("Are you sure you want to delete this media?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+    dlg.set_secondary_text(Glib::ustring::compose("All files and folders from this media (%1) will be deleted from the archive!", media->name()));
+
+    if (dlg.run() == Gtk::RESPONSE_NO)
+        return;
+
+    media->remove();
 }
 

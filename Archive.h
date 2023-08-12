@@ -104,11 +104,11 @@ namespace arc {
             [[nodiscard]] bool hasActiveArchive() const;
             [[nodiscard]] bool hasCurrentMedia() const;
 
-        private:
-
             class Media {
                 public:
                     Media(std::unique_ptr<sqlite::database>& dbhandle, uint64_t id);
+
+                    std::unique_ptr<Media> getMedia(uint64_t id);
 
                     void occupy(uint64_t size);
                     [[nodiscard]] const Glib::ustring& name() const;
@@ -117,6 +117,7 @@ namespace arc {
                     [[nodiscard]] uint64_t capacity() const;
                     [[nodiscard]] uint64_t free() const;
                     [[nodiscard]] uint64_t id() const;
+                    void remove();
 
                 private:
                     Glib::ustring m_name;
@@ -129,6 +130,8 @@ namespace arc {
 
                 friend class Archive;
             };
+
+        private:
 
             class Settings {
                 public:

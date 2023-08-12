@@ -279,4 +279,40 @@ namespace arc {
         }
     }
 
+    std::unique_ptr<arc::Archive::Media> Archive::Media::getMedia(uint64_t id) {
+        return std::make_unique<arc::Archive::Media>(m_dbhandle, id);
+    }
+
+    void Archive::Media::remove() {
+        try {
+            *m_dbhandle
+                << "SELECT id, COUNT(id) AS A FROM arc_tree INNER JOIN arc_tree_to_media ON (id=arc_tree_id) GROUP BY id HAVING A=1 and arc_media_id=?"
+                << m_id
+                >> [&](sqlite3_uint64 del_id) {
+                    *m_dbhandle
+                        << "DELETE FROM arc_tree WHERE id=?"
+                        << del_id;
+                };
+
+            {
+                *m_dbhandle
+                    << "DELETE FROM arc_tree_to_media WHERE arc_tree_id=?"
+                    << m_id;
+            }
+
+            {
+                *m_dbhandle
+                    << "DELETE FROM arc_media WHERE id=?"
+                    << m_id;
+            }
+
+            Signals::instance().update_main_window.emit();
+            Signals::instance().update_tree.emit();
+            Signals::instance().update_media_view.emit();
+
+        } catch (const std::exception& e) {
+            assert_fail(e);
+        }
+    }
+
 } // arc

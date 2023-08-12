@@ -35,6 +35,7 @@ class MainWindow : public Gtk::Window {
         Gtk::ToolButton* m_media_new_button;
         Gtk::TreeSelection* m_media_view_selection;
         Gtk::ToolButton* m_media_view_select_button;
+        Gtk::ToolButton* m_media_view_remove_button;
 
         void onNewArchiveButtonClicked();
 
@@ -59,6 +60,8 @@ class MainWindow : public Gtk::Window {
         void onUploadButtonClicked();
 
         void onMediaViewSelectButton();
+
+        void onMediaViewRemoveButtonClicked();
 
         void onMediaToggle(const Glib::ustring& path);
 
