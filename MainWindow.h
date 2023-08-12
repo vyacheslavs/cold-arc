@@ -33,6 +33,8 @@ class MainWindow : public Gtk::Window {
         std::unordered_map<uint64_t, Gtk::TreeIter> m_tree_fast_access;
         Gtk::Toolbar* m_media_toolbar;
         Gtk::ToolButton* m_media_new_button;
+        Gtk::TreeSelection* m_media_view_selection;
+        Gtk::ToolButton* m_media_view_select_button;
 
         void onNewArchiveButtonClicked();
 
@@ -52,7 +54,11 @@ class MainWindow : public Gtk::Window {
 
         void updateMediaView();
 
+        void onMediaViewSelectionChanged();
+
         void onUploadButtonClicked();
+
+        void onMediaViewSelectButton();
 
         void onMediaToggle(const Glib::ustring& path);
 

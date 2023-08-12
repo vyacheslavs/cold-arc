@@ -45,6 +45,8 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_sep2 = findWidget<Gtk::SeparatorToolItem>("sep2", m_builder);
     m_media_toolbar = findWidget<Gtk::Toolbar>("media_toolbar", m_builder);
     m_media_new_button = findWidget<Gtk::ToolButton>("new_media_button", m_builder);
+    m_media_view_selection = findObject<Gtk::TreeSelection>("media_view_selection", m_builder);
+    m_media_view_select_button = findWidget<Gtk::ToolButton>("select_button", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -53,6 +55,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     applyFontAwesome(m_create_folder->get_label_widget());
     applyFontAwesome(m_upload_button->get_label_widget());
     applyFontAwesome(m_media_new_button->get_label_widget(), false);
+    applyFontAwesome(m_media_view_select_button->get_label_widget(), false);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
@@ -62,6 +65,8 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_upload_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onUploadButtonClicked));
     m_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::updateContents));
     m_media_new_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
+    m_media_view_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::onMediaViewSelectionChanged));
+    m_media_view_select_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onMediaViewSelectButton));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
@@ -174,6 +179,9 @@ void MainWindow::updateUI() {
     m_media_toolbar->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
+
+    onMediaViewSelectionChanged();
+
     auto title = Glib::ustring("ColdArc");
     if (arc::Archive::instance().hasActiveArchive()) {
         title = Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name());
@@ -307,5 +315,28 @@ void MainWindow::onMediaToggle(const Glib::ustring& path) {
         row[cols.checkbox] = !row[cols.checkbox];
         updateTree();
     }
+}
+
+void MainWindow::onMediaViewSelectionChanged() {
+    auto sel = m_media_view_selection->get_selected();
+    auto outcome = false;
+    if (!sel) {
+        outcome = false;
+    } else {
+        const auto& row = *sel;
+        MediaListColumns cols;
+        outcome = row[cols.id] != arc::Archive::instance().settings->media()->id();
+    }
+    m_media_view_select_button->set_sensitive(outcome);
+}
+
+void MainWindow::onMediaViewSelectButton() {
+    auto sel = m_media_view_selection->get_selected();
+    if (!sel)
+        return;
+
+    MediaListColumns cols;
+    auto new_id = (*sel)[cols.id];
+    arc::Archive::instance().settings->switchMedia(new_id);
 }
 

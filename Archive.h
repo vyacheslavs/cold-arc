@@ -108,11 +108,7 @@ namespace arc {
 
             class Media {
                 public:
-                    Media(std::unique_ptr<sqlite::database>& dbhandle, const uint64_t id, Glib::ustring name, Glib::ustring serial, uint64_t cap) :
-                        m_dbhandle(dbhandle), m_id(id), m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap) {}
-
-                    Media(std::unique_ptr<sqlite::database>& dbhandle, uint64_t id, Glib::ustring name, Glib::ustring serial, uint64_t cap, uint64_t occ, uint64_t loc) :
-                        m_dbhandle(dbhandle), m_id(id), m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap), m_occupied(occ), m_locked(loc) {}
+                    Media(std::unique_ptr<sqlite::database>& dbhandle, uint64_t id);
 
                     void occupy(uint64_t size);
                     [[nodiscard]] const Glib::ustring& name() const;
@@ -140,6 +136,7 @@ namespace arc {
                     [[nodiscard]] const Glib::ustring& name() const;
                     [[nodiscard]] const std::unique_ptr<Media>& media() const;
                     void updateName(const Glib::ustring& name);
+                    void switchMedia(uint64_t new_id);
 
                 private:
                     Glib::ustring m_name;
