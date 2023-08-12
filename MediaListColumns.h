@@ -14,6 +14,7 @@ class MediaListColumns : public Gtk::TreeModel::ColumnRecord {
         Gtk::TreeModelColumn<Glib::ustring> name;
         Gtk::TreeModelColumn<Glib::ustring> serial;
         Gtk::TreeModelColumn<guint64> capacity;
+        Gtk::TreeModelColumn<gulong> id;
 
         MediaListColumns() {
             add(active_icon);
@@ -21,6 +22,7 @@ class MediaListColumns : public Gtk::TreeModel::ColumnRecord {
             add(capacity);
             add(name);
             add(serial);
+            add(id);
         }
 };
 
