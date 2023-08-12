@@ -27,7 +27,7 @@ namespace arc {
             void init(const Glib::ustring& filename);
             uint64_t createFolder(const Glib::ustring& name, uint64_t parentId = 1, bool quiet = false);
             uint64_t createPath(const Glib::ustring& path, uint64_t parentId = 1, bool quiet = false);
-            uint64_t createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId = 1);
+            bool createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId = 1);
 
             template<typename F>
             void walkTree(F callback, uint64_t parent_id, const std::string& exclusions = std::string()) {
@@ -78,7 +78,7 @@ namespace arc {
             void browseMedia(F callback) {
                 try {
                     *m_dbhandle
-                        << "SELECT id, capacity, name, serial FROM arc_media"
+                        << "SELECT id, capacity, occupied, name, serial FROM arc_media"
                         >> callback;
                 } catch (const std::exception& e) {
                     assert_fail(e);
@@ -108,40 +108,43 @@ namespace arc {
 
             class Media {
                 public:
-                    Media() = default;
-                    Media(Glib::ustring name, Glib::ustring serial, uint64_t cap) :
-                        m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap) {}
+                    Media(std::unique_ptr<sqlite::database>& dbhandle, const uint64_t id, Glib::ustring name, Glib::ustring serial, uint64_t cap) :
+                        m_dbhandle(dbhandle), m_id(id), m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap) {}
 
-                    Media(Glib::ustring name, Glib::ustring serial, uint64_t cap, uint64_t occ, uint64_t loc) :
-                        m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap), m_occupied(occ), m_locked(loc) {}
+                    Media(std::unique_ptr<sqlite::database>& dbhandle, uint64_t id, Glib::ustring name, Glib::ustring serial, uint64_t cap, uint64_t occ, uint64_t loc) :
+                        m_dbhandle(dbhandle), m_id(id), m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap), m_occupied(occ), m_locked(loc) {}
 
+                    void occupy(uint64_t size);
                     [[nodiscard]] const Glib::ustring& name() const;
                     [[nodiscard]] const Glib::ustring& serial() const;
+                    [[nodiscard]] uint64_t occupied() const;
+                    [[nodiscard]] uint64_t capacity() const;
+                    [[nodiscard]] uint64_t free() const;
+                    [[nodiscard]] uint64_t id() const;
 
                 private:
                     Glib::ustring m_name;
                     Glib::ustring m_serial;
                     uint64_t m_capacity {0};
                     uint64_t m_occupied {0};
+                    uint64_t m_id{0};
                     bool m_locked {false};
+                    std::unique_ptr<sqlite::database>& m_dbhandle;
 
                 friend class Archive;
             };
 
             class Settings {
                 public:
-                    explicit Settings(std::unique_ptr<sqlite::database>& _settings);
+                    explicit Settings(std::unique_ptr<sqlite::database>& dbhandle);
                     [[nodiscard]] const Glib::ustring& name() const;
-                    [[nodiscard]] sqlite3_uint64 mediaId() const;
                     [[nodiscard]] const std::unique_ptr<Media>& media() const;
                     void updateName(const Glib::ustring& name);
-                    void updateCurrentMedia(sqlite3_uint64 id);
 
                 private:
                     Glib::ustring m_name;
-                    sqlite3_uint64 m_currentMediaId {0};
                     std::unique_ptr<sqlite::database>& m_dbhandle;
-                    std::unique_ptr<Media> m_currentMedia;
+                    std::unique_ptr<Media> m_current_media;
 
                     friend class Archive;
             };

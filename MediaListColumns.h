@@ -13,15 +13,17 @@ class MediaListColumns : public Gtk::TreeModel::ColumnRecord {
         Gtk::TreeModelColumn<gint> checkbox;
         Gtk::TreeModelColumn<Glib::ustring> name;
         Gtk::TreeModelColumn<Glib::ustring> serial;
-        Gtk::TreeModelColumn<guint64> capacity;
+        Gtk::TreeModelColumn<gint> percentage;
+        Gtk::TreeModelColumn<Glib::ustring> percentage_text;
         Gtk::TreeModelColumn<gulong> id;
 
         MediaListColumns() {
             add(active_icon);
             add(checkbox);
-            add(capacity);
             add(name);
             add(serial);
+            add(percentage);
+            add(percentage_text);
             add(id);
         }
 };

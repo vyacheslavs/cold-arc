@@ -106,8 +106,14 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
         comboRenderer->signal_toggled().connect(sigc::mem_fun(this, &MainWindow::onMediaToggle));
 
         m_media_view->append_column("Name", cols.name);
-        //m_media_view->append_column("Capacity", cols.capacity);
         m_media_view->append_column("Serial", cols.serial);
+
+        auto progressRenderer = Gtk::manage(new Gtk::CellRendererProgress);
+        Gtk::TreeView::Column* progressCol = Gtk::manage(new Gtk::TreeView::Column("Space"));
+        progressCol->pack_start(*progressRenderer, false);
+        m_media_view->append_column(*progressCol);
+        progressCol->add_attribute(progressRenderer->property_value(), cols.percentage);
+        progressCol->add_attribute(progressRenderer->property_text(), cols.percentage_text);
     }
 
     updateUI();
@@ -231,7 +237,8 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64
 void MainWindow::onUploadButtonClicked() {
     auto files = UploadChooserDialog::run();
     if (!files.empty() && UploadDialog::run(currentFolderParentId(), std::move(files))) {
-        Signals::instance().update_tree.emit();
+        updateTree();
+        updateMediaView();
     }
 }
 
@@ -271,15 +278,18 @@ void MainWindow::updateMediaView() {
 
     m_media_store->clear();
     MediaListColumns cols;
-    arc::Archive::instance().browseMedia([&](sqlite3_uint64 id, sqlite3_uint64 capacity, const std::string& name, const std::string& serial) {
+    arc::Archive::instance().browseMedia([&](sqlite3_uint64 id, sqlite3_uint64 capacity, sqlite3_uint64 occupied, const std::string& name, const std::string& serial) {
         auto row = *m_media_store->append();
-        if (id == arc::Archive::instance().settings->mediaId())
+        if (id == arc::Archive::instance().settings->media()->id())
             row[cols.active_icon] = Gdk::Pixbuf::create_from_resource("/icons/ca-check.svg");
         row[cols.name] = name;
         row[cols.checkbox] = 1;
-        row[cols.capacity] = capacity;
         row[cols.serial] = serial;
         row[cols.id] = id;
+        row[cols.percentage] = static_cast<int>((100 * occupied) / capacity);
+        std::ostringstream ss;
+        ss << HumanReadable{occupied} << "/" << HumanReadable{capacity};
+        row[cols.percentage_text] = ss.str();
     });
 }
 

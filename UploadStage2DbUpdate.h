@@ -19,9 +19,9 @@ class UploadStage2DbUpdate {
         using sig_proto = sigc::slot<void(uint64_t, uint64_t, bool)>;
         UploadStage2DbUpdate(std::vector<UploadFileInfo>&& files, uint64_t parentId);
         void signal_update_notification(sig_proto&& slot);
-        void start();
+        void start(uint64_t cap_limit);
     private:
-        void stage2Main();
+        void stage2Main(uint64_t cap_limit);
         void onDispatcherNotification();
         void notifyThreadStopped();
 
