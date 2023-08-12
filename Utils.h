@@ -7,7 +7,7 @@
 
 #include <gtkmm-3.0/gtkmm.h>
 #include <tl/expected.hpp>
-#include <cassert>
+#include "assert.h"
 
 template<typename T>
 T* findWidget(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>& builder) {
@@ -115,7 +115,10 @@ enum class CalculateSHA256Errors {
 tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::string& filename, uint64_t size, const std::function<void(uint64_t)>& callback);
 
 #define assert_fail(e) \
-      __assert_fail (e.what(), __FILE__, __LINE__, __PRETTY_FUNCTION__)
+                       do { \
+                       std::cerr << e.what() << " at " << __FILE__ << ":" << __LINE__ << " / " << __PRETTY_FUNCTION__ << "\n"; \
+                       assert (false); \
+                       } while(0)
 
 struct HumanReadable {
         std::uintmax_t size{};
