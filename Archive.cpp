@@ -55,7 +55,7 @@ namespace arc {
         }
     }
 
-    void Archive::newMedia(const Glib::ustring &name, const Glib::ustring &serial, int capacity) {
+    void Archive::newMedia(const Glib::ustring &name, const Glib::ustring &serial, uint64_t capacity) {
         {
             *m_dbhandle
                 << "INSERT INTO arc_media (name, serial, capacity, occupied, locked) VALUES (?,?,?,0,0)"
