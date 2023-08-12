@@ -40,6 +40,8 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_contents_store = findObject<Gtk::ListStore>("liststore1", m_builder);
     m_media_view = findWidget<Gtk::TreeView>("mediaview", m_builder);
     m_media_store = findObject<Gtk::ListStore>("liststore2", m_builder);
+    m_sep1 = findWidget<Gtk::SeparatorToolItem>("sep1", m_builder);
+    m_sep2 = findWidget<Gtk::SeparatorToolItem>("sep2", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -154,6 +156,8 @@ void MainWindow::updateUI() {
     auto theme = Gtk::IconTheme::get_default();
     theme->add_resource_path("/icons/app");
 
+    m_sep1->set_visible(arc::Archive::instance().hasActiveArchive());
+    m_sep2->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
@@ -201,7 +205,7 @@ std::string MainWindow::collectExclusions() {
     bool at_least_one_exclusion = false;
 
     MediaListColumns cols;
-    for (const auto& m : m_media_store->children()) {
+    for (const auto& m: m_media_store->children()) {
         if (m[cols.checkbox]) {
             if (!exclustions.empty()) exclustions.append(",");
             exclustions.append(std::to_string(m[cols.id]));
