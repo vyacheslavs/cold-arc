@@ -121,6 +121,7 @@ namespace arc {
             return folder_id;
         } catch (const std::exception& e) {
             assert_fail(e);
+            return 0;
         }
     }
 

@@ -7,6 +7,26 @@
     <property name="can-focus">False</property>
     <property name="label" translatable="yes"></property>
   </object>
+  <object class="GtkLabel" id="label1">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
+  <object class="GtkLabel" id="label2">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
+  <object class="GtkLabel" id="label3">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
+  <object class="GtkLabel" id="label4">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
   <object class="GtkListStore" id="liststore1">
     <columns>
       <!-- column-name icon -->
@@ -211,7 +231,7 @@
                     <property name="wide-handle">True</property>
                     <child>
                       <object class="GtkScrolledWindow">
-                        <property name="width-request">200</property>
+                        <property name="width-request">400</property>
                         <property name="height-request">400</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
@@ -236,19 +256,95 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow">
+                      <object class="GtkBox">
                         <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="shadow-type">in</property>
+                        <property name="can-focus">False</property>
+                        <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkTreeView" id="mediaview">
+                          <object class="GtkToolbar" id="media_toolbar">
                             <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="model">liststore2</property>
-                            <child internal-child="selection">
-                              <object class="GtkTreeSelection"/>
+                            <property name="can-focus">False</property>
+                            <property name="toolbar-style">icons</property>
+                            <child>
+                              <object class="GtkToolButton" id="new_media_button">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">New media</property>
+                                <property name="use-underline">True</property>
+                                <property name="label-widget">label1</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="select_button">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">Select media</property>
+                                <property name="use-underline">True</property>
+                                <property name="label-widget">label2</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="remove_button">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">Delete media</property>
+                                <property name="use-underline">True</property>
+                                <property name="label-widget">label3</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="lock_button">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="use-underline">True</property>
+                                <property name="label-widget">label4</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
                             </child>
                           </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkScrolledWindow">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="shadow-type">in</property>
+                            <child>
+                              <object class="GtkTreeView" id="mediaview">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="model">liststore2</property>
+                                <property name="search-column">1</property>
+                                <child internal-child="selection">
+                                  <object class="GtkTreeSelection"/>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
                         </child>
                       </object>
                       <packing>
