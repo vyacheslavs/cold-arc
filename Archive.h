@@ -56,12 +56,19 @@ namespace arc {
             }
 
             template<typename F>
-            void browse(F callback, uint64_t parent_id) {
+            void browse(F callback, uint64_t parent_id, const std::string& exclustions = std::string()) {
                 try {
-                    *m_dbhandle
-                        << "SELECT id, typ, name, siz, hash FROM arc_tree WHERE parent_id=? ORDER BY typ DESC"
-                        << parent_id
-                        >> callback;
+                    if (exclustions.empty()) {
+                        *m_dbhandle
+                            << "SELECT id, typ, name, siz, hash FROM arc_tree WHERE parent_id=? ORDER BY typ DESC"
+                            << parent_id
+                            >> callback;
+                    } else {
+                        *m_dbhandle
+                            << Glib::ustring::compose("SELECT id, typ, name, siz, hash, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE parent_id=? AND A=1 ORDER BY typ DESC", exclustions).operator std::string()
+                            << parent_id
+                            >> callback;
+                    }
                 } catch (const std::exception& e) {
                     assert_fail(e);
                 }

@@ -189,6 +189,14 @@ void MainWindow::updateTree() {
     m_tree_store->clear();
     m_contents_store->clear();
 
+    arc::Archive::instance().walkTree(
+        [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
+            sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
+            allocateTreeNodeUsingParentId(name, id, parent_id);
+        }, 0, collectExclusions());
+}
+
+std::string MainWindow::collectExclusions() {
     std::string exclustions;
     bool at_least_one_exclusion = false;
 
@@ -202,12 +210,7 @@ void MainWindow::updateTree() {
     }
     if (!at_least_one_exclusion)
         exclustions.clear();
-
-    arc::Archive::instance().walkTree(
-        [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
-            sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
-            allocateTreeNodeUsingParentId(name, id, parent_id);
-        }, 0, exclustions);
+    return exclustions;
 }
 
 void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64_t id, uint64_t parent_id) {
@@ -253,7 +256,7 @@ void MainWindow::updateContents() {
             irow[cols.size] = (size == 0 ? Glib::ustring{} : Glib::ustring::compose("%1", size));
             irow[cols.hash] = hash;
 
-        }, row[cols.id]);
+        }, row[cols.id], collectExclusions());
     }
 }
 
