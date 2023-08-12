@@ -78,7 +78,7 @@ namespace arc {
             void browseMedia(F callback) {
                 try {
                     *m_dbhandle
-                        << "SELECT id, capacity, name, serial FROM arc_media"
+                        << "SELECT id, capacity, occupied, name, serial FROM arc_media"
                         >> callback;
                 } catch (const std::exception& e) {
                     assert_fail(e);

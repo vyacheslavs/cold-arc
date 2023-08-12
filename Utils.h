@@ -45,53 +45,55 @@ void runDialog(const Glib::ustring& resourcePath, const Glib::ustring& dialogId,
 
 template<typename T, typename Locker = std::mutex>
 class BodyGuard {
-public:
-
-    class Access {
     public:
-        T* operator->() {
-            return get();
-        }
 
-        T* get() const {
-            return &bodyref;
-        }
+        class Access {
+            public:
+                T* operator->() {
+                    return get();
+                }
 
-        T& operator*() {
-            return *get();
+                T* get() const {
+                    return &bodyref;
+                }
+
+                T& operator*() {
+                    return *get();
+                }
+
+            private:
+                friend class BodyGuard;
+
+                Access(T& _b, Locker& _l)
+                    : bodyref(_b),
+                      lockref(_l) { lockref.lock(); }
+
+                T& bodyref;
+                Locker& lockref;
+
+            public:
+                Access(const Access&) = delete;
+
+                Access(Access&&) = delete;
+
+                Access& operator=(const Access&) = delete;
+
+                Access& operator=(Access&&) = delete;
+
+                ~Access() { lockref.unlock(); }
+        };
+
+        template<typename ...Args>
+        explicit BodyGuard(Args... args) :
+            body(std::forward<Args>(args)...) {}
+
+        Access access() {
+            return {body, lock};
         }
 
     private:
-        friend class BodyGuard;
-
-        Access(T& _b, Locker& _l) : bodyref(_b), lockref(_l) { lockref.lock(); }
-
-        T& bodyref;
-        Locker& lockref;
-
-    public:
-        Access(const Access&) = delete;
-
-        Access(Access&&) = delete;
-
-        Access& operator=(const Access&) = delete;
-
-        Access& operator=(Access&&) = delete;
-
-        ~Access() { lockref.unlock(); }
-    };
-
-    template<typename ...Args>
-    explicit BodyGuard(Args... args) :
-            body(std::forward<Args>(args)...) {}
-
-    Access access() {
-        return {body, lock};
-    }
-
-private:
-    T body;
-    Locker lock;
+        T body;
+        Locker lock;
 };
 
 bool endsWith(const Glib::ustring& filename, const Glib::ustring& postfix);
@@ -113,5 +115,19 @@ tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::stri
 
 #define assert_fail(e) \
       __assert_fail (e.what(), __FILE__, __LINE__, __ASSERT_FUNCTION)
+
+struct HumanReadable {
+        std::uintmax_t size{};
+    private:
+        friend
+        std::ostream& operator<<(std::ostream& os, HumanReadable hr) {
+            int i{};
+            double mantissa = hr.size;
+            for (; mantissa >= 1024.; mantissa /= 1024., ++i) {}
+            mantissa = std::ceil(mantissa * 10.) / 10.;
+            os << mantissa << "BKMGTPE"[i];
+            return i == 0 ? os : os << "B";
+        }
+};
 
 #endif //COLD_ARC_GTK_UTILS_H

@@ -27,11 +27,13 @@
       <column type="GdkPixbuf"/>
       <!-- column-name checkbox -->
       <column type="gint"/>
-      <!-- column-name capacity -->
-      <column type="guint64"/>
       <!-- column-name name -->
       <column type="gchararray"/>
       <!-- column-name serial -->
+      <column type="gchararray"/>
+      <!-- column-name percentage -->
+      <column type="gint"/>
+      <!-- column-name percentage_text -->
       <column type="gchararray"/>
       <!-- column-name id -->
       <column type="gulong"/>
