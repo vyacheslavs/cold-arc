@@ -114,7 +114,7 @@ enum class CalculateSHA256Errors {
 tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::string& filename, uint64_t size, const std::function<void(uint64_t)>& callback);
 
 #define assert_fail(e) \
-      __assert_fail (e.what(), __FILE__, __LINE__, __ASSERT_FUNCTION)
+      __assert_fail (e.what(), __FILE__, __LINE__, __PRETTY_FUNCTION__)
 
 struct HumanReadable {
         std::uintmax_t size{};
