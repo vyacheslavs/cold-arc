@@ -67,3 +67,13 @@ void UploadStage2DbUpdate::notifyThreadStopped() {
     }
     m_dispatcher.emit();
 }
+
+uint64_t UploadStage2DbUpdate::calculateTotalSize() const {
+    uint64_t total = 0;
+    for (const auto& item: m_files) {
+        if (item.isSkipped())
+            continue;
+        total += item.getSize();
+    }
+    return total;
+}

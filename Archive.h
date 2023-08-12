@@ -109,20 +109,22 @@ namespace arc {
             class Media {
                 public:
                     Media() = default;
-                    Media(Glib::ustring name, Glib::ustring serial, uint64_t cap) :
-                        m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap) {}
+                    Media(uint64_t id, Glib::ustring name, Glib::ustring serial, uint64_t cap) :
+                        m_id(id), m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap) {}
 
-                    Media(Glib::ustring name, Glib::ustring serial, uint64_t cap, uint64_t occ, uint64_t loc) :
-                        m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap), m_occupied(occ), m_locked(loc) {}
+                    Media(uint64_t id, Glib::ustring name, Glib::ustring serial, uint64_t cap, uint64_t occ, uint64_t loc) :
+                        m_id(id), m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap), m_occupied(occ), m_locked(loc) {}
 
                     [[nodiscard]] const Glib::ustring& name() const;
                     [[nodiscard]] const Glib::ustring& serial() const;
+                    [[nodiscard]] uint64_t id() const;
 
                 private:
                     Glib::ustring m_name;
                     Glib::ustring m_serial;
                     uint64_t m_capacity {0};
                     uint64_t m_occupied {0};
+                    uint64_t m_id{0};
                     bool m_locked {false};
 
                 friend class Archive;
@@ -132,14 +134,11 @@ namespace arc {
                 public:
                     explicit Settings(std::unique_ptr<sqlite::database>& _settings);
                     [[nodiscard]] const Glib::ustring& name() const;
-                    [[nodiscard]] sqlite3_uint64 mediaId() const;
                     [[nodiscard]] const std::unique_ptr<Media>& media() const;
                     void updateName(const Glib::ustring& name);
-                    void updateCurrentMedia(sqlite3_uint64 id);
 
                 private:
                     Glib::ustring m_name;
-                    sqlite3_uint64 m_currentMediaId {0};
                     std::unique_ptr<sqlite::database>& m_dbhandle;
                     std::unique_ptr<Media> m_currentMedia;
 

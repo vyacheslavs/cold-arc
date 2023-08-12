@@ -20,6 +20,7 @@ class UploadStage2DbUpdate {
         UploadStage2DbUpdate(std::vector<UploadFileInfo>&& files, uint64_t parentId);
         void signal_update_notification(sig_proto&& slot);
         void start();
+        uint64_t calculateTotalSize() const;
     private:
         void stage2Main();
         void onDispatcherNotification();

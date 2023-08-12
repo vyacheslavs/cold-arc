@@ -273,7 +273,7 @@ void MainWindow::updateMediaView() {
     MediaListColumns cols;
     arc::Archive::instance().browseMedia([&](sqlite3_uint64 id, sqlite3_uint64 capacity, const std::string& name, const std::string& serial) {
         auto row = *m_media_store->append();
-        if (id == arc::Archive::instance().settings->mediaId())
+        if (id == arc::Archive::instance().settings->media()->id())
             row[cols.active_icon] = Gdk::Pixbuf::create_from_resource("/icons/ca-check.svg");
         row[cols.name] = name;
         row[cols.checkbox] = 1;

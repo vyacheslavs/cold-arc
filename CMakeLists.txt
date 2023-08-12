@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(cold_arc_gtk)
+project(cold_arc_gtk VERSION 1.0.0)
 
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
