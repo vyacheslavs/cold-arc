@@ -31,6 +31,8 @@ class MainWindow : public Gtk::Window {
         Gtk::SeparatorToolItem* m_sep1;
         Gtk::SeparatorToolItem* m_sep2;
         std::unordered_map<uint64_t, Gtk::TreeIter> m_tree_fast_access;
+        Gtk::Toolbar* m_media_toolbar;
+        Gtk::ToolButton* m_media_new_button;
 
         void onNewArchiveButtonClicked();
 

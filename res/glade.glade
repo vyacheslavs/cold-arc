@@ -96,8 +96,8 @@
   </object>
   <object class="GtkWindow" id="main">
     <property name="can-focus">False</property>
-    <property name="default-width">800</property>
-    <property name="default-height">600</property>
+    <property name="default-width">1000</property>
+    <property name="default-height">800</property>
     <property name="icon-name">ca-icon</property>
     <child>
       <object class="GtkBox" id="box1">

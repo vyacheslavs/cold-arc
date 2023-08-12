@@ -19,10 +19,11 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
                                                                                                       m_builder(
                                                                                                           builder) {
 
-    auto applyFontAwesome = [&](auto widget) {
+    auto applyFontAwesome = [&](auto widget, bool resize = true) {
         auto desc = widget->get_pango_context()->get_font_description();
         desc.set_family("Font Awesome 6 Free");
-        desc.set_size(18 * Pango::SCALE);
+        if (resize)
+            desc.set_size(18 * Pango::SCALE);
         desc.set_weight(Pango::WEIGHT_HEAVY);
         widget->get_pango_context()->set_font_description(desc);
     };
@@ -42,6 +43,8 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_media_store = findObject<Gtk::ListStore>("liststore2", m_builder);
     m_sep1 = findWidget<Gtk::SeparatorToolItem>("sep1", m_builder);
     m_sep2 = findWidget<Gtk::SeparatorToolItem>("sep2", m_builder);
+    m_media_toolbar = findWidget<Gtk::Toolbar>("media_toolbar", m_builder);
+    m_media_new_button = findWidget<Gtk::ToolButton>("new_media_button", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -49,6 +52,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     applyFontAwesome(m_archive_settings_button->get_label_widget());
     applyFontAwesome(m_create_folder->get_label_widget());
     applyFontAwesome(m_upload_button->get_label_widget());
+    applyFontAwesome(m_media_new_button->get_label_widget(), false);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
@@ -57,6 +61,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_create_folder->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onCreateFolderClicked));
     m_upload_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onUploadButtonClicked));
     m_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::updateContents));
+    m_media_new_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
@@ -166,6 +171,7 @@ void MainWindow::updateUI() {
     m_sep2->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia());
+    m_media_toolbar->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
     auto title = Glib::ustring("ColdArc");
