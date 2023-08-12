@@ -189,11 +189,25 @@ void MainWindow::updateTree() {
     m_tree_store->clear();
     m_contents_store->clear();
 
+    std::string exclustions;
+    bool at_least_one_exclusion = false;
+
+    MediaListColumns cols;
+    for (const auto& m : m_media_store->children()) {
+        if (m[cols.checkbox]) {
+            if (!exclustions.empty()) exclustions.append(",");
+            exclustions.append(std::to_string(m[cols.id]));
+        } else
+            at_least_one_exclusion = true;
+    }
+    if (!at_least_one_exclusion)
+        exclustions.clear();
+
     arc::Archive::instance().walkTree(
         [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
             sqlite3_uint64 dt, sqlite3_uint64 parent_id) {
             allocateTreeNodeUsingParentId(name, id, parent_id);
-        }, true);
+        }, 0, exclustions);
 }
 
 void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64_t id, uint64_t parent_id) {
@@ -258,6 +272,7 @@ void MainWindow::updateMediaView() {
         row[cols.checkbox] = 1;
         row[cols.capacity] = capacity;
         row[cols.serial] = serial;
+        row[cols.id] = id;
     });
 }
 
@@ -267,6 +282,7 @@ void MainWindow::onMediaToggle(const Glib::ustring& path) {
     if (it != m_media_store->children().end()) {
         const auto& row = *it;
         row[cols.checkbox] = !row[cols.checkbox];
+        updateTree();
     }
 }
 

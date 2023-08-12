@@ -30,20 +30,26 @@ namespace arc {
             uint64_t createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId = 1);
 
             template<typename F>
-            void walkTree(F callback, bool folders_only = false) {
-                walkTree(callback, 0, folders_only);
-            }
-
-            template<typename F>
-            void walkTree(F callback, uint64_t parent_id, bool folders_only = false) {
+            void walkTree(F callback, uint64_t parent_id, const std::string& exclusions = std::string()) {
                 try {
-                    *m_dbhandle
-                        << (folders_only ? "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=? and typ='folder'" : "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=?")
-                        << parent_id
-                        >> [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk, sqlite3_uint64 dt) {
-                            callback(id, typ, name, hash, lnk, dt, parent_id);
-                            walkTree(callback, id, folders_only);
-                        };
+                    // select arc_tree.*, arc_tree_to_media.arc_media_id IN (1) as A from arc_tree inner join arc_tree_to_media on arc_tree.id=arc_tree_to_media.arc_tree_id where arc_tree.parent_id=1 and A=1;
+                    auto lcall = [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk, sqlite3_uint64 dt) {
+                        callback(id, typ, name, hash, lnk, dt, parent_id);
+                        walkTree(callback, id, exclusions);
+                    };
+
+                    if (exclusions.empty()) {
+                        *m_dbhandle
+                            << "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=? and typ='folder'"
+                            << parent_id
+                            >> lcall;
+                            ;
+                    } else {
+                        *m_dbhandle
+                            << Glib::ustring::compose("SELECT id, typ, name, hash, lnk, dt, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE arc_tree.parent_id=? and A=1 AND typ='folder' GROUP BY id", exclusions).operator std::string()
+                            << parent_id
+                            >> lcall;
+                    }
                 } catch (const std::runtime_error& e) {
                     assert_fail(e);
                 }
