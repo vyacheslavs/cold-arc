@@ -62,7 +62,14 @@ namespace arc {
                 << name.operator std::string() << serial.operator std::string() << capacity;
         }
         uint64_t media_id = m_dbhandle->last_insert_rowid();
-        settings->m_currentMedia = std::make_unique<Media>(media_id, name, serial, capacity);
+        {
+            *m_dbhandle
+                << "UPDATE db_settings SET current_media=?"
+                << media_id;
+        }
+        settings->m_current_media = std::make_unique<Media>(m_dbhandle, media_id, name, serial, capacity);
+
+        Signals::instance().update_main_window.emit();
         Signals::instance().update_media_view.emit();
     }
 
@@ -73,7 +80,7 @@ namespace arc {
     bool Archive::hasCurrentMedia() const {
         if (!settings)
             return false;
-        return settings->m_currentMedia.operator bool();
+        return settings->m_current_media.operator bool();
     }
 
     uint64_t Archive::createFolder(const Glib::ustring& name, uint64_t parentId, bool quiet) {
@@ -129,14 +136,16 @@ namespace arc {
         return parentId;
     }
 
-    uint64_t Archive::createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId) {
+    bool Archive::createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId) {
         sqlite3_uint64 idx;
+        bool file_created = true;
         try {
             *m_dbhandle
                 << "INSERT INTO arc_tree (parent_id, typ, name, siz, hash, lnk, dt, dt_org, perm) VALUES (?, 'file', ?, ?, ?, ?, ?, ?, ?)"
                 << parentId << name.operator std::string() << file_info.getSize() << file_info.getHash() << file_info.getPath()
                 << std::time(nullptr) << file_info.getMtime() << file_info.getMode();
         } catch (const sqlite::exceptions::constraint&) { // ignore constraint errors
+            file_created = false;
         } catch (const std::exception& e) {
             assert_fail(e);
         }
@@ -148,7 +157,7 @@ namespace arc {
                     << id << settings->media()->id();
             } catch (const sqlite::exceptions::constraint& e) {}
         }, idx);
-        return 0;
+        return file_created;
     }
 
     std::unique_ptr<Archive> Archive::clone() {
@@ -171,7 +180,7 @@ namespace arc {
             throw WrongDatabaseVersion(COLD_ARC_DB_VERSION, v);
     }
 
-    Archive::Settings::Settings(std::unique_ptr<sqlite::database> &_settings) : m_dbhandle(_settings) {
+    Archive::Settings::Settings(std::unique_ptr<sqlite::database> &dbhandle) : m_dbhandle(dbhandle) {
         uint64_t media_id {0};
         *m_dbhandle
             << "SELECT name, current_media FROM db_settings"
@@ -184,7 +193,7 @@ namespace arc {
                 << "SELECT capacity, occupied, locked, name, serial FROM arc_media WHERE id=?"
                 << media_id
                 >> [&](sqlite3_uint64 capacity, sqlite3_uint64 occupied, sqlite3_uint64 locked, const std::string& name, const std::string& serial) {
-                    m_currentMedia = std::make_unique<Media>(media_id, name, serial, capacity, occupied, locked);
+                    m_current_media = std::make_unique<Media>(m_dbhandle, media_id, name, serial, capacity, occupied, locked);
                 };
         }
     }
@@ -204,7 +213,7 @@ namespace arc {
     }
 
     const std::unique_ptr<Archive::Media> &Archive::Settings::media() const {
-        return m_currentMedia;
+        return m_current_media;
     }
 
     const Glib::ustring &Archive::Media::name() const {
@@ -217,6 +226,31 @@ namespace arc {
 
     uint64_t Archive::Media::id() const {
         return m_id;
+    }
+
+    uint64_t Archive::Media::occupied() const {
+        return m_occupied;
+    }
+
+    uint64_t Archive::Media::capacity() const {
+        return m_capacity;
+    }
+
+    uint64_t Archive::Media::free() const {
+        assert(m_capacity >= m_occupied);
+        return m_capacity - m_occupied;
+    }
+
+    void Archive::Media::occupy(uint64_t size) {
+        assert(m_occupied + size <= m_capacity);
+        m_occupied += size;
+        try {
+            *m_dbhandle
+                << "UPDATE arc_media SET occupied=? WHERE id=?"
+                << m_occupied << id();
+        } catch (const std::exception& e) {
+            assert_fail(e);
+        }
     }
 
 } // arc

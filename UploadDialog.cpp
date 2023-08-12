@@ -131,6 +131,25 @@ void UploadDialog::onRemoveErrButtonClicked() {
 
 void UploadDialog::onNextButtonClicked() {
 
+    // before anything let's check the media
+    uint64_t total = 0;
+    for (const auto& item: m_ready_files) {
+        if (item.isSkipped())
+            continue;
+        total += item.getSize();
+    }
+
+    if (arc::Archive::instance().settings->media()->free() < total) {
+        // not enough place to allocate all those files
+        Gtk::MessageDialog rusure("Not enough space to allocate the files.", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_OK_CANCEL,
+                                  true);
+        rusure.set_secondary_text("You can stop uploading or upload files partially until full");
+        if (rusure.run() == Gtk::RESPONSE_CANCEL) {
+            response(Gtk::RESPONSE_CANCEL);
+            return;
+        }
+    }
+
     onRemoveErrButtonClicked();
 
     m_btn_next->set_sensitive(false);
@@ -140,7 +159,7 @@ void UploadDialog::onNextButtonClicked() {
 
     m_stage2 = std::make_unique<UploadStage2DbUpdate>(std::move(m_ready_files), m_current_folder_parent_id);
     m_stage2->signal_update_notification(sigc::mem_fun(this, &UploadDialog::onStage2Update));
-    m_stage2->start();
+    m_stage2->start(arc::Archive::instance().settings->media()->free());
 }
 
 void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut) {
@@ -162,6 +181,7 @@ void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut) {
         m_progress->set_text("Upload complete");
         m_btn_close->set_sensitive(true);
         m_need_tree_reload = true;
+        response(Gtk::RESPONSE_OK);
     }
 }
 

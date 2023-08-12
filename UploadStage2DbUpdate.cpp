@@ -11,16 +11,25 @@ UploadStage2DbUpdate::UploadStage2DbUpdate(std::vector<UploadFileInfo>&& files, 
     m_dispatcher.connect(sigc::mem_fun(this, &UploadStage2DbUpdate::onDispatcherNotification));
 }
 
-void UploadStage2DbUpdate::stage2Main() {
+void UploadStage2DbUpdate::stage2Main(uint64_t cap_limit) {
 
     std::unique_ptr<arc::Archive> m_db(arc::Archive::clone());
 
+    uint64_t to_upload = 0;
     for (const auto& item: m_files) {
         if (item.isSkipped())
             continue;
 
+        to_upload += item.getSize();
+        if (to_upload > cap_limit) {
+            to_upload -= item.getSize();
+            break;
+        }
+
         auto file_folder = m_db->createPath(item.getFolder(), m_parentId, true);
-        m_db->createFile(item.getBasename(), item, file_folder);
+        if (!m_db->createFile(item.getBasename(), item, file_folder)) {
+            to_upload -= item.getSize();
+        }
 
         if (m_dispatcher.timeToEmit()) {
             {
@@ -30,6 +39,8 @@ void UploadStage2DbUpdate::stage2Main() {
             m_dispatcher.emit(DispatcherEmitPolicy::Throttled);
         }
     }
+
+    m_db->settings->media()->occupy(to_upload);
 
     notifyThreadStopped();
 }
@@ -56,8 +67,8 @@ void UploadStage2DbUpdate::signal_update_notification(UploadStage2DbUpdate::sig_
     m_gui_slot.connect(std::move(slot));
 }
 
-void UploadStage2DbUpdate::start() {
-    m_stage2_thread = std::make_unique<std::thread>(&UploadStage2DbUpdate::stage2Main, this);
+void UploadStage2DbUpdate::start(uint64_t cap_limit) {
+    m_stage2_thread = std::make_unique<std::thread>(&UploadStage2DbUpdate::stage2Main, this, cap_limit);
 }
 
 void UploadStage2DbUpdate::notifyThreadStopped() {
@@ -66,14 +77,4 @@ void UploadStage2DbUpdate::notifyThreadStopped() {
         acc->emplace_back(false, 0);
     }
     m_dispatcher.emit();
-}
-
-uint64_t UploadStage2DbUpdate::calculateTotalSize() const {
-    uint64_t total = 0;
-    for (const auto& item: m_files) {
-        if (item.isSkipped())
-            continue;
-        total += item.getSize();
-    }
-    return total;
 }
