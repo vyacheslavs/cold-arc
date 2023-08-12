@@ -296,7 +296,7 @@ namespace arc {
 
             {
                 *m_dbhandle
-                    << "DELETE FROM arc_tree_to_media WHERE arc_tree_id=?"
+                    << "DELETE FROM arc_tree_to_media WHERE arc_media_id=?"
                     << m_id;
             }
 
