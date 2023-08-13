@@ -9,11 +9,15 @@
 
 class NewFolderDialog : public Gtk::Dialog {
 
-public:
-    NewFolderDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
-    static void run(uint64_t parentId);
+    public:
+        NewFolderDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
 
-    Gtk::Entry* edit_folder_name;
+        static void run(uint64_t parentId);
+
+    private:
+        void onActivate();
+
+        Gtk::Entry* edit_folder_name;
 };
 
 

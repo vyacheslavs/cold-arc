@@ -81,6 +81,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/glade.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/settings.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/newfolder.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/newmedia.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/uploaddialog.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/updlg.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db

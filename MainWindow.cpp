@@ -19,10 +19,11 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
                                                                                                       m_builder(
                                                                                                           builder) {
 
-    auto applyFontAwesome = [&](auto widget) {
+    auto applyFontAwesome = [&](auto widget, bool resize = true) {
         auto desc = widget->get_pango_context()->get_font_description();
         desc.set_family("Font Awesome 6 Free");
-        desc.set_size(18 * Pango::SCALE);
+        if (resize)
+            desc.set_size(18 * Pango::SCALE);
         desc.set_weight(Pango::WEIGHT_HEAVY);
         widget->get_pango_context()->set_font_description(desc);
     };
@@ -42,6 +43,11 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_media_store = findObject<Gtk::ListStore>("liststore2", m_builder);
     m_sep1 = findWidget<Gtk::SeparatorToolItem>("sep1", m_builder);
     m_sep2 = findWidget<Gtk::SeparatorToolItem>("sep2", m_builder);
+    m_media_toolbar = findWidget<Gtk::Toolbar>("media_toolbar", m_builder);
+    m_media_new_button = findWidget<Gtk::ToolButton>("new_media_button", m_builder);
+    m_media_view_selection = findObject<Gtk::TreeSelection>("media_view_selection", m_builder);
+    m_media_view_select_button = findWidget<Gtk::ToolButton>("select_button", m_builder);
+    m_media_view_remove_button = findWidget<Gtk::ToolButton>("remove_button", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -49,6 +55,9 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     applyFontAwesome(m_archive_settings_button->get_label_widget());
     applyFontAwesome(m_create_folder->get_label_widget());
     applyFontAwesome(m_upload_button->get_label_widget());
+    applyFontAwesome(m_media_new_button->get_label_widget(), false);
+    applyFontAwesome(m_media_view_select_button->get_label_widget(), false);
+    applyFontAwesome(m_media_view_remove_button->get_label_widget(), false);
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
@@ -57,6 +66,12 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_create_folder->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onCreateFolderClicked));
     m_upload_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onUploadButtonClicked));
     m_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::updateContents));
+    m_media_new_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewMediaButtonClicked));
+    m_media_view_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::onMediaViewSelectionChanged));
+    m_media_view_select_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onMediaViewSelectButton));
+    m_media_view_remove_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onMediaViewRemoveButtonClicked));
+    m_tree->signal_row_collapsed().connect(sigc::mem_fun(this, &MainWindow::onTreeViewRowCollapsed));
+    m_tree->signal_row_expanded().connect(sigc::mem_fun(this, &MainWindow::onTreeViewRowExpanded));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
@@ -166,8 +181,12 @@ void MainWindow::updateUI() {
     m_sep2->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia());
+    m_media_toolbar->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
+
+    onMediaViewSelectionChanged();
+
     auto title = Glib::ustring("ColdArc");
     if (arc::Archive::instance().hasActiveArchive()) {
         title = Glib::ustring::compose("ColdArc [%1]", arc::Archive::instance().settings->name());
@@ -198,6 +217,8 @@ void MainWindow::updateTree() {
 
     m_tree_store->clear();
     m_contents_store->clear();
+    m_tree_fast_access.clear();
+    m_colapse_expand_records_cached = std::move(m_colapse_expand_records);
 
     arc::Archive::instance().walkTree(
         [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
@@ -230,6 +251,12 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64
         auto t_it = m_tree_fast_access.find(parent_id);
         if (t_it != m_tree_fast_access.end()) {
             allocateTreeNode(m_tree_store->append(t_it->second->children()), id, name);
+
+            auto cached = m_colapse_expand_records_cached.find(id);
+            if (cached != m_colapse_expand_records_cached.end() && cached->second) {
+                m_tree->expand_row(m_tree_store->get_path(t_it->second), true);
+                m_colapse_expand_records[id] = true;
+            }
         }
     }
 }
@@ -300,6 +327,62 @@ void MainWindow::onMediaToggle(const Glib::ustring& path) {
         const auto& row = *it;
         row[cols.checkbox] = !row[cols.checkbox];
         updateTree();
+    }
+}
+
+void MainWindow::onMediaViewSelectionChanged() {
+    auto sel = m_media_view_selection->get_selected();
+    auto outcome = false;
+    if (!sel) {
+        outcome = false;
+    } else {
+        const auto& row = *sel;
+        MediaListColumns cols;
+        outcome = row[cols.id] != arc::Archive::instance().settings->media()->id();
+    }
+    m_media_view_select_button->set_sensitive(outcome);
+    m_media_view_remove_button->set_sensitive(outcome);
+}
+
+void MainWindow::onMediaViewSelectButton() {
+    auto sel = m_media_view_selection->get_selected();
+    if (!sel)
+        return;
+
+    MediaListColumns cols;
+    auto new_id = (*sel)[cols.id];
+    arc::Archive::instance().settings->switchMedia(new_id);
+}
+
+void MainWindow::onMediaViewRemoveButtonClicked() {
+    auto sel = m_media_view_selection->get_selected();
+    if (!sel)
+        return;
+
+    MediaListColumns cols;
+    auto media = arc::Archive::instance().settings->media()->getMedia((*sel)[cols.id]);
+    Gtk::MessageDialog dlg("Are you sure you want to delete this media?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+    dlg.set_secondary_text(Glib::ustring::compose("All files and folders from this media (%1) will be deleted from the archive!", media->name()));
+
+    if (dlg.run() == Gtk::RESPONSE_NO)
+        return;
+
+    media->remove();
+}
+
+void MainWindow::onTreeViewRowCollapsed(const Gtk::TreeIter& iter, const Gtk::TreePath& path) {
+    FolderModelColumns cols;
+    if (iter != m_tree_store->children().end()) {
+        const auto& row = (*iter);
+        m_colapse_expand_records[row[cols.id]] = false;
+    }
+}
+
+void MainWindow::onTreeViewRowExpanded(const Gtk::TreeIter& iter, const Gtk::TreePath& path) {
+    FolderModelColumns cols;
+    if (iter != m_tree_store->children().end()) {
+        const auto& row = (*iter);
+        m_colapse_expand_records[row[cols.id]] = true;
     }
 }
 

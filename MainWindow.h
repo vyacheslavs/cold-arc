@@ -31,6 +31,11 @@ class MainWindow : public Gtk::Window {
         Gtk::SeparatorToolItem* m_sep1;
         Gtk::SeparatorToolItem* m_sep2;
         std::unordered_map<uint64_t, Gtk::TreeIter> m_tree_fast_access;
+        Gtk::Toolbar* m_media_toolbar;
+        Gtk::ToolButton* m_media_new_button;
+        Gtk::TreeSelection* m_media_view_selection;
+        Gtk::ToolButton* m_media_view_select_button;
+        Gtk::ToolButton* m_media_view_remove_button;
 
         void onNewArchiveButtonClicked();
 
@@ -50,9 +55,20 @@ class MainWindow : public Gtk::Window {
 
         void updateMediaView();
 
+        void onMediaViewSelectionChanged();
+
         void onUploadButtonClicked();
 
+        void onMediaViewSelectButton();
+
+        void onMediaViewRemoveButtonClicked();
+
         void onMediaToggle(const Glib::ustring& path);
+
+        void onTreeViewRowCollapsed(const Gtk::TreeIter& iter, const Gtk::TreePath& path);
+        void onTreeViewRowExpanded(const Gtk::TreeIter& iter, const Gtk::TreePath& path);
+        std::unordered_map<uint64_t, bool> m_colapse_expand_records;
+        std::unordered_map<uint64_t, bool> m_colapse_expand_records_cached;
 
         uint64_t currentFolderParentId();
 

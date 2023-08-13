@@ -65,7 +65,7 @@ namespace arc {
                             >> callback;
                     } else {
                         *m_dbhandle
-                            << Glib::ustring::compose("SELECT id, typ, name, siz, hash, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE parent_id=? AND A=1 ORDER BY typ DESC", exclustions).operator std::string()
+                            << Glib::ustring::compose("SELECT id, typ, name, siz, hash, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE parent_id=? AND A=1 GROUP BY id ORDER BY typ DESC", exclustions).operator std::string()
                             << parent_id
                             >> callback;
                     }
@@ -104,15 +104,11 @@ namespace arc {
             [[nodiscard]] bool hasActiveArchive() const;
             [[nodiscard]] bool hasCurrentMedia() const;
 
-        private:
-
             class Media {
                 public:
-                    Media(std::unique_ptr<sqlite::database>& dbhandle, const uint64_t id, Glib::ustring name, Glib::ustring serial, uint64_t cap) :
-                        m_dbhandle(dbhandle), m_id(id), m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap) {}
+                    Media(std::unique_ptr<sqlite::database>& dbhandle, uint64_t id);
 
-                    Media(std::unique_ptr<sqlite::database>& dbhandle, uint64_t id, Glib::ustring name, Glib::ustring serial, uint64_t cap, uint64_t occ, uint64_t loc) :
-                        m_dbhandle(dbhandle), m_id(id), m_name(std::move(name)), m_serial(std::move(serial)), m_capacity(cap), m_occupied(occ), m_locked(loc) {}
+                    std::unique_ptr<Media> getMedia(uint64_t id);
 
                     void occupy(uint64_t size);
                     [[nodiscard]] const Glib::ustring& name() const;
@@ -121,6 +117,7 @@ namespace arc {
                     [[nodiscard]] uint64_t capacity() const;
                     [[nodiscard]] uint64_t free() const;
                     [[nodiscard]] uint64_t id() const;
+                    void remove();
 
                 private:
                     Glib::ustring m_name;
@@ -134,12 +131,15 @@ namespace arc {
                 friend class Archive;
             };
 
+        private:
+
             class Settings {
                 public:
                     explicit Settings(std::unique_ptr<sqlite::database>& dbhandle);
                     [[nodiscard]] const Glib::ustring& name() const;
                     [[nodiscard]] const std::unique_ptr<Media>& media() const;
                     void updateName(const Glib::ustring& name);
+                    void switchMedia(uint64_t new_id);
 
                 private:
                     Glib::ustring m_name;

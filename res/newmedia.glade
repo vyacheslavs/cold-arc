@@ -10,6 +10,9 @@
   <object class="GtkDialog" id="settings_win">
     <property name="width-request">600</property>
     <property name="can-focus">False</property>
+    <property name="title" translatable="yes">Add new media to the project</property>
+    <property name="modal">True</property>
+    <property name="icon-name">ca_icon</property>
     <property name="type-hint">dialog</property>
     <child internal-child="vbox">
       <object class="GtkBox">
@@ -143,7 +146,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Capacity:</property>
+                <property name="label" translatable="yes">Capacity (in MB):</property>
               </object>
               <packing>
                 <property name="expand">False</property>

@@ -67,7 +67,7 @@ namespace arc {
                 << "UPDATE db_settings SET current_media=?"
                 << media_id;
         }
-        settings->m_current_media = std::make_unique<Media>(m_dbhandle, media_id, name, serial, capacity);
+        settings->m_current_media = std::make_unique<Media>(m_dbhandle, media_id);
 
         Signals::instance().update_main_window.emit();
         Signals::instance().update_media_view.emit();
@@ -121,6 +121,7 @@ namespace arc {
             return folder_id;
         } catch (const std::exception& e) {
             assert_fail(e);
+            return 0;
         }
     }
 
@@ -189,12 +190,7 @@ namespace arc {
                 media_id = id;
         };
         if (media_id > 0) {
-            *m_dbhandle
-                << "SELECT capacity, occupied, locked, name, serial FROM arc_media WHERE id=?"
-                << media_id
-                >> [&](sqlite3_uint64 capacity, sqlite3_uint64 occupied, sqlite3_uint64 locked, const std::string& name, const std::string& serial) {
-                    m_current_media = std::make_unique<Media>(m_dbhandle, media_id, name, serial, capacity, occupied, locked);
-                };
+            m_current_media = std::make_unique<Media>(m_dbhandle, media_id);
         }
     }
 
@@ -214,6 +210,18 @@ namespace arc {
 
     const std::unique_ptr<Archive::Media> &Archive::Settings::media() const {
         return m_current_media;
+    }
+
+    void Archive::Settings::switchMedia(uint64_t new_id) {
+        try {
+            *m_dbhandle
+                << "UPDATE db_settings SET current_media=?"
+                << new_id;
+        } catch (const std::exception& e) {
+            assert_fail(e);
+        }
+        m_current_media = std::make_unique<Media>(m_dbhandle, new_id);
+        Signals::instance().update_media_view.emit();
     }
 
     const Glib::ustring &Archive::Media::name() const {
@@ -248,6 +256,60 @@ namespace arc {
             *m_dbhandle
                 << "UPDATE arc_media SET occupied=? WHERE id=?"
                 << m_occupied << id();
+        } catch (const std::exception& e) {
+            assert_fail(e);
+        }
+    }
+
+    Archive::Media::Media(std::unique_ptr<sqlite::database>& dbhandle, uint64_t id) : m_dbhandle(dbhandle) {
+        try {
+            *m_dbhandle
+                << "SELECT capacity, occupied, locked, name, serial FROM arc_media WHERE id=?"
+                << id
+                >> [&](sqlite3_uint64 capacity, sqlite3_uint64 occupied, sqlite3_uint64 locked, const std::string& name, const std::string& serial) {
+                    m_capacity = capacity;
+                    m_occupied = occupied;
+                    m_locked = locked;
+                    m_name = name;
+                    m_serial = serial;
+                    m_id = id;
+                };
+        } catch (const std::exception& e) {
+            assert_fail(e);
+        }
+    }
+
+    std::unique_ptr<arc::Archive::Media> Archive::Media::getMedia(uint64_t id) {
+        return std::make_unique<arc::Archive::Media>(m_dbhandle, id);
+    }
+
+    void Archive::Media::remove() {
+        try {
+            *m_dbhandle
+                << "SELECT id, COUNT(id) AS A FROM arc_tree INNER JOIN arc_tree_to_media ON (id=arc_tree_id) GROUP BY id HAVING A=1 and arc_media_id=?"
+                << m_id
+                >> [&](sqlite3_uint64 del_id) {
+                    *m_dbhandle
+                        << "DELETE FROM arc_tree WHERE id=?"
+                        << del_id;
+                };
+
+            {
+                *m_dbhandle
+                    << "DELETE FROM arc_tree_to_media WHERE arc_media_id=?"
+                    << m_id;
+            }
+
+            {
+                *m_dbhandle
+                    << "DELETE FROM arc_media WHERE id=?"
+                    << m_id;
+            }
+
+            Signals::instance().update_main_window.emit();
+            Signals::instance().update_tree.emit();
+            Signals::instance().update_media_view.emit();
+
         } catch (const std::exception& e) {
             assert_fail(e);
         }
