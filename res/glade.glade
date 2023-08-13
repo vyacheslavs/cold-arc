@@ -27,6 +27,11 @@
     <property name="can-focus">False</property>
     <property name="label" translatable="yes"></property>
   </object>
+  <object class="GtkLabel" id="label5">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="label" translatable="yes"></property>
+  </object>
   <object class="GtkListStore" id="liststore1">
     <columns>
       <!-- column-name icon -->
@@ -207,6 +212,18 @@
                 <property name="homogeneous">True</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkToolButton" id="delete_button">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="use-underline">True</property>
+                <property name="label-widget">label5</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -370,9 +387,8 @@
                         <property name="can-focus">True</property>
                         <property name="model">liststore1</property>
                         <property name="search-column">0</property>
-                        <property name="enable-tree-lines">True</property>
                         <child internal-child="selection">
-                          <object class="GtkTreeSelection"/>
+                          <object class="GtkTreeSelection" id="contents_selection"/>
                         </child>
                       </object>
                     </child>

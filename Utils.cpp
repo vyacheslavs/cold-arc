@@ -100,3 +100,12 @@ tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::stri
     }
     return os.str();
 }
+
+void applyFontAwesome(Gtk::Widget* widget, bool resize) {
+auto desc = widget->get_pango_context()->get_font_description();
+desc.set_family("Font Awesome 6 Free");
+if (resize)
+desc.set_size(18 * Pango::SCALE);
+desc.set_weight(Pango::WEIGHT_HEAVY);
+widget->get_pango_context()->set_font_description(desc);
+};

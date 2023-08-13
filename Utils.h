@@ -134,4 +134,6 @@ struct HumanReadable {
         }
 };
 
+void applyFontAwesome(Gtk::Widget* widget, bool resize = true);
+
 #endif //COLD_ARC_GTK_UTILS_H
