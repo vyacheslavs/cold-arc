@@ -65,6 +65,11 @@ class MainWindow : public Gtk::Window {
 
         void onMediaToggle(const Glib::ustring& path);
 
+        void onTreeViewRowCollapsed(const Gtk::TreeIter& iter, const Gtk::TreePath& path);
+        void onTreeViewRowExpanded(const Gtk::TreeIter& iter, const Gtk::TreePath& path);
+        std::unordered_map<uint64_t, bool> m_colapse_expand_records;
+        std::unordered_map<uint64_t, bool> m_colapse_expand_records_cached;
+
         uint64_t currentFolderParentId();
 
         template<typename A, typename B, typename C>

@@ -36,7 +36,6 @@ private:
     Gtk::Button* m_btn_close;
     std::vector<UploadFileInfo> m_ready_files;
     uint64_t m_current_folder_parent_id;
-    bool m_need_tree_reload {false};
 };
 
 

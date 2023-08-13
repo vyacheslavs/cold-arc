@@ -47,7 +47,7 @@ UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<
 bool UploadDialog::run(uint64_t current_folder_parent_id, UploadFilesCollection&& files) {
     bool ret = false;
     runDialog<UploadDialog>("/main/updlg.glade", "upload_dialog", [&](UploadDialog* dlg, int rc) {
-        ret = dlg->m_need_tree_reload;
+        ret = rc == Gtk::RESPONSE_OK;
     }, current_folder_parent_id, files);
     return ret;
 }
@@ -180,7 +180,6 @@ void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut) {
         m_progress->set_fraction(1);
         m_progress->set_text("Upload complete");
         m_btn_close->set_sensitive(true);
-        m_need_tree_reload = true;
         response(Gtk::RESPONSE_OK);
     }
 }

@@ -70,6 +70,8 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_media_view_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::onMediaViewSelectionChanged));
     m_media_view_select_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onMediaViewSelectButton));
     m_media_view_remove_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onMediaViewRemoveButtonClicked));
+    m_tree->signal_row_collapsed().connect(sigc::mem_fun(this, &MainWindow::onTreeViewRowCollapsed));
+    m_tree->signal_row_expanded().connect(sigc::mem_fun(this, &MainWindow::onTreeViewRowExpanded));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
@@ -215,6 +217,8 @@ void MainWindow::updateTree() {
 
     m_tree_store->clear();
     m_contents_store->clear();
+    m_tree_fast_access.clear();
+    m_colapse_expand_records_cached = std::move(m_colapse_expand_records);
 
     arc::Archive::instance().walkTree(
         [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk,
@@ -247,6 +251,12 @@ void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64
         auto t_it = m_tree_fast_access.find(parent_id);
         if (t_it != m_tree_fast_access.end()) {
             allocateTreeNode(m_tree_store->append(t_it->second->children()), id, name);
+
+            auto cached = m_colapse_expand_records_cached.find(id);
+            if (cached != m_colapse_expand_records_cached.end() && cached->second) {
+                m_tree->expand_row(m_tree_store->get_path(t_it->second), true);
+                m_colapse_expand_records[id] = true;
+            }
         }
     }
 }
@@ -358,5 +368,21 @@ void MainWindow::onMediaViewRemoveButtonClicked() {
         return;
 
     media->remove();
+}
+
+void MainWindow::onTreeViewRowCollapsed(const Gtk::TreeIter& iter, const Gtk::TreePath& path) {
+    FolderModelColumns cols;
+    if (iter != m_tree_store->children().end()) {
+        const auto& row = (*iter);
+        m_colapse_expand_records[row[cols.id]] = false;
+    }
+}
+
+void MainWindow::onTreeViewRowExpanded(const Gtk::TreeIter& iter, const Gtk::TreePath& path) {
+    FolderModelColumns cols;
+    if (iter != m_tree_store->children().end()) {
+        const auto& row = (*iter);
+        m_colapse_expand_records[row[cols.id]] = true;
+    }
 }
 

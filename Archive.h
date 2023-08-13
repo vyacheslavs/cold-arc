@@ -65,7 +65,7 @@ namespace arc {
                             >> callback;
                     } else {
                         *m_dbhandle
-                            << Glib::ustring::compose("SELECT id, typ, name, siz, hash, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE parent_id=? AND A=1 ORDER BY typ DESC", exclustions).operator std::string()
+                            << Glib::ustring::compose("SELECT id, typ, name, siz, hash, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE parent_id=? AND A=1 GROUP BY id ORDER BY typ DESC", exclustions).operator std::string()
                             << parent_id
                             >> callback;
                     }
