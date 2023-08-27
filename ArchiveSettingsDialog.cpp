@@ -13,8 +13,15 @@ ArchiveSettingsDialog::ArchiveSettingsDialog(Gtk::Dialog::BaseObjectType *win, c
 
 void ArchiveSettingsDialog::run() {
     runDialog<ArchiveSettingsDialog>("/main/settings.glade", "settings_win", [](ArchiveSettingsDialog* dlg, int rc){
-        if (rc == Gtk::RESPONSE_OK)
-            arc::Archive::instance().settings->updateName(dlg->getArchiveName());
+        if (rc == Gtk::RESPONSE_OK) {
+            auto p = arc::Archive::instance().savePoint();
+            try {
+                arc::Archive::instance().settings->updateName(dlg->getArchiveName());
+            } catch (const sqlite::sqlite_exception& e) {
+                p.rollback();
+                sqliteError(e);
+            }
+        }
     });
 }
 

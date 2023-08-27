@@ -113,7 +113,28 @@ void MainWindow::onNewArchiveButtonClicked() {
     newArcDlg.add_filter(dbFilter);
 
     if (newArcDlg.run() == Gtk::RESPONSE_OK) {
-        arc::Archive::instance().newArchive(newArcDlg.get_filename());
+        try {
+            arc::Archive::instance().newArchive(newArcDlg.get_filename());
+        } catch (const WrongDatabaseVersion& e) {
+            Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to create archive %1", newArcDlg.get_filename()));
+            dlg.set_secondary_text(e.what());
+            dlg.run();
+        } catch (const sqlite::sqlite_exception& e) {
+            Gtk::MessageDialog dlg("Sqlite error");
+            dlg.set_secondary_text(e.what());
+            dlg.run();
+            Signals::instance().app_quit.emit();
+        } catch (const DBNotThreadSafe& e) {
+            Gtk::MessageDialog dlg("Database error");
+            dlg.set_secondary_text(e.what());
+            dlg.run();
+            Signals::instance().app_quit.emit();
+        } catch (const ExtractResourceException& e) {
+            Gtk::MessageDialog dlg("Resource error");
+            dlg.set_secondary_text(e.what());
+            dlg.run();
+            Signals::instance().app_quit.emit();
+        }
     }
 }
 
@@ -131,7 +152,20 @@ void MainWindow::onOpenArchiveButtonClicked() {
     openArcDlg.add_filter(dbFilter);
 
     if (openArcDlg.run() == Gtk::RESPONSE_OK) {
-        arc::Archive::instance().openArchive(openArcDlg.get_filename());
+        try {
+            arc::Archive::instance().openArchive(openArcDlg.get_filename());
+        } catch (const WrongDatabaseVersion& e) {
+            Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to open archive %1", openArcDlg.get_filename()));
+            dlg.set_secondary_text(e.what());
+            dlg.run();
+        } catch (const sqlite::sqlite_exception& e) {
+            sqliteError(e);
+        } catch (const DBNotThreadSafe& e) {
+            Gtk::MessageDialog dlg("Database error");
+            dlg.set_secondary_text(e.what());
+            dlg.run();
+            Signals::instance().app_quit.emit();
+        }
     }
 }
 
@@ -221,21 +255,25 @@ uint64_t MainWindow::currentFolderParentId() {
 }
 
 void MainWindow::updateContents() {
-    if (m_selection->get_selected()) {
-        ContentsModelColumns cols;
-        auto row = *(m_tree->get_selection()->get_selected());
+    try {
+        if (m_selection->get_selected()) {
+            ContentsModelColumns cols;
+            auto row = *(m_tree->get_selection()->get_selected());
 
-        m_contents_store->clear();
-        arc::Archive::instance().browse([&](sqlite3_uint64 id, const std::string& typ, const std::string& name, sqlite3_uint64 size, const std::string& hash) {
+            m_contents_store->clear();
+            arc::Archive::instance().browse([&](sqlite3_uint64 id, const std::string& typ, const std::string& name, sqlite3_uint64 size, const std::string& hash) {
 
-            auto irow = *m_contents_store->append();
-            irow[cols.name] = name;
-            irow[cols.typ] = Gdk::Pixbuf::create_from_resource(typ == "folder" ? "/icons/ca-folder-1.svg" : "/icons/ca-file.svg");
-            irow[cols.id] = id;
-            irow[cols.size] = (size == 0 ? Glib::ustring{} : Glib::ustring::compose("%1", size));
-            irow[cols.hash] = hash;
+                auto irow = *m_contents_store->append();
+                irow[cols.name] = name;
+                irow[cols.typ] = Gdk::Pixbuf::create_from_resource(typ == "folder" ? "/icons/ca-folder-1.svg" : "/icons/ca-file.svg");
+                irow[cols.id] = id;
+                irow[cols.size] = (size == 0 ? Glib::ustring{} : Glib::ustring::compose("%1", size));
+                irow[cols.hash] = hash;
 
-        }, row[cols.id], m_media_view->collectExclusions());
+            }, row[cols.id], m_media_view->collectExclusions());
+        }
+    } catch (const sqlite::sqlite_exception& e) {
+        sqliteError(e);
     }
 }
 
@@ -256,21 +294,25 @@ void MainWindow::onTreeViewRowExpanded(const Gtk::TreeIter& iter, const Gtk::Tre
 }
 
 void MainWindow::onDeleteButtonClicked() {
-    std::set<uint64_t> medias;
-    std::vector<uint64_t> items;
+    try {
+        std::set<uint64_t> medias;
+        std::vector<uint64_t> items;
 
-    m_contents_selection->selected_foreach_iter([&](const auto& it) {
-        const auto& row = *it;
-        ContentsModelColumns cols;
+        m_contents_selection->selected_foreach_iter([&](const auto& it) {
+            const auto& row = *it;
+            ContentsModelColumns cols;
 
-        uint64_t arc_id = row[cols.id];
-        items.push_back(arc_id);
+            uint64_t arc_id = row[cols.id];
+            items.push_back(arc_id);
 
-        arc::Archive::instance().getMediaForArcId(arc_id, [&](sqlite3_uint64 media_id) {
-            medias.insert(media_id);
+            arc::Archive::instance().getMediaForArcId(arc_id, [&](sqlite3_uint64 media_id) {
+                medias.insert(media_id);
+            });
         });
-    });
-    DeleteDialog::run(std::move(items), std::move(medias));
+        DeleteDialog::run(std::move(items), std::move(medias));
+    } catch (const sqlite::sqlite_exception& e) {
+        sqliteError(e);
+    }
 }
 
 void MainWindow::updateContentsSelection() {

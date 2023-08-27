@@ -20,7 +20,7 @@ public:
 private:
 
     void onStage1Notification(const UploadFileInfo& notification);
-    void onStage2Update(uint64_t id, uint64_t total, bool shut);
+    void onStage2Update(uint64_t id, uint64_t total, bool shut, std::shared_ptr<ExceptionCargoBase> e);
     void onRemoveButtonClicked();
     void onRemoveErrButtonClicked();
     void onNextButtonClicked();

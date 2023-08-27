@@ -25,8 +25,14 @@ NewMediaDialog::NewMediaDialog(Gtk::Dialog::BaseObjectType *win, const Glib::Ref
 void NewMediaDialog::run() {
     runDialog<NewMediaDialog>("/main/newmedia.glade", "settings_win", [](NewMediaDialog* dlg, int rc){
         if (rc == Gtk::RESPONSE_OK) {
-            auto [name, serial, cap] = dlg->get();
-            arc::Archive::instance().newMedia(name, serial, cap);
+            auto p = arc::Archive::instance().savePoint();
+            try {
+                auto [name, serial, cap] = dlg->get();
+                arc::Archive::instance().newMedia(name, serial, cap);
+            } catch (const sqlite::sqlite_exception& e) {
+                p.rollback();
+                sqliteError(e, false);
+            }
         }
     });
 }

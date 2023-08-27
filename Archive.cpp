@@ -10,7 +10,7 @@
 #include "Exceptions.h"
 #include <ctime>
 #include <filesystem>
-#include <cstdint>
+#include <chrono>
 
 namespace arc {
     Archive &Archive::instance() {
@@ -33,26 +33,18 @@ namespace arc {
     }
 
     void Archive::openArchive(const Glib::ustring &filename) {
-        try {
-            const auto fn = endsWith(filename, ".db") ? filename : filename+".db";
+        const auto fn = endsWith(filename, ".db") ? filename : filename+".db";
 
-            init(fn);
+        init(fn);
 
-            if (!sqlite3_threadsafe())
-                throw std::runtime_error("sqlite3 is not thread safe");
+        if (!sqlite3_threadsafe())
+            throw DBNotThreadSafe();
 
-            sqlite3_config(SQLITE_CONFIG_SERIALIZED);
+        sqlite3_config(SQLITE_CONFIG_SERIALIZED);
 
-            Signals::instance().update_main_window.emit();
-            Signals::instance().update_tree.emit();
-            Signals::instance().update_media_view.emit();
-        } catch (const WrongDatabaseVersion& e) {
-            Gtk::MessageDialog dlg(Glib::ustring::compose("Failed to open archive %1", filename));
-            dlg.set_secondary_text(e.what());
-            dlg.run();
-        } catch (const std::exception& e) {
-            assert_fail(e);
-        }
+        Signals::instance().update_main_window.emit();
+        Signals::instance().update_tree.emit();
+        Signals::instance().update_media_view.emit();
     }
 
     void Archive::newMedia(const Glib::ustring &name, const Glib::ustring &serial, uint64_t capacity) {
@@ -110,18 +102,13 @@ namespace arc {
                 dlg.run();
             }
             sqlite3_uint64 folder_id;
-            try {
+            {
                 *m_dbhandle
                     << "SELECT id FROM arc_tree WHERE name=? AND parent_id=?"
                     << name.operator std::string() << parentId
                     >> folder_id;
-            } catch (const std::runtime_error& e) {
-                assert_fail(e);
             }
             return folder_id;
-        } catch (const std::exception& e) {
-            assert_fail(e);
-            return 0;
         }
     }
 
@@ -147,8 +134,6 @@ namespace arc {
                 << std::time(nullptr) << file_info.getMtime() << file_info.getMode();
         } catch (const sqlite::exceptions::constraint&) { // ignore constraint errors
             file_created = false;
-        } catch (const std::exception& e) {
-            assert_fail(e);
         }
         idx = m_dbhandle->last_insert_rowid();
         walkRoot([&](sqlite3_uint64 id) {
@@ -181,34 +166,33 @@ namespace arc {
             throw WrongDatabaseVersion(COLD_ARC_DB_VERSION, v);
     }
     void Archive::remove(uint64_t id, const std::vector<uint64_t>& media_ids) {
-        try {
-            std::set<uint64_t> media_set(media_ids.begin(), media_ids.end());
-            {
-                *m_dbhandle
-                    << "SELECT siz, arc_media_id FROM arc_tree INNER JOIN arc_tree_to_media ON (arc_tree.id=arc_tree_to_media.arc_tree_id) WHERE arc_tree.id=?"
-                    << id
-                    >> [&](sqlite3_uint64 siz, sqlite3_uint64 mid) {
-                    if (media_set.count(mid)) {
-                        {
-                            *m_dbhandle << "UPDATE arc_media SET occupied=occupied-? WHERE id=?" << siz << mid;
-                        }
-                        {
-                            *m_dbhandle
-                                << "DELETE FROM arc_tree_to_media WHERE arc_tree_id=? AND arc_media_id=?"
-                                << id << mid;
-                        }
+        std::set<uint64_t> media_set(media_ids.begin(), media_ids.end());
+        {
+            *m_dbhandle
+                << "SELECT siz, arc_media_id FROM arc_tree INNER JOIN arc_tree_to_media ON (arc_tree.id=arc_tree_to_media.arc_tree_id) WHERE arc_tree.id=?"
+                << id
+                >> [&](sqlite3_uint64 siz, sqlite3_uint64 mid) {
+                if (media_set.count(mid)) {
+                    {
+                        *m_dbhandle << "UPDATE arc_media SET occupied=occupied-? WHERE id=?" << siz << mid;
                     }
-                };
-            }
-
-            {
-                *m_dbhandle
-                    << "DELETE FROM arc_tree WHERE id=?"
-                    << id;
-            }
-        } catch (const std::exception& e) {
-            assert_fail(e);
+                    {
+                        *m_dbhandle
+                            << "DELETE FROM arc_tree_to_media WHERE arc_tree_id=? AND arc_media_id=?"
+                            << id << mid;
+                    }
+                }
+            };
         }
+        {
+            *m_dbhandle
+                << "DELETE FROM arc_tree WHERE id=?"
+                << id;
+        }
+    }
+
+    Archive::SavePoint Archive::savePoint() {
+        return Archive::SavePoint(m_dbhandle.get());
     }
 
     Archive::Settings::Settings(std::unique_ptr<sqlite::database> &dbhandle) : m_dbhandle(dbhandle) {
@@ -243,12 +227,10 @@ namespace arc {
     }
 
     void Archive::Settings::switchMedia(uint64_t new_id) {
-        try {
+        {
             *m_dbhandle
                 << "UPDATE db_settings SET current_media=?"
                 << new_id;
-        } catch (const std::exception& e) {
-            assert_fail(e);
         }
         m_current_media = std::make_unique<Media>(m_dbhandle, new_id);
         Signals::instance().update_media_view.emit();
@@ -282,12 +264,10 @@ namespace arc {
     void Archive::Media::occupy(uint64_t size) {
         assert(m_occupied + size <= m_capacity);
         m_occupied += size;
-        try {
+        {
             *m_dbhandle
                 << "UPDATE arc_media SET occupied=? WHERE id=?"
                 << m_occupied << id();
-        } catch (const std::exception& e) {
-            assert_fail(e);
         }
     }
 
@@ -314,7 +294,7 @@ namespace arc {
     }
 
     void Archive::Media::remove() {
-        try {
+        {
             *m_dbhandle
                 << "SELECT id, COUNT(id) AS A FROM arc_tree INNER JOIN arc_tree_to_media ON (id=arc_tree_id) GROUP BY id HAVING A=1 and arc_media_id=?"
                 << m_id
@@ -323,26 +303,52 @@ namespace arc {
                         << "DELETE FROM arc_tree WHERE id=?"
                         << del_id;
                 };
-
-            {
-                *m_dbhandle
-                    << "DELETE FROM arc_tree_to_media WHERE arc_media_id=?"
-                    << m_id;
-            }
-
-            {
-                *m_dbhandle
-                    << "DELETE FROM arc_media WHERE id=?"
-                    << m_id;
-            }
-
-            Signals::instance().update_main_window.emit();
-            Signals::instance().update_tree.emit();
-            Signals::instance().update_media_view.emit();
-
-        } catch (const std::exception& e) {
-            assert_fail(e);
         }
+
+        {
+            *m_dbhandle
+                << "DELETE FROM arc_tree_to_media WHERE arc_media_id=?"
+                << m_id;
+        }
+
+        {
+            *m_dbhandle
+                << "DELETE FROM arc_media WHERE id=?"
+                << m_id;
+        }
+
+        Signals::instance().update_main_window.emit();
+        Signals::instance().update_tree.emit();
+        Signals::instance().update_media_view.emit();
     }
 
+    Archive::SavePoint::SavePoint(sqlite::database* db)  : m_dbhandle(db) {
+        auto now = std::chrono::system_clock::now().time_since_epoch();
+        m_savepoint_name = "arc" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
+        {
+            *m_dbhandle << "BEGIN";
+        }
+        {
+            *m_dbhandle
+                << Glib::ustring::compose("SAVEPOINT %1", m_savepoint_name).operator std::string();
+        }
+    }
+    Archive::SavePoint::~SavePoint() {
+        if (m_auto_release) {
+            {
+                *m_dbhandle
+                    << Glib::ustring::compose("RELEASE %1", m_savepoint_name).operator std::string();
+            }
+            {
+                *m_dbhandle << "COMMIT";
+            }
+        }
+    }
+    void Archive::SavePoint::rollback() {
+        m_auto_release = false;
+        {
+            *m_dbhandle
+                << Glib::ustring::compose("ROLLBACK TO %1", m_savepoint_name).operator std::string();
+        }
+    }
 } // arc

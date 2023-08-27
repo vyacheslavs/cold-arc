@@ -8,6 +8,8 @@
 #include <gtkmm-3.0/gtkmm.h>
 #include <tl/expected.hpp>
 #include "assert.h"
+#include "sqlite_modern_cpp.h"
+#include "Exceptions.h"
 
 template<typename T>
 T* findWidget(const Glib::ustring& name, const Glib::RefPtr<Gtk::Builder>& builder) {
@@ -103,6 +105,12 @@ bool fileExists(const Glib::ustring& filename);
 
 Glib::ustring generateSerial();
 
+/**
+ * Extracts a blob from resource and outputs it into the file
+ * @param resource_path
+ * @param filename
+ * @throws ExtractResourceException
+ */
 void extractFromResource(const Glib::ustring& resource_path, const Glib::ustring& filename);
 
 void addFont(const Glib::ustring& font_resource);
@@ -135,5 +143,6 @@ struct HumanReadable {
 };
 
 void applyFontAwesome(Gtk::Widget* widget, bool resize = true);
+void sqliteError(const sqlite::sqlite_exception& e, bool is_fatal = true);
 
 #endif //COLD_ARC_GTK_UTILS_H
