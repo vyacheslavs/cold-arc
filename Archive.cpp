@@ -180,6 +180,36 @@ namespace arc {
         if (v != COLD_ARC_DB_VERSION)
             throw WrongDatabaseVersion(COLD_ARC_DB_VERSION, v);
     }
+    void Archive::remove(uint64_t id, const std::vector<uint64_t>& media_ids) {
+        try {
+            std::set<uint64_t> media_set(media_ids.begin(), media_ids.end());
+            {
+                *m_dbhandle
+                    << "SELECT siz, arc_media_id FROM arc_tree INNER JOIN arc_tree_to_media ON (arc_tree.id=arc_tree_to_media.arc_tree_id) WHERE arc_tree.id=?"
+                    << id
+                    >> [&](sqlite3_uint64 siz, sqlite3_uint64 mid) {
+                    if (media_set.count(mid)) {
+                        {
+                            *m_dbhandle << "UPDATE arc_media SET occupied=occupied-? WHERE id=?" << siz << mid;
+                        }
+                        {
+                            *m_dbhandle
+                                << "DELETE FROM arc_tree_to_media WHERE arc_tree_id=? AND arc_media_id=?"
+                                << id << mid;
+                        }
+                    }
+                };
+            }
+
+            {
+                *m_dbhandle
+                    << "DELETE FROM arc_tree WHERE id=?"
+                    << id;
+            }
+        } catch (const std::exception& e) {
+            assert_fail(e);
+        }
+    }
 
     Archive::Settings::Settings(std::unique_ptr<sqlite::database> &dbhandle) : m_dbhandle(dbhandle) {
         uint64_t media_id {0};

@@ -61,6 +61,10 @@ add_executable(cold_arc_gtk main.cpp
         Dispatcher.h
         ContentsModelColumns.h
         MediaListColumns.h
+        DeleteDialog.cpp
+        DeleteDialog.h
+        MediaView.cpp
+        MediaView.h
 )
 
 target_compile_definitions(cold_arc_gtk PRIVATE COLD_ARC_DB_VERSION=${COLD_ARC_DB_VERSION})
@@ -84,6 +88,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/newmedia.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/uploaddialog.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/updlg.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/deletedlg.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-solid-900.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-regular-400.otf

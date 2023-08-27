@@ -28,25 +28,37 @@ namespace arc {
             uint64_t createFolder(const Glib::ustring& name, uint64_t parentId = 1, bool quiet = false);
             uint64_t createPath(const Glib::ustring& path, uint64_t parentId = 1, bool quiet = false);
             bool createFile(const Glib::ustring& name, const UploadFileInfo& file_info, uint64_t parentId = 1);
+            void remove(uint64_t id, const std::vector<uint64_t>& media_ids);
+
+            enum WalkFlags {
+                    CallbackLast =        (1 << 0),
+                    WalkFilesAndFolders = (1 << 1),
+            };
 
             template<typename F>
-            void walkTree(F callback, uint64_t parent_id, const std::string& exclusions = std::string()) {
+            void walkTree(F callback, uint64_t parent_id, const std::string& exclusions = std::string(), int flags = 0) {
                 try {
-                    // select arc_tree.*, arc_tree_to_media.arc_media_id IN (1) as A from arc_tree inner join arc_tree_to_media on arc_tree.id=arc_tree_to_media.arc_tree_id where arc_tree.parent_id=1 and A=1;
                     auto lcall = [&](sqlite3_uint64 id, const std::string& typ, const std::string& name, const std::string& hash, const std::string& lnk, sqlite3_uint64 dt) {
-                        callback(id, typ, name, hash, lnk, dt, parent_id);
-                        walkTree(callback, id, exclusions);
+                        if (flags & CallbackLast) {
+                            if (typ == "folder")
+                                walkTree(callback, id, exclusions, flags);
+                            callback(id, typ, name, hash, lnk, dt, parent_id);
+                        } else {
+                            callback(id, typ, name, hash, lnk, dt, parent_id);
+                            if (typ == "folder")
+                                walkTree(callback, id, exclusions, flags);
+                        }
                     };
 
                     if (exclusions.empty()) {
                         *m_dbhandle
-                            << "SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=? and typ='folder'"
+                            << Glib::ustring::compose("SELECT id, typ, name, hash, lnk, dt FROM arc_tree WHERE parent_id=?%1", !(flags & WalkFilesAndFolders) ? " and typ='folder'" : "").operator std::string()
                             << parent_id
                             >> lcall;
                             ;
                     } else {
                         *m_dbhandle
-                            << Glib::ustring::compose("SELECT id, typ, name, hash, lnk, dt, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE arc_tree.parent_id=? and A=1 AND typ='folder' GROUP BY id", exclusions).operator std::string()
+                            << Glib::ustring::compose("SELECT id, typ, name, hash, lnk, dt, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE arc_tree.parent_id=? and A=1%2 GROUP BY id", exclusions, !(flags & WalkFilesAndFolders) ? " AND typ='folder'" : "").operator std::string()
                             << parent_id
                             >> lcall;
                     }
@@ -79,6 +91,18 @@ namespace arc {
                 try {
                     *m_dbhandle
                         << "SELECT id, capacity, occupied, name, serial FROM arc_media"
+                        >> callback;
+                } catch (const std::exception& e) {
+                    assert_fail(e);
+                }
+            }
+
+            template<typename F>
+            void getMediaForArcId(uint64_t arc_id, F callback) {
+                try {
+                    *m_dbhandle
+                        << "SELECT arc_media_id FROM arc_tree_to_media WHERE arc_tree_id=?"
+                        << arc_id
                         >> callback;
                 } catch (const std::exception& e) {
                     assert_fail(e);

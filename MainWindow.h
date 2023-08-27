@@ -7,6 +7,7 @@
 
 #include <gtkmm-3.0/gtkmm.h>
 #include "FolderModelColumns.h"
+#include "MediaView.h"
 
 class MainWindow : public Gtk::Window {
     public:
@@ -26,24 +27,18 @@ class MainWindow : public Gtk::Window {
         Gtk::TreeStore* m_tree_store;
         Gtk::TreeView* m_contents_view;
         Gtk::ListStore* m_contents_store;
-        Gtk::TreeView* m_media_view;
-        Gtk::ListStore* m_media_store;
+        MediaView* m_media_view;
         Gtk::SeparatorToolItem* m_sep1;
         Gtk::SeparatorToolItem* m_sep2;
         std::unordered_map<uint64_t, Gtk::TreeIter> m_tree_fast_access;
-        Gtk::Toolbar* m_media_toolbar;
-        Gtk::ToolButton* m_media_new_button;
-        Gtk::TreeSelection* m_media_view_selection;
-        Gtk::ToolButton* m_media_view_select_button;
-        Gtk::ToolButton* m_media_view_remove_button;
+        Gtk::ToolButton* m_delete_button;
+        Gtk::TreeSelection* m_contents_selection;
 
         void onNewArchiveButtonClicked();
 
         void onOpenArchiveButtonClicked();
 
         void onArchiveSettings();
-
-        void onNewMediaButtonClicked();
 
         void onCreateFolderClicked();
 
@@ -53,20 +48,16 @@ class MainWindow : public Gtk::Window {
 
         void updateContents();
 
-        void updateMediaView();
-
-        void onMediaViewSelectionChanged();
-
         void onUploadButtonClicked();
 
-        void onMediaViewSelectButton();
+        void onDeleteButtonClicked();
 
-        void onMediaViewRemoveButtonClicked();
-
-        void onMediaToggle(const Glib::ustring& path);
+        void updateContentsSelection();
 
         void onTreeViewRowCollapsed(const Gtk::TreeIter& iter, const Gtk::TreePath& path);
+
         void onTreeViewRowExpanded(const Gtk::TreeIter& iter, const Gtk::TreePath& path);
+
         std::unordered_map<uint64_t, bool> m_colapse_expand_records;
         std::unordered_map<uint64_t, bool> m_colapse_expand_records_cached;
 
@@ -85,7 +76,6 @@ class MainWindow : public Gtk::Window {
 
         void allocateTreeNodeUsingParentId(const Glib::ustring& folderName, uint64_t id, uint64_t parentId);
 
-        std::string collectExclusions();
 };
 
 
