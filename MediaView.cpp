@@ -66,14 +66,18 @@ void MediaView::onMediaToggle(const Glib::ustring& path) {
 }
 
 void MediaView::update() {
-    if (!arc::Archive::instance().hasActiveArchive())
-        return;
+    try {
+        if (!arc::Archive::instance().hasActiveArchive())
+            return;
 
-    m_media_toolbar->set_visible(arc::Archive::instance().hasCurrentMedia());
+        m_media_toolbar->set_visible(arc::Archive::instance().hasCurrentMedia());
 
-    m_media_store->clear();
-    MediaListColumns cols;
-    arc::Archive::instance().browseMedia(sigc::mem_fun(this, &MediaView::addMedia));
+        m_media_store->clear();
+        MediaListColumns cols;
+        arc::Archive::instance().browseMedia(sigc::mem_fun(this, &MediaView::addMedia));
+    } catch (const sqlite::sqlite_exception& e) {
+        sqliteError(e);
+    }
 }
 
 std::string MediaView::collectExclusions() const {
@@ -114,7 +118,13 @@ void MediaView::onMediaViewSelectButton() {
 
     MediaListColumns cols;
     auto new_id = (*sel)[cols.id];
-    arc::Archive::instance().settings->switchMedia(new_id);
+    auto p = arc::Archive::instance().savePoint();
+    try {
+        arc::Archive::instance().settings->switchMedia(new_id);
+    } catch (const sqlite::sqlite_exception& e) {
+        p.rollback();
+        sqliteError(e);
+    }
 }
 
 void MediaView::onMediaViewRemoveButtonClicked() {
@@ -130,7 +140,13 @@ void MediaView::onMediaViewRemoveButtonClicked() {
     if (dlg.run() == Gtk::RESPONSE_NO)
         return;
 
-    media->remove();
+    auto p = arc::Archive::instance().savePoint();
+    try {
+        media->remove();
+    } catch (const sqlite::sqlite_exception& e) {
+        p.rollback();
+        sqliteError(e);
+    }
 }
 
 void MediaView::onNewMediaButtonClicked() {

@@ -3,6 +3,7 @@
 #include "MainWindow.h"
 #include "Utils.h"
 #include <openssl/evp.h>
+#include "Signals.h"
 
 int main(int argc, char** argv) {
 
@@ -17,9 +18,10 @@ int main(int argc, char** argv) {
 
         Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_resource("/main/glade.glade");
 
+        Signals::instance().app_quit.connect(sigc::mem_fun(app.get(), &Gtk::Application::quit));
         std::unique_ptr<MainWindow> win (findWidgetDerived<MainWindow>("main", builder));
-        app->run(*win);
 
+        app->run(*win);
     } catch (const Glib::Exception& e) {
         std::cout << "error: " << e.what() << "\n";
     } catch (const std::exception& e) {

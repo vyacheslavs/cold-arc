@@ -162,7 +162,25 @@ void UploadDialog::onNextButtonClicked() {
     m_stage2->start(arc::Archive::instance().settings->media()->free());
 }
 
-void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut) {
+void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut, std::shared_ptr<ExceptionCargoBase> _e) {
+
+    if (_e) {
+        try {
+            response(Gtk::RESPONSE_CANCEL);
+            _e->rethrow();
+        } catch (const sqlite::sqlite_exception& e) {
+            response(Gtk::RESPONSE_CANCEL);
+            sqliteError(e);
+            return;
+        } catch (const WrongDatabaseVersion& e) {
+            response(Gtk::RESPONSE_CANCEL);
+            Gtk::MessageDialog dlg("Failed to upload data");
+            dlg.set_secondary_text(e.what());
+            dlg.run();
+            return;
+        }
+    }
+
     if (id>0) {
         UploadListColumns cols;
         for (auto it = m_store->children().begin(); it != m_store->children().end();) {

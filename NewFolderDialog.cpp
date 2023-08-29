@@ -15,7 +15,13 @@ void NewFolderDialog::run(uint64_t parentId) {
     runDialog<NewFolderDialog>("/main/newfolder.glade", "settings_win", [&](NewFolderDialog* dlg, int rc) {
         auto folder_name = dlg->edit_folder_name->get_text();
         if (rc == Gtk::RESPONSE_OK && !folder_name.empty()) {
-            arc::Archive::instance().createFolder(folder_name, parentId);
+            auto p = arc::Archive::instance().savePoint();
+            try {
+                arc::Archive::instance().createFolder(folder_name, parentId);
+            } catch (const sqlite::sqlite_exception& e) {
+                p.rollback();
+                sqliteError(e, false);
+            }
         }
     });
 }
