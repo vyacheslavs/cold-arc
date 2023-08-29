@@ -66,7 +66,7 @@ namespace arc {
              * @param capacity
              * @throws sqlite::sqlite_exception
              */
-            void newMedia(const Glib::ustring& name, const Glib::ustring& serial, uint64_t capacity);
+            void newMedia(const Glib::ustring& name, const Glib::ustring& serial, uint64_t capacity, bool rockridge, bool joliet);
             /**
              * Initialize database handle and checks the database version
              *
@@ -165,12 +165,12 @@ namespace arc {
             void browse(F callback, uint64_t parent_id, const std::string& exclusions = std::string()) {
                 if (exclusions.empty()) {
                     *m_dbhandle
-                        << "SELECT id, typ, name, siz, hash FROM arc_tree WHERE parent_id=? ORDER BY typ DESC"
+                        << "SELECT id, typ, name, siz, hash, lnk FROM arc_tree WHERE parent_id=? ORDER BY typ DESC"
                         << parent_id
                         >> callback;
                 } else {
                     *m_dbhandle
-                        << Glib::ustring::compose("SELECT id, typ, name, siz, hash, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE parent_id=? AND A=1 GROUP BY id ORDER BY typ DESC", exclusions).operator std::string()
+                        << Glib::ustring::compose("SELECT id, typ, name, siz, hash, lnk, arc_media_id IN (%1) as A FROM arc_tree INNER JOIN arc_tree_to_media on id=arc_tree_id WHERE parent_id=? AND A=1 GROUP BY id ORDER BY typ DESC", exclusions).operator std::string()
                         << parent_id
                         >> callback;
                 }
@@ -250,6 +250,8 @@ namespace arc {
                     [[nodiscard]] uint64_t capacity() const;
                     [[nodiscard]] uint64_t free() const;
                     [[nodiscard]] uint64_t id() const;
+                    [[nodiscard]] bool rockridge() const;
+                    [[nodiscard]] bool joliet() const;
                     /**
                      * Removes the media
                      */
@@ -262,6 +264,8 @@ namespace arc {
                     uint64_t m_occupied {0};
                     uint64_t m_id{0};
                     bool m_locked {false};
+                    bool m_rockridge {false};
+                    bool m_joliet {false};
                     std::unique_ptr<sqlite::database>& m_dbhandle;
 
                 friend class Archive;

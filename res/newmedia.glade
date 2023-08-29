@@ -22,6 +22,8 @@
         <child internal-child="action_area">
           <object class="GtkButtonBox">
             <property name="can-focus">False</property>
+            <property name="margin-end">10</property>
+            <property name="margin-bottom">10</property>
             <property name="layout-style">end</property>
             <child>
               <object class="GtkButton" id="btn_ok">
@@ -174,6 +176,54 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-start">10</property>
+            <property name="margin-end">10</property>
+            <property name="margin-top">10</property>
+            <property name="margin-bottom">10</property>
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkCheckButton" id="rockridge_toggle">
+                <property name="label" translatable="yes">RockRidge extension</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">False</property>
+                <property name="halign">center</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="joliet_toggle">
+                <property name="label" translatable="yes">Joliet extension</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">False</property>
+                <property name="halign">center</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">4</property>
           </packing>
         </child>
       </object>

@@ -26,11 +26,13 @@ class MediaView : public Gtk::TreeView {
         Gtk::ToolButton* m_media_view_select_button;
         Gtk::ToolButton* m_media_view_remove_button;
         Gtk::ToolButton* m_media_new_button;
+        Gtk::ToolButton* m_media_export_button;
 
         void onMediaToggle(const Glib::ustring& path);
         void onMediaViewSelectionChanged();
         void onMediaViewSelectButton();
         void onMediaViewRemoveButtonClicked();
+        void onMediaViewExportButton();
 };
 
 

@@ -11,6 +11,9 @@ NewMediaDialog::NewMediaDialog(Gtk::Dialog::BaseObjectType *win, const Glib::Ref
     m_edit_media_name = findWidget<Gtk::Entry>("edit_media_name", builder);
     m_edit_media_serial = findWidget<Gtk::Entry>("edit_media_serial", builder);
     m_edit_media_capacity = findWidget<Gtk::SpinButton>("edit_media_capacity", builder);
+    m_rockridge = findWidget<Gtk::CheckButton>("rockridge_toggle", builder);
+    m_joliet = findWidget<Gtk::CheckButton>("joliet_toggle", builder);
+
     m_edit_media_name->signal_changed().connect(sigc::mem_fun(this, &NewMediaDialog::onEditMediaNameChanged));
     m_edit_media_serial->signal_changed().connect(sigc::mem_fun(this, &NewMediaDialog::onEditMediaSerialChanged));
     m_edit_media_capacity->signal_changed().connect(sigc::mem_fun(this, &NewMediaDialog::onEditMediaCapacityChanged));
@@ -28,7 +31,7 @@ void NewMediaDialog::run() {
             auto p = arc::Archive::instance().savePoint();
             try {
                 auto [name, serial, cap] = dlg->get();
-                arc::Archive::instance().newMedia(name, serial, cap);
+                arc::Archive::instance().newMedia(name, serial, cap, dlg->rockridge(), dlg->joliet());
             } catch (const sqlite::sqlite_exception& e) {
                 p.rollback();
                 sqliteError(e, false);
@@ -71,4 +74,10 @@ std::tuple<Glib::ustring, Glib::ustring, uint64_t> NewMediaDialog::get() const {
             m_edit_media_serial->get_text(),
             cap
     };
+}
+bool NewMediaDialog::rockridge() const {
+    return m_rockridge->get_active();
+}
+bool NewMediaDialog::joliet() const {
+    return m_rockridge->get_active();
 }

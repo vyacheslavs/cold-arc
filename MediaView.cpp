@@ -5,11 +5,13 @@
 #include "MediaView.h"
 #include "Utils.h"
 #include "MediaListColumns.h"
-#include "Signals.h"
 #include "Archive.h"
-#include "ContentsModelColumns.h"
-#include "DeleteDialog.h"
 #include "NewMediaDialog.h"
+#include "ExportDialog.h"
+#include "Signals.h"
+
+#define LIBISOFS_WITHOUT_LIBBURN yes
+#include "libisofs.h"
 
 MediaView::MediaView(Gtk::TreeView::BaseObjectType* bot, const Glib::RefPtr<Gtk::Builder>& builder, bool toolbar) {
     m_media_view = findWidget<Gtk::TreeView>("mediaview", builder);
@@ -43,16 +45,23 @@ MediaView::MediaView(Gtk::TreeView::BaseObjectType* bot, const Glib::RefPtr<Gtk:
     m_media_view_select_button = findWidget<Gtk::ToolButton>("select_button", builder);
     m_media_view_remove_button = findWidget<Gtk::ToolButton>("remove_button", builder);
     m_media_new_button = findWidget<Gtk::ToolButton>("new_media_button", builder);
+    m_media_export_button = findWidget<Gtk::ToolButton>("export_button", builder);
 
     applyFontAwesome(m_media_view_select_button->get_label_widget(), false);
     applyFontAwesome(m_media_view_remove_button->get_label_widget(), false);
     applyFontAwesome(m_media_new_button->get_label_widget(), false);
+    applyFontAwesome(m_media_export_button->get_label_widget(), false);
+
+    m_media_view_select_button->set_sensitive(false);
+    m_media_view_remove_button->set_sensitive(false);
+    m_media_export_button->set_sensitive(false);
 
     m_media_toolbar->set_visible(false);
     m_media_view_selection->signal_changed().connect(sigc::mem_fun(this, &MediaView::onMediaViewSelectionChanged));
     m_media_view_select_button->signal_clicked().connect(sigc::mem_fun(this, &MediaView::onMediaViewSelectButton));
     m_media_view_remove_button->signal_clicked().connect(sigc::mem_fun(this, &MediaView::onMediaViewRemoveButtonClicked));
     m_media_new_button->signal_clicked().connect(sigc::mem_fun(this, &MediaView::onNewMediaButtonClicked));
+    m_media_export_button->signal_clicked().connect(sigc::mem_fun(this, &MediaView::onMediaViewExportButton));
 }
 
 void MediaView::onMediaToggle(const Glib::ustring& path) {
@@ -109,6 +118,7 @@ void MediaView::onMediaViewSelectionChanged() {
     }
     m_media_view_select_button->set_sensitive(outcome);
     m_media_view_remove_button->set_sensitive(outcome);
+    m_media_export_button->set_sensitive(outcome);
 }
 
 void MediaView::onMediaViewSelectButton() {
@@ -177,5 +187,28 @@ std::vector<uint64_t> MediaView::collectCheckedIds() const {
         }
     }
     return ids;
+}
+void MediaView::onMediaViewExportButton() {
+    auto sel = m_media_view_selection->get_selected();
+    if (!sel)
+        return;
+
+    MediaListColumns cols;
+    uint64_t media_id = (*sel)[cols.id];
+
+    Gtk::FileChooserDialog newISO("Please choose the name of ISO file", Gtk::FILE_CHOOSER_ACTION_SAVE);
+
+    newISO.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+    newISO.add_button("Save", Gtk::RESPONSE_OK);
+
+    auto isoFilter = Gtk::FileFilter::create();
+    isoFilter->set_name("iso files");
+    isoFilter->add_pattern("*.iso");
+    newISO.add_filter(isoFilter);
+
+    if (newISO.run() == Gtk::RESPONSE_OK) {
+        newISO.hide();
+        ExportDialog::run(media_id, newISO.get_filename());
+    }
 }
 
