@@ -14,6 +14,9 @@ public:
 
     std::tuple<Glib::ustring, Glib::ustring, uint64_t> get() const;
 
+    bool rockridge() const;
+    bool joliet() const;
+
 private:
 
     void onEditMediaNameChanged();
@@ -23,6 +26,8 @@ private:
     Gtk::Entry* m_edit_media_name;
     Gtk::Entry* m_edit_media_serial;
     Gtk::SpinButton* m_edit_media_capacity;
+    Gtk::CheckButton* m_rockridge;
+    Gtk::CheckButton* m_joliet;
 
     void checkSanity();
 

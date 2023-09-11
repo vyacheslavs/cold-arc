@@ -24,6 +24,46 @@
             explicit ExtractResourceException(const char* w) : std::runtime_error(w) {}
     };
 
+    class ISOBuilderException : public std::runtime_error {
+        public:
+            explicit ISOBuilderException(const char* what) : std::runtime_error(what) {}
+    };
+
+    class ISOBuilderConstructionException : public ISOBuilderException {
+        public:
+            explicit ISOBuilderConstructionException() : ISOBuilderException("iso initialization failure") {}
+    };
+
+    class ISOBuilderPrepareImageException : public ISOBuilderException {
+        public:
+            explicit ISOBuilderPrepareImageException() : ISOBuilderException("iso prepare image failure") {}
+    };
+
+    class ISOBuilderNewDirException : public ISOBuilderException {
+        public:
+            explicit ISOBuilderNewDirException() : ISOBuilderException("iso new dir failed") {}
+    };
+
+    class ISOBuilderNewOptsException : public ISOBuilderException {
+        public:
+            explicit ISOBuilderNewOptsException() : ISOBuilderException("iso new opts failed") {}
+    };
+
+    class ISOBuilderNewBurnSourceException : public ISOBuilderException {
+        public:
+            explicit ISOBuilderNewBurnSourceException() : ISOBuilderException("iso new opts failed") {}
+    };
+
+    class ISOBuilderStreamException : public ISOBuilderException {
+        public:
+            explicit ISOBuilderStreamException() : ISOBuilderException("iso new stream failed") {}
+    };
+
+    class ISOBuilderInvalidArgument : public ISOBuilderException {
+        public:
+            explicit ISOBuilderInvalidArgument() : ISOBuilderException("wrong argument exception") {}
+    };
+
     class ExceptionCargoBase {
         public:
             virtual void rethrow() = 0;

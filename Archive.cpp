@@ -47,11 +47,11 @@ namespace arc {
         Signals::instance().update_media_view.emit();
     }
 
-    void Archive::newMedia(const Glib::ustring &name, const Glib::ustring &serial, uint64_t capacity) {
+    void Archive::newMedia(const Glib::ustring& name, const Glib::ustring& serial, uint64_t capacity, bool rockridge, bool joliet) {
         {
             *m_dbhandle
-                << "INSERT INTO arc_media (name, serial, capacity, occupied, locked) VALUES (?,?,?,0,0)"
-                << name.operator std::string() << serial.operator std::string() << capacity;
+                << "INSERT INTO arc_media (name, serial, capacity, occupied, locked, rockridge, joliet) VALUES (?,?,?,0,0,?,?)"
+                << name.operator std::string() << serial.operator std::string() << capacity << (rockridge ? 1 : 0) << (joliet ? 1 : 0);
         }
         uint64_t media_id = m_dbhandle->last_insert_rowid();
         {
@@ -274,15 +274,17 @@ namespace arc {
     Archive::Media::Media(std::unique_ptr<sqlite::database>& dbhandle, uint64_t id) : m_dbhandle(dbhandle) {
         try {
             *m_dbhandle
-                << "SELECT capacity, occupied, locked, name, serial FROM arc_media WHERE id=?"
+                << "SELECT capacity, occupied, locked, name, serial, rockridge, joliet FROM arc_media WHERE id=?"
                 << id
-                >> [&](sqlite3_uint64 capacity, sqlite3_uint64 occupied, sqlite3_uint64 locked, const std::string& name, const std::string& serial) {
+                >> [&](sqlite3_uint64 capacity, sqlite3_uint64 occupied, sqlite3_uint64 locked, const std::string& name, const std::string& serial, sqlite3_uint64 rockridge, sqlite3_uint64 joliet) {
                     m_capacity = capacity;
                     m_occupied = occupied;
                     m_locked = locked;
                     m_name = name;
                     m_serial = serial;
                     m_id = id;
+                    m_rockridge = rockridge > 0;
+                    m_joliet = joliet > 0;
                 };
         } catch (const std::exception& e) {
             assert_fail(e);
@@ -320,6 +322,12 @@ namespace arc {
         Signals::instance().update_main_window.emit();
         Signals::instance().update_tree.emit();
         Signals::instance().update_media_view.emit();
+    }
+    bool Archive::Media::rockridge() const {
+        return m_rockridge;
+    }
+    bool Archive::Media::joliet() const {
+        return m_joliet;
     }
 
     Archive::SavePoint::SavePoint(sqlite::database* db)  : m_dbhandle(db) {

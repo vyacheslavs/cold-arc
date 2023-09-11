@@ -8,6 +8,7 @@
         <file preprocess="xml-stripblanks">uploaddialog.glade</file>
         <file preprocess="xml-stripblanks">updlg.glade</file>
         <file preprocess="xml-stripblanks">deletedlg.glade</file>
+        <file preprocess="xml-stripblanks">export.glade</file>
         <file>skeleton.db</file>
         <file>awesome-free-solid-900.otf</file>
         <file>awesome-free-regular-400.otf</file>

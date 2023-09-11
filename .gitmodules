@@ -4,3 +4,6 @@
 [submodule "sqlite_modern_cpp"]
 	path = sqlite_modern_cpp
 	url = https://github.com/SqliteModernCpp/sqlite_modern_cpp.git
+[submodule "libisofs"]
+	path = libisofs
+	url = https://github.com/vyacheslavs/libisofs.git

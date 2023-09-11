@@ -33,7 +33,9 @@ CREATE TABLE IF NOT EXISTS arc_media (
     occupied  INTEGER NOT NULL,
     locked    INTEGER NOT NULL,
     name      TEXT NOT NULL,
-    serial    TEXT NOT NULL UNIQUE
+    serial    TEXT NOT NULL UNIQUE,
+    rockridge INTEGER NOT NULL,
+    joliet    INTEGER NOT NULL
 );
 
 DROP TABLE IF EXISTS arc_tree_to_media;

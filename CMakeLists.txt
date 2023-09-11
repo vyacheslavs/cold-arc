@@ -9,9 +9,10 @@ find_package(Fontconfig)
 
 set(EXPECTED_BUILD_TESTS OFF)
 set(EXPECTED_BUILD_PACKAGE_DEB OFF)
-set(COLD_ARC_DB_VERSION 10)
+set(COLD_ARC_DB_VERSION 11)
 
 add_subdirectory("expected")
+add_subdirectory("libisofs")
 
 link_directories(
         ${GTKMM_LIBRARY_DIRS}
@@ -65,6 +66,13 @@ add_executable(cold_arc_gtk main.cpp
         DeleteDialog.h
         MediaView.cpp
         MediaView.h
+        ExportDialog.cpp
+        ExportDialog.h
+        ISOBuilder.cpp
+        ISOBuilder.h
+        FileStream.c
+        FileStream.h
+        ExportModelColumns.h
 )
 
 target_compile_definitions(cold_arc_gtk PRIVATE COLD_ARC_DB_VERSION=${COLD_ARC_DB_VERSION})
@@ -75,6 +83,7 @@ target_link_libraries(cold_arc_gtk
         ${OPENSSL_LIBRARIES}
         ${Fontconfig_LIBRARIES}
         expected
+        libisofs
 )
 
 add_custom_command(
@@ -89,6 +98,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/uploaddialog.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/updlg.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/deletedlg.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/export.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-solid-900.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-regular-400.otf

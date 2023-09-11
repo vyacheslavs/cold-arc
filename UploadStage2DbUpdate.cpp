@@ -54,7 +54,6 @@ void UploadStage2DbUpdate::stage2Main(uint64_t cap_limit) {
         m_db->settings->media()->occupy(to_upload);
         notifyThreadStopped();
     } catch (const sqlite::sqlite_exception& e) {
-        std::cout << "rolled back!\n";
         p.rollback();
         notifyThreadStopped(e);
     }
