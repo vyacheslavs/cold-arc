@@ -28,6 +28,7 @@ IsoStream* file_stream(const char* path, stream_callback* cb);
 stream_callback* file_stream_get_callback(const IsoStream* stream);
 const char* file_stream_get_filepath(const IsoStream* stream);
 int file_stream_get_progress(const IsoStream* stream);
+void file_stream_free(IsoStream *stream);
 
 #ifdef __cplusplus
 }

@@ -12,51 +12,72 @@ UploadStage2DbUpdate::UploadStage2DbUpdate(std::vector<UploadFileInfo>&& files, 
 }
 
 void UploadStage2DbUpdate::stage2Main(uint64_t cap_limit) {
+    arc::Archive::ArchivePtr m_db;
 
-    std::unique_ptr<arc::Archive> m_db;
-    try {
-        m_db = arc::Archive::clone();
-    } catch (const sqlite::sqlite_exception& e) {
-        notifyThreadStopped(e);
+    cold_arc::Error scope_error;
+    ScopeExit scope([&] {
+        if (scope_error.code == cold_arc::ErrorCode::None) {
+            notifyThreadStopped();
+            return;
+        }
+        notifyThreadStopped(scope_error);
+    });
+
+    auto dbres = arc::Archive::clone();
+    if (!dbres) {
+        scope_error = dbres.error();
         return;
-    } catch (const WrongDatabaseVersion& e) {
-        notifyThreadStopped(e);
+    }
+    m_db = std::move(dbres.value());
+    if (auto res = m_db->beginTransaction(); !res ) {
+        scope_error = res.error();
         return;
     }
 
-    auto p = m_db->savePoint();
-    try {
-        uint64_t to_upload = 0;
-        for (const auto& item: m_files) {
-            if (item.isSkipped())
-                continue;
+    uint64_t to_upload = 0;
+    for (const auto& item: m_files) {
+        if (item.isSkipped())
+            continue;
 
-            to_upload += item.getSize();
-            if (to_upload > cap_limit) {
-                to_upload -= item.getSize();
-                break;
-            }
-
-            auto file_folder = m_db->createPath(item.getFolder(), m_parentId, true);
-            if (!m_db->createFile(item.getBasename(), item, file_folder)) {
-                to_upload -= item.getSize();
-            }
-
-            if (m_dispatcher.timeToEmit()) {
-                {
-                    auto cc = m_queue.access();
-                    cc->emplace_back(true, item.index);
-                }
-                m_dispatcher.emit(DispatcherEmitPolicy::Throttled);
-            }
+        to_upload += item.getSize();
+        if (to_upload > cap_limit) {
+            to_upload -= item.getSize();
+            break;
         }
 
-        m_db->settings->media()->occupy(to_upload);
-        notifyThreadStopped();
-    } catch (const sqlite::sqlite_exception& e) {
-        p.rollback();
-        notifyThreadStopped(e);
+        auto file_folder = m_db->createPath(item.getFolder(), m_parentId, true);
+        if (!file_folder) {
+            auto rb = m_db->rollbackTransaction();
+            scope_error = make_combined_error(file_folder.error(), rb.error(), cold_arc::ErrorCode::UploadThreadError);
+            return;
+        }
+        auto resFile = m_db->createFile(item.getBasename(), item, file_folder.value());
+        if (!resFile) {
+            auto rb = m_db->rollbackTransaction();
+            scope_error = make_combined_error(resFile.error(), rb.error(), cold_arc::ErrorCode::UploadThreadError);
+            return;
+        }
+        if (!resFile.value()) {
+            to_upload -= item.getSize();
+        }
+
+        if (m_dispatcher.timeToEmit()) {
+            {
+                auto cc = m_queue.access();
+                cc->emplace_back(true, item.index);
+            }
+            m_dispatcher.emit(DispatcherEmitPolicy::Throttled);
+        }
     }
+
+    if (auto res = m_db->settings->media()->occupy(to_upload); !res) {
+        auto rb = m_db->rollbackTransaction();
+        scope_error = make_combined_error(res.error(), rb.error(), cold_arc::ErrorCode::UploadThreadError);
+        return;
+    }
+
+    if (auto rb = m_db->commitTransaction(); !rb)
+        scope_error = rb.error();
 }
 
 void UploadStage2DbUpdate::onDispatcherNotification() {

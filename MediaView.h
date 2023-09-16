@@ -6,13 +6,14 @@
 #define COLD_ARC_GTK_MEDIAVIEW_H
 
 #include <gtkmm-3.0/gtkmm.h>
+#include "Utils.h"
 
 class MediaView : public Gtk::TreeView {
     public:
         MediaView(Gtk::TreeView::BaseObjectType* bot, const Glib::RefPtr<Gtk::Builder>& builder, bool toolbar = true);
         void update();
         void onNewMediaButtonClicked();
-        void addMedia(uint64_t id, uint64_t capacity, uint64_t occupied, const std::string& name, const std::string& serial);
+        cold_arc::Error addMedia(uint64_t id, uint64_t capacity, uint64_t occupied, const std::string& name, const std::string& serial);
         std::string collectExclusions() const;
         std::vector<uint64_t> collectCheckedIds() const;
 

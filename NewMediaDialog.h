@@ -6,11 +6,12 @@
 #define COLD_ARC_GTK_NEWMEDIADIALOG_H
 
 #include <gtkmm-3.0/gtkmm.h>
+#include "Utils.h"
 
 class NewMediaDialog : public Gtk::Dialog {
 public:
     NewMediaDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
-    static void run();
+    [[nodiscard]] static cold_arc::Result<> run();
 
     std::tuple<Glib::ustring, Glib::ustring, uint64_t> get() const;
 

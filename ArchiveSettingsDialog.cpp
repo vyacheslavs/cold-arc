@@ -11,18 +11,24 @@ ArchiveSettingsDialog::ArchiveSettingsDialog(Gtk::Dialog::BaseObjectType *win, c
     m_edit_arc_name->set_text(arc::Archive::instance().settings->name());
 }
 
-void ArchiveSettingsDialog::run() {
-    runDialog<ArchiveSettingsDialog>("/main/settings.glade", "settings_win", [](ArchiveSettingsDialog* dlg, int rc){
-        if (rc == Gtk::RESPONSE_OK) {
-            auto p = arc::Archive::instance().savePoint();
-            try {
-                arc::Archive::instance().settings->updateName(dlg->getArchiveName());
-            } catch (const sqlite::sqlite_exception& e) {
-                p.rollback();
-                sqliteError(e);
-            }
+cold_arc::Result<> ArchiveSettingsDialog::run() {
+
+    auto r = runDialog<ArchiveSettingsDialog>("/main/settings.glade", "settings_win");
+    if (!r)
+        return unexpected_nested(cold_arc::ErrorCode::ArchiveSettingsDialogError, r.error());
+
+    if (r.value().rc == Gtk::RESPONSE_OK) {
+        if (auto res = arc::Archive::instance().beginTransaction(); !res)
+            return unexpected_nested(cold_arc::ErrorCode::ArchiveSettingsDialogError, res.error());
+
+        if (auto res = arc::Archive::instance().settings->updateName(r.value().dialog->getArchiveName()); !res) {
+            auto rb = arc::Archive::instance().rollbackTransaction();
+            return unexpected_combined_error(cold_arc::ErrorCode::ArchiveSettingsDialogError, res.error(), rb.error());
         }
-    });
+        if (auto res = arc::Archive::instance().commitTransaction(); !res)
+            return unexpected_nested(cold_arc::ErrorCode::ArchiveSettingsDialogError, res.error());
+    }
+    return {};
 }
 
 Glib::ustring ArchiveSettingsDialog::getArchiveName() const {

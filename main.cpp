@@ -4,6 +4,7 @@
 #include "Utils.h"
 #include <openssl/evp.h>
 #include "Signals.h"
+#include "Archive.h"
 
 int main(int argc, char** argv) {
 
@@ -12,9 +13,23 @@ int main(int argc, char** argv) {
     try {
         auto app = Gtk::Application::create(argc, argv, "org.coldarc");
 
-        addFont("awesome-free-solid-900.otf");
-        addFont("awesome-free-regular-400.otf");
-        addFont("awesome-free-brands-regular-400.otf");
+        if (auto res = addFont("awesome-free-solid-900.otf"); !res) {
+            reportError(res.error());
+            return 2;
+        }
+        if (auto res = addFont("awesome-free-regular-400.otf"); !res) {
+            reportError(res.error());
+            return 3;
+        }
+        if (auto res = addFont("awesome-free-brands-regular-400.otf"); !res) {
+            reportError(res.error());
+            return 4;
+        }
+
+        if (auto res = arc::Archive::configure(); !res) {
+            reportError(res.error());
+            return 1;
+        }
 
         Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_resource("/main/glade.glade");
 

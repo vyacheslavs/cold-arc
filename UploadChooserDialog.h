@@ -8,12 +8,13 @@
 #include <gtkmm-3.0/gtkmm.h>
 
 #include "UploadFilesCollection.h"
+#include "Utils.h"
 
 class UploadChooserDialog : public Gtk::Dialog {
     public:
 
     UploadChooserDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
-    [[nodiscard]] static UploadFilesCollection run();
+    [[nodiscard]] static cold_arc::Result<UploadFilesCollection> run();
 
     UploadFilesCollection getFiles() const;
 

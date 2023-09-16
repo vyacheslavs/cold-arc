@@ -42,7 +42,6 @@ add_executable(cold_arc_gtk main.cpp
         NewMediaDialog.h
         Signals.cpp
         Signals.h
-        Exceptions.h
         NewFolderDialog.cpp
         NewFolderDialog.h
         FolderModelColumns.h

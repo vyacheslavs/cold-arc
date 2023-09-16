@@ -8,7 +8,6 @@
 #include <gtkmm-3.0/gtkmm.h>
 #include "ISOBuilder.h"
 #include "Dispatcher.h"
-#include "Exceptions.h"
 #include "Utils.h"
 #include <thread>
 
@@ -20,7 +19,7 @@ enum class progress_type {
 
 struct ExportProgressInfo {
     bool running {true};
-    std::shared_ptr<ExceptionCargoBase> e;
+    cold_arc::Error e;
 
     progress_type prog_type {progress_type::unknown};
     int progress {0}; // overall progress
@@ -30,8 +29,8 @@ struct ExportProgressInfo {
     explicit ExportProgressInfo(std::string fn, int prog) : running(true), prog_type(progress_type::last_file), progress(prog), file_name(std::move(fn)) {}
     ExportProgressInfo(int prog, std::string fn) : running(true), prog_type(progress_type::overall), progress(prog), file_name(std::move(fn)) {}
 
-    template <typename E>
-    explicit ExportProgressInfo(const E& _e) : running(false), e(std::make_shared<ExceptionCargo<E>>(_e)) {}
+    template<typename E>
+    explicit ExportProgressInfo(E && _e, bool is_running) : running(is_running), e(std::forward<E>(_e)) {}
 };
 
 using ExportProgressInfoQueue = std::list<ExportProgressInfo>;
@@ -39,9 +38,10 @@ using ExportProgressInfoQueueSafe = BodyGuard<ExportProgressInfoQueue>;
 
 class ExportDialog : public Gtk::Dialog {
     public:
-        ExportDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder, uint64_t media_id, std::string  iso_file);
+        ExportDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
 
-        static void run(uint64_t media_id, const std::string& iso_file);
+        [[nodiscard]] static cold_arc::Result<> run(uint64_t media_id, const std::string& iso_file);
+        [[nodiscard]] cold_arc::Result<> construct(const Glib::RefPtr<Gtk::Builder>& builder, uint64_t media_id, std::string iso_file);
 
     private:
 
@@ -49,7 +49,7 @@ class ExportDialog : public Gtk::Dialog {
         void notifyThreadStopped(E&& e) {
             {
                 auto cc = m_queue.access();
-                cc->emplace_back(std::forward<E>(e));
+                cc->emplace_back(std::forward<E>(e), false);
             }
             m_dispatcher.emit(DispatcherEmitPolicy::Force);
         }
@@ -64,13 +64,13 @@ class ExportDialog : public Gtk::Dialog {
         std::unique_ptr<std::thread> m_work_thread;
         Dispatcher m_dispatcher;
         ExportProgressInfoQueueSafe m_queue;
-        uint64_t m_media_id;
+        uint64_t m_media_id {0};
         std::string m_iso_filepath;
-        stream_callback m_stream_callback;
-        Gtk::TreeView* m_export_view;
-        Gtk::ListStore* m_export_store;
-        Gtk::ProgressBar* m_progress_bar;
-        Gtk::Button* m_ok_btn;
+        stream_callback m_stream_callback{nullptr};
+        Gtk::TreeView* m_export_view {nullptr};
+        Gtk::ListStore* m_export_store {nullptr};
+        Gtk::ProgressBar* m_progress_bar {nullptr};
+        Gtk::Button* m_ok_btn {nullptr};
 };
 
 
