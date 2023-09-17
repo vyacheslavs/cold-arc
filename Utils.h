@@ -258,12 +258,6 @@ enum class CalculateSHA256Errors {
 
 tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::string& filename, uint64_t size, const std::function<void(uint64_t)>& callback);
 
-#define assert_fail(e) \
-                       do { \
-                       std::cerr << e.what() << " at " << __FILE__ << ":" << __LINE__ << " / " << __PRETTY_FUNCTION__ << "\n"; \
-                       assert (false); \
-                       } while(0)
-
 struct HumanReadable {
         std::uintmax_t size{};
     private:
@@ -279,7 +273,6 @@ struct HumanReadable {
 };
 
 void applyFontAwesome(Gtk::Widget* widget, bool resize = true);
-void sqliteError(const sqlite::sqlite_exception& e, bool is_fatal = true);
 void reportError(const cold_arc::Error& e, bool is_fatal = true);
 
 template <typename F>

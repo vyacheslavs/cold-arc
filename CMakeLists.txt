@@ -9,7 +9,7 @@ find_package(Fontconfig)
 
 set(EXPECTED_BUILD_TESTS OFF)
 set(EXPECTED_BUILD_PACKAGE_DEB OFF)
-set(COLD_ARC_DB_VERSION 11)
+set(COLD_ARC_DB_VERSION 12)
 
 add_subdirectory("expected")
 add_subdirectory("libisofs")
@@ -72,6 +72,8 @@ add_executable(cold_arc_gtk main.cpp
         FileStream.c
         FileStream.h
         ExportModelColumns.h
+        ErrorBox.cpp
+        ErrorBox.h
 )
 
 target_compile_definitions(cold_arc_gtk PRIVATE COLD_ARC_DB_VERSION=${COLD_ARC_DB_VERSION})
@@ -98,6 +100,8 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/updlg.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/deletedlg.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/export.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/err.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/err.css
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-solid-900.otf
         DEPENDS ${PROJECT_SOURCE_DIR}/res/awesome-free-regular-400.otf

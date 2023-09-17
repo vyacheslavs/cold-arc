@@ -9,6 +9,7 @@
 #include <fstream>
 #include <filesystem>
 #include <openssl/evp.h>
+#include "ErrorBox.h"
 
 bool endsWith(const Glib::ustring& filename, const Glib::ustring& postfix) {
     if (postfix.size() > filename.size()) return false;
@@ -149,18 +150,8 @@ void applyFontAwesome(Gtk::Widget* widget, bool resize) {
     widget->get_pango_context()->set_font_description(desc);
 }
 
-void sqliteError(const sqlite::sqlite_exception& e, bool is_fatal) {
-    Gtk::MessageDialog dlg("Sqlite error");
-    dlg.set_secondary_text(e.what());
-    dlg.run();
-    if (is_fatal)
-        Signals::instance().app_quit.emit();
-}
-
 void reportError(const cold_arc::Error& e, bool is_fatal) {
-    Gtk::MessageDialog dlg("Error");
-    dlg.set_secondary_text(cold_arc::explain_nested_error(e));
-    dlg.run();
+    ErrorBox::run(e);
     if (is_fatal)
         Signals::instance().app_quit.emit();
 }

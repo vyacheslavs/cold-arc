@@ -198,21 +198,28 @@ void MainWindow::updateTree() {
         }, 0, m_media_view->collectExclusions()); !res) {
         reportError(res.error());
     }
+
+    for (const auto& exp : m_colapse_expand_records_cached) {
+        if (exp.second) {
+            auto it = m_tree_fast_access.find(exp.first);
+            if (it != m_tree_fast_access.end()) {
+                m_tree->expand_to_path(m_tree_store->get_path(it->second));
+                m_colapse_expand_records[exp.first] = true;
+            }
+        }
+    }
 }
 
 void MainWindow::allocateTreeNodeUsingParentId(const Glib::ustring& name, uint64_t id, uint64_t parent_id) {
     if (parent_id == 0) {
-        allocateTreeNode(m_tree_store->append(), id, name);
+        auto node = m_tree_store->append();
+        allocateTreeNode(node, id, name);
+
     } else {
         auto t_it = m_tree_fast_access.find(parent_id);
         if (t_it != m_tree_fast_access.end()) {
-            allocateTreeNode(m_tree_store->append(t_it->second->children()), id, name);
-
-            auto cached = m_colapse_expand_records_cached.find(id);
-            if (cached != m_colapse_expand_records_cached.end() && cached->second) {
-                m_tree->expand_row(m_tree_store->get_path(t_it->second), true);
-                m_colapse_expand_records[id] = true;
-            }
+            auto node = m_tree_store->append(t_it->second->children());
+            allocateTreeNode(node, id, name);
         }
     }
 }

@@ -9,10 +9,12 @@
         <file preprocess="xml-stripblanks">updlg.glade</file>
         <file preprocess="xml-stripblanks">deletedlg.glade</file>
         <file preprocess="xml-stripblanks">export.glade</file>
+        <file preprocess="xml-stripblanks">err.glade</file>
         <file>skeleton.db</file>
         <file>awesome-free-solid-900.otf</file>
         <file>awesome-free-regular-400.otf</file>
         <file>awesome-free-brands-regular-400.otf</file>
+        <file>err.css</file>
     </gresource>
     <gresource prefix="/icons/app/scalable/actions">
         <file>ca-icon.svg</file>
