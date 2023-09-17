@@ -9,7 +9,6 @@
 #include "Signals.h"
 #include <ctime>
 #include <filesystem>
-#include <chrono>
 
 namespace arc {
     Archive &Archive::instance() {
@@ -208,7 +207,7 @@ namespace arc {
 
     static std::string explain_db_version_error(const cold_arc::Error& e) {
         std::stringstream ss;
-        ss << cold_arc::explain_generic(e) << "wrong database version, loaded: "<<std::any_cast<sqlite3_int64>(e.aux)<<", expected: "<<COLD_ARC_DB_VERSION<<"\n";
+        ss << cold_arc::explain_generic(e) << "wrong database version, loaded: "<<std::any_cast<sqlite3_uint64>(e.aux)<<", expected: "<<COLD_ARC_DB_VERSION<<"\n";
         return ss.str();
     }
 
@@ -405,7 +404,7 @@ namespace arc {
         try {
             *m_dbhandle
                 << "UPDATE arc_media SET occupied=? WHERE id=?"
-                << m_occupied << id();
+                << (m_occupied+size) << id();
             m_occupied += size;
             return {};
         } catch (const sqlite::sqlite_exception& e) {
