@@ -25,19 +25,24 @@ NewMediaDialog::NewMediaDialog(Gtk::Dialog::BaseObjectType *win, const Glib::Ref
     checkSanity();
 }
 
-void NewMediaDialog::run() {
-    runDialog<NewMediaDialog>("/main/newmedia.glade", "settings_win", [](NewMediaDialog* dlg, int rc){
-        if (rc == Gtk::RESPONSE_OK) {
-            auto p = arc::Archive::instance().savePoint();
-            try {
-                auto [name, serial, cap] = dlg->get();
-                arc::Archive::instance().newMedia(name, serial, cap, dlg->rockridge(), dlg->joliet());
-            } catch (const sqlite::sqlite_exception& e) {
-                p.rollback();
-                sqliteError(e, false);
-            }
+cold_arc::Result<> NewMediaDialog::run() {
+
+    auto r = runDialog<NewMediaDialog>("/main/newmedia.glade", "settings_win");
+    if (!r)
+        return unexpected_nested(cold_arc::ErrorCode::NewMediaDialogError, r.error());
+    if (r.value().rc == Gtk::RESPONSE_OK) {
+        if (auto rb = arc::Archive::instance().beginTransaction(); !rb)
+            return unexpected_nested(cold_arc::ErrorCode::NewMediaDialogError, rb.error());
+        auto [name, serial, cap] = r.value().dialog->get();
+        auto m = arc::Archive::instance().newMedia(name, serial, cap, r.value().dialog->rockridge(), r.value().dialog->joliet());
+        if (!m) {
+            auto rb = arc::Archive::instance().rollbackTransaction();
+            return unexpected_combined_error(cold_arc::ErrorCode::NewMediaDialogError, m.error(), rb.error());
         }
-    });
+        if (auto rb = arc::Archive::instance().commitTransaction(); !rb)
+            return unexpected_nested(cold_arc::ErrorCode::NewMediaDialogError, rb.error());
+    }
+    return {};
 }
 
 void NewMediaDialog::onEditMediaNameChanged() {
@@ -79,5 +84,5 @@ bool NewMediaDialog::rockridge() const {
     return m_rockridge->get_active();
 }
 bool NewMediaDialog::joliet() const {
-    return m_rockridge->get_active();
+    return m_joliet->get_active();
 }

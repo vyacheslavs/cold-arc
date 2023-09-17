@@ -8,12 +8,8 @@
 #include "Archive.h"
 #include "NewMediaDialog.h"
 #include "ExportDialog.h"
-#include "Signals.h"
 
-#define LIBISOFS_WITHOUT_LIBBURN yes
-#include "libisofs.h"
-
-MediaView::MediaView(Gtk::TreeView::BaseObjectType* bot, const Glib::RefPtr<Gtk::Builder>& builder, bool toolbar) {
+MediaView::MediaView(Gtk::TreeView::BaseObjectType*, const Glib::RefPtr<Gtk::Builder>& builder, bool toolbar) {
     m_media_view = findWidget<Gtk::TreeView>("mediaview", builder);
     m_media_store = findObject<Gtk::ListStore>("liststore2", builder);
 
@@ -75,18 +71,15 @@ void MediaView::onMediaToggle(const Glib::ustring& path) {
 }
 
 void MediaView::update() {
-    try {
-        if (!arc::Archive::instance().hasActiveArchive())
-            return;
+    if (!arc::Archive::instance().hasActiveArchive())
+        return;
 
-        m_media_toolbar->set_visible(arc::Archive::instance().hasCurrentMedia());
+    m_media_toolbar->set_visible(arc::Archive::instance().hasCurrentMedia());
 
-        m_media_store->clear();
-        MediaListColumns cols;
-        arc::Archive::instance().browseMedia(sigc::mem_fun(this, &MediaView::addMedia));
-    } catch (const sqlite::sqlite_exception& e) {
-        sqliteError(e);
-    }
+    m_media_store->clear();
+    MediaListColumns cols;
+    if (auto res = arc::Archive::instance().browseMedia(sigc::mem_fun(this, &MediaView::addMedia));!res)
+        reportError(res.error());
 }
 
 std::string MediaView::collectExclusions() const {
@@ -108,7 +101,7 @@ std::string MediaView::collectExclusions() const {
 
 void MediaView::onMediaViewSelectionChanged() {
     auto sel = m_media_view_selection->get_selected();
-    auto outcome = false;
+    bool outcome;
     if (!sel) {
         outcome = false;
     } else {
@@ -128,12 +121,19 @@ void MediaView::onMediaViewSelectButton() {
 
     MediaListColumns cols;
     auto new_id = (*sel)[cols.id];
-    auto p = arc::Archive::instance().savePoint();
-    try {
-        arc::Archive::instance().settings->switchMedia(new_id);
-    } catch (const sqlite::sqlite_exception& e) {
-        p.rollback();
-        sqliteError(e);
+
+    if (auto rb = arc::Archive::instance().beginTransaction();!rb) {
+        reportError(rb.error());
+        return;
+    }
+    if (auto res = arc::Archive::instance().settings->switchMedia(new_id); !res) {
+        auto rb = arc::Archive::instance().rollbackTransaction();
+        reportError(make_combined_error(res.error(), rb.error(), cold_arc::ErrorCode::MediaSelectError));
+        return;
+    }
+    if (auto rb = arc::Archive::instance().commitTransaction();!rb) {
+        reportError(rb.error());
+        return;
     }
 }
 
@@ -143,26 +143,37 @@ void MediaView::onMediaViewRemoveButtonClicked() {
         return;
 
     MediaListColumns cols;
-    auto media = arc::Archive::instance().settings->media()->getMedia((*sel)[cols.id]);
+    auto media = arc::Archive::instance().settings->media()->construct((*sel)[cols.id]);
+    if (!media) {
+        reportError(media.error());
+        return;
+    }
     Gtk::MessageDialog dlg("Are you sure you want to delete this media?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
-    dlg.set_secondary_text(Glib::ustring::compose("All files and folders from this media (%1) will be deleted from the archive!", media->name()));
+    dlg.set_secondary_text(Glib::ustring::compose("All files and folders from this media (%1) will be deleted from the archive!", media.value()->name()));
 
     if (dlg.run() == Gtk::RESPONSE_NO)
         return;
 
-    auto p = arc::Archive::instance().savePoint();
-    try {
-        media->remove();
-    } catch (const sqlite::sqlite_exception& e) {
-        p.rollback();
-        sqliteError(e);
+    if (auto rb = arc::Archive::instance().beginTransaction();!rb) {
+        reportError(rb.error());
+        return;
+    }
+    if (auto res = media.value()->remove(); !res) {
+        auto rb = arc::Archive::instance().rollbackTransaction();
+        reportError(make_combined_error(res.error(), rb.error(), cold_arc::ErrorCode::MediaSelectError));
+        return;
+    }
+    if (auto rb = arc::Archive::instance().commitTransaction();!rb) {
+        reportError(rb.error());
+        return;
     }
 }
 
 void MediaView::onNewMediaButtonClicked() {
-    NewMediaDialog::run();
+    if (auto res = NewMediaDialog::run();!res)
+        reportError(res.error());
 }
-void MediaView::addMedia(uint64_t id, uint64_t capacity, uint64_t occupied, const std::string& name, const std::string& serial) {
+cold_arc::Error MediaView::addMedia(uint64_t id, uint64_t capacity, uint64_t occupied, const std::string& name, const std::string& serial) {
     MediaListColumns cols;
 
     auto row = *m_media_store->append();
@@ -176,7 +187,10 @@ void MediaView::addMedia(uint64_t id, uint64_t capacity, uint64_t occupied, cons
     std::ostringstream ss;
     ss << HumanReadable{occupied} << "/" << HumanReadable{capacity};
     row[cols.percentage_text] = ss.str();
+
+    return {};
 }
+
 std::vector<uint64_t> MediaView::collectCheckedIds() const {
     std::vector<uint64_t> ids;
 
@@ -208,7 +222,8 @@ void MediaView::onMediaViewExportButton() {
 
     if (newISO.run() == Gtk::RESPONSE_OK) {
         newISO.hide();
-        ExportDialog::run(media_id, newISO.get_filename());
+        if (auto res = ExportDialog::run(media_id, newISO.get_filename());!res)
+            reportError(res.error());
     }
 }
 

@@ -11,22 +11,19 @@
 #define LIBISOFS_WITHOUT_LIBBURN yes
 #include "libisofs.h"
 #include "FileStream.h"
+#include "Utils.h"
 
 class ISOBuilder {
     public:
-        /**
-         * Constructs ISO builder
-         *
-         * @throws ISOBuilderConstructionException
-         */
-        ISOBuilder();
+        ISOBuilder() = default;
         ~ISOBuilder();
 
-        void prepareImage(const char* imageId);
-        [[nodiscard]] IsoDir* new_folder(const char* folder_name, IsoDir* parent = nullptr);
+        [[nodiscard]] cold_arc::Result<> construct();
+        [[nodiscard]] cold_arc::Result<> prepareImage(const std::string& imageId);
+        [[nodiscard]] cold_arc::Result<IsoDir*> new_folder(const std::string& folder_name, IsoDir* parent = nullptr);
         [[nodiscard]] IsoDir* root_folder() const;
-        [[nodiscard]] IsoStream* new_file(const char* file_name, const char* file_path, IsoDir* parent);
-        void burn(const char* outfile, bool rockridge, bool joliet);
+        [[nodiscard]] cold_arc::Result<IsoStream*> new_file(const std::string& file_name, const std::string& file_path, IsoDir* parent);
+        [[nodiscard]] cold_arc::Result<> burn(const std::string& outfile, bool rockridge, bool joliet);
         void set_stream_callback(stream_callback* cb);
     private:
         IsoImage* m_image {nullptr};

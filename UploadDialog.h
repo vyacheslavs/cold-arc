@@ -9,33 +9,34 @@
 #include "UploadFilesCollection.h"
 #include "UploadStage1Resolving.h"
 #include "UploadStage2DbUpdate.h"
+#include "Utils.h"
 
 class UploadDialog : public Gtk::Dialog {
 public:
-    UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder,
-                 uint64_t current_folder_parent_id, UploadFilesCollection&& files);
+    UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
 
-    static bool run(uint64_t current_folder_parent_id, UploadFilesCollection&& files);
+    [[nodiscard]] static cold_arc::Result<bool> run(uint64_t current_folder_parent_id, UploadFilesCollection&& files);
+    [[nodiscard]] cold_arc::Result<> construct(const Glib::RefPtr<Gtk::Builder>& builder, uint64_t current_folder_parent_id, UploadFilesCollection&& files);
 
 private:
 
     void onStage1Notification(const UploadFileInfo& notification);
-    void onStage2Update(uint64_t id, uint64_t total, bool shut, std::shared_ptr<ExceptionCargoBase> e);
+    void onStage2Update(uint64_t id, uint64_t total, bool shut, const cold_arc::Error& e);
     void onRemoveButtonClicked();
     void onRemoveErrButtonClicked();
     void onNextButtonClicked();
 
-    UploadStage1Resolving m_stage1;
+    std::unique_ptr<UploadStage1Resolving> m_stage1;
     std::unique_ptr<UploadStage2DbUpdate> m_stage2;
-    Gtk::TreeView* m_tree;
-    Gtk::ListStore* m_store;
-    Gtk::ProgressBar* m_progress;
-    Gtk::ToolButton* m_remove_button;
-    Gtk::ToolButton* m_remove_all_skipped;
-    Gtk::Button* m_btn_next;
-    Gtk::Button* m_btn_close;
+    Gtk::TreeView* m_tree {nullptr};
+    Gtk::ListStore* m_store {nullptr};
+    Gtk::ProgressBar* m_progress {nullptr};
+    Gtk::ToolButton* m_remove_button {nullptr};
+    Gtk::ToolButton* m_remove_all_skipped {nullptr};
+    Gtk::Button* m_btn_next {nullptr};
+    Gtk::Button* m_btn_close {nullptr};
     std::vector<UploadFileInfo> m_ready_files;
-    uint64_t m_current_folder_parent_id;
+    uint64_t m_current_folder_parent_id {0};
 };
 
 

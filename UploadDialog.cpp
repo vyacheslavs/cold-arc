@@ -9,47 +9,13 @@
 
 #include <iostream>
 
-UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder,
-    uint64_t current_folder_parent_id, UploadFilesCollection&& files) : Gtk::Dialog(win),
-                                                                        m_stage1(std::move(
-                                                                            files)),
-                                                                        m_current_folder_parent_id(
-                                                                            current_folder_parent_id) {
+UploadDialog::UploadDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder) : Gtk::Dialog(win) {}
 
-    m_stage1.signal_upload_notification(sigc::mem_fun(this, &UploadDialog::onStage1Notification));
-
-    m_tree = findWidget<Gtk::TreeView>("tree", builder);
-    m_progress = findWidget<Gtk::ProgressBar>("progress", builder);
-    m_remove_button = findWidget<Gtk::ToolButton>("btn_remove", builder);
-    m_remove_all_skipped = findWidget<Gtk::ToolButton>("btn_remove_err", builder);
-    m_btn_next = findWidget<Gtk::Button>("btn_next", builder);
-    m_btn_close = findWidget<Gtk::Button>("btn_close", builder);
-
-    m_remove_button->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onRemoveButtonClicked));
-    m_remove_all_skipped->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onRemoveErrButtonClicked));
-    m_btn_next->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onNextButtonClicked));
-    m_btn_next->set_sensitive(false);
-    m_btn_close->set_sensitive(false);
-    m_remove_button->set_sensitive(false);
-    m_remove_all_skipped->set_sensitive(false);
-
-    UploadListColumns cols;
-    m_tree->append_column("Status", cols.status);
-    m_tree->append_column("Folder", cols.folder);
-    m_tree->append_column("Path", cols.path);
-    m_tree->append_column("SHA256", cols.hash);
-    m_tree->append_column("Size", cols.size);
-    m_tree->append_column("Info", cols.reason);
-
-    m_store = findObject<Gtk::ListStore>("resolve_tree_list_store", builder);
-}
-
-bool UploadDialog::run(uint64_t current_folder_parent_id, UploadFilesCollection&& files) {
-    bool ret = false;
-    runDialog<UploadDialog>("/main/updlg.glade", "upload_dialog", [&](UploadDialog* dlg, int rc) {
-        ret = rc == Gtk::RESPONSE_OK;
-    }, current_folder_parent_id, files);
-    return ret;
+cold_arc::Result<bool> UploadDialog::run(uint64_t current_folder_parent_id, UploadFilesCollection&& files) {
+    auto r = runDialog<UploadDialog>("/main/updlg.glade", "upload_dialog", current_folder_parent_id, files);
+    if (!r)
+        return unexpected_nested(cold_arc::ErrorCode::UploadDialogError, r.error());
+    return r.value().rc == Gtk::RESPONSE_OK;
 }
 
 void UploadDialog::onStage1Notification(const UploadFileInfo& notification) {
@@ -162,23 +128,11 @@ void UploadDialog::onNextButtonClicked() {
     m_stage2->start(arc::Archive::instance().settings->media()->free());
 }
 
-void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut, std::shared_ptr<ExceptionCargoBase> _e) {
+void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut, const cold_arc::Error& e) {
 
-    if (_e) {
-        try {
-            response(Gtk::RESPONSE_CANCEL);
-            _e->rethrow();
-        } catch (const sqlite::sqlite_exception& e) {
-            response(Gtk::RESPONSE_CANCEL);
-            sqliteError(e);
-            return;
-        } catch (const WrongDatabaseVersion& e) {
-            response(Gtk::RESPONSE_CANCEL);
-            Gtk::MessageDialog dlg("Failed to upload data");
-            dlg.set_secondary_text(e.what());
-            dlg.run();
-            return;
-        }
+    if (e.code != cold_arc::ErrorCode::None) {
+        response(Gtk::RESPONSE_CANCEL);
+        reportError(e);
     }
 
     if (id>0) {
@@ -200,5 +154,37 @@ void UploadDialog::onStage2Update(uint64_t id, uint64_t total, bool shut, std::s
         m_btn_close->set_sensitive(true);
         response(Gtk::RESPONSE_OK);
     }
+}
+cold_arc::Result<> UploadDialog::construct(const Glib::RefPtr<Gtk::Builder>& builder, uint64_t current_folder_parent_id, UploadFilesCollection&& files) {
+    m_stage1 = std::make_unique<UploadStage1Resolving>(std::move(files));
+    m_current_folder_parent_id = current_folder_parent_id;
+    m_stage1->signal_upload_notification(sigc::mem_fun(this, &UploadDialog::onStage1Notification));
+
+    m_tree = findWidget<Gtk::TreeView>("tree", builder);
+    m_progress = findWidget<Gtk::ProgressBar>("progress", builder);
+    m_remove_button = findWidget<Gtk::ToolButton>("btn_remove", builder);
+    m_remove_all_skipped = findWidget<Gtk::ToolButton>("btn_remove_err", builder);
+    m_btn_next = findWidget<Gtk::Button>("btn_next", builder);
+    m_btn_close = findWidget<Gtk::Button>("btn_close", builder);
+
+    m_remove_button->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onRemoveButtonClicked));
+    m_remove_all_skipped->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onRemoveErrButtonClicked));
+    m_btn_next->signal_clicked().connect(sigc::mem_fun(this, &UploadDialog::onNextButtonClicked));
+    m_btn_next->set_sensitive(false);
+    m_btn_close->set_sensitive(false);
+    m_remove_button->set_sensitive(false);
+    m_remove_all_skipped->set_sensitive(false);
+
+    UploadListColumns cols;
+    m_tree->append_column("Status", cols.status);
+    m_tree->append_column("Folder", cols.folder);
+    m_tree->append_column("Path", cols.path);
+    m_tree->append_column("SHA256", cols.hash);
+    m_tree->append_column("Size", cols.size);
+    m_tree->append_column("Info", cols.reason);
+
+    m_store = findObject<Gtk::ListStore>("resolve_tree_list_store", builder);
+
+    return {};
 }
 

@@ -6,16 +6,17 @@
 #define COLD_ARC_GTK_ARCHIVESETTINGSDIALOG_H
 
 #include <gtkmm-3.0/gtkmm.h>
+#include "Utils.h"
 
 class ArchiveSettingsDialog : public Gtk::Dialog {
     public:
         ArchiveSettingsDialog(Gtk::Dialog::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder);
-        static void run();
+        [[nodiscard]] static cold_arc::Result<> run();
 
         Glib::ustring getArchiveName() const;
     private:
 
-        Gtk::Entry* m_edit_arc_name;
+        Gtk::Entry* m_edit_arc_name {nullptr};
 };
 
 

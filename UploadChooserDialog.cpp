@@ -9,15 +9,15 @@ UploadChooserDialog::UploadChooserDialog(Gtk::Dialog::BaseObjectType *win, const
     m_chooser_widget = findWidget<Gtk::FileChooserWidget>("chooser_widget", builder);
 }
 
-UploadFilesCollection UploadChooserDialog::run() {
+cold_arc::Result<UploadFilesCollection> UploadChooserDialog::run() {
+    auto r = runDialog<UploadChooserDialog>("/main/uploaddialog.glade", "upload_dlg");
+    if (!r)
+        return unexpected_nested(cold_arc::ErrorCode::UploadChooserDialogError, r.error());
 
-    UploadFilesCollection files_to_upload;
-    runDialog<UploadChooserDialog>("/main/uploaddialog.glade", "upload_dlg", [&](UploadChooserDialog* dlg, int rc){
-        if (rc == Gtk::RESPONSE_OK)
-            files_to_upload = std::move(dlg->getFiles());
-    });
+    if (r.value().rc == Gtk::RESPONSE_OK)
+        return std::move(r.value().dialog->getFiles());
 
-    return std::move(files_to_upload);
+    return {};
 }
 
 UploadFilesCollection UploadChooserDialog::getFiles() const {

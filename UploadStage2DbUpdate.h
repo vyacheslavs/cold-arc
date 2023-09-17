@@ -10,18 +10,18 @@
 #include "UploadFileInfo.h"
 #include <thread>
 #include "Utils.h"
-#include "Exceptions.h"
+#include "Archive.h"
 
 struct Stage2Notification {
 
     Stage2Notification(bool _is_running, uint64_t idx) : thread_running(_is_running), index(idx) {}
     template <typename E>
     Stage2Notification(bool _is_running, uint64_t idx, const E& _e)
-        : thread_running(_is_running), index(idx), e(std::make_shared<ExceptionCargo<E>>(_e)) {}
+        : thread_running(_is_running), index(idx), e(_e) {}
 
     bool thread_running {false};
     uint64_t index {0};
-    std::shared_ptr<ExceptionCargoBase> e;
+    cold_arc::Error e;
 };
 
 using Stage2NotificationQueue = std::list<Stage2Notification>;
@@ -29,7 +29,7 @@ using Stage2NotificationQueueSafe = BodyGuard<Stage2NotificationQueue>;
 
 class UploadStage2DbUpdate {
     public:
-        using sig_proto = sigc::slot<void(uint64_t, uint64_t, bool, std::shared_ptr<ExceptionCargoBase>)>;
+        using sig_proto = sigc::slot<void(uint64_t, uint64_t, bool, const cold_arc::Error&)>;
         UploadStage2DbUpdate(std::vector<UploadFileInfo>&& files, uint64_t parentId);
         void signal_update_notification(sig_proto&& slot);
         void start(uint64_t cap_limit);
@@ -51,7 +51,7 @@ class UploadStage2DbUpdate {
         std::vector<UploadFileInfo> m_files;
         std::unique_ptr<std::thread> m_stage2_thread;
         Dispatcher m_dispatcher;
-        sigc::signal<void(uint64_t, uint64_t, bool, std::shared_ptr<ExceptionCargoBase>)> m_gui_slot;
+        sigc::signal<void(uint64_t, uint64_t, bool, const cold_arc::Error&)> m_gui_slot;
         uint64_t m_parentId;
 };
 

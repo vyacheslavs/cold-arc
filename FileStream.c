@@ -32,7 +32,7 @@ static off_t file_stream_get_size(IsoStream *stream);
 static int file_stream_read(IsoStream *stream, void *buf, size_t count);
 static int file_stream_is_repeatable(IsoStream *stream);
 static void file_stream_get_id(IsoStream *stream, unsigned int *fs_id, dev_t *dev_id, ino_t *ino_id);
-static void file_stream_free(IsoStream *stream);
+void file_stream_free(IsoStream *stream);
 static int file_stream_update_size(IsoStream *stream);
 static IsoStream* file_stream_get_input_stream(IsoStream *stream, int flag);
 static int file_stream_clone_stream(IsoStream *old_stream, IsoStream **new_stream, int flag);
@@ -125,7 +125,7 @@ static void file_stream_get_id(IsoStream *stream, unsigned int *fs_id, dev_t *de
     *ino_id = data->ino_id;
 }
 
-static void file_stream_free(IsoStream *stream) {
+void file_stream_free(IsoStream *stream) {
     FileStreamPrivate* data = (FileStreamPrivate*) stream->data;
     free((void*)data->path);
     free(data);
