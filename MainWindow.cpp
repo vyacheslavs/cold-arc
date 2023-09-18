@@ -185,6 +185,13 @@ void MainWindow::updateTree() {
     if (!arc::Archive::instance().hasActiveArchive())
         return;
 
+    std::optional<uint64_t> selected_id;
+    if (m_selection->get_selected()) {
+        FolderModelColumns cols;
+        auto row = *(m_tree->get_selection()->get_selected());
+        selected_id = row[cols.id];
+    }
+
     m_tree_store->clear();
     m_contents_store->clear();
     m_tree_fast_access.clear();
@@ -206,6 +213,13 @@ void MainWindow::updateTree() {
                 m_tree->expand_to_path(m_tree_store->get_path(it->second));
                 m_colapse_expand_records[exp.first] = true;
             }
+        }
+    }
+
+    if (selected_id) {
+        auto sel = m_tree_fast_access.find(selected_id.value());
+        if (sel != m_tree_fast_access.end()) {
+            m_selection->select(sel->second);
         }
     }
 }
