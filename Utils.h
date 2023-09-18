@@ -67,6 +67,7 @@ namespace cold_arc {
         MediaSelectError,
         MediaRemoveError,
         MediaLockError,
+        ReloadMediaError,
     };
 
     typedef std::string(*explain_aux_callback)(const struct Error&);

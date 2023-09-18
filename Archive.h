@@ -335,6 +335,7 @@ namespace arc {
                      * @param new_id
                      */
                     [[nodiscard]] cold_arc::Result<> switchMedia(uint64_t new_id);
+                    [[nodiscard]] cold_arc::Result<> reloadMedia();
 
                 private:
                     Glib::ustring m_name;

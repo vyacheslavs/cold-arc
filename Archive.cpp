@@ -375,6 +375,16 @@ namespace arc {
         Signals::instance().update_media_view.emit();
         return {};
     }
+    cold_arc::Result<> Archive::Settings::reloadMedia() {
+        if (!m_current_media)
+            return {};
+
+        auto m = std::make_unique<Media>();
+        if (auto res = m->construct(m_dbhandle, m_current_media->m_id); !res)
+            return unexpected_nested(cold_arc::ErrorCode::ReloadMediaError, res.error());
+        m_current_media = std::move(m);
+        return {};
+    }
 
     const Glib::ustring &Archive::Media::name() const {
         return m_name;

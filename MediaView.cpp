@@ -8,6 +8,7 @@
 #include "Archive.h"
 #include "NewMediaDialog.h"
 #include "ExportDialog.h"
+#include "Signals.h"
 
 MediaView::MediaView(Gtk::TreeView::BaseObjectType*, const Glib::RefPtr<Gtk::Builder>& builder, bool toolbar) {
     m_media_view = findWidget<Gtk::TreeView>("mediaview", builder);
@@ -141,6 +142,7 @@ void MediaView::onMediaViewSelectButton() {
         reportError(rb.error());
         return;
     }
+    Signals::instance().update_main_window();
 }
 
 void MediaView::onMediaViewRemoveButtonClicked() {
@@ -250,5 +252,13 @@ void MediaView::onMediaViewLockButton() {
 
     const auto& row = *sel;
     row[cols.locked] = m_media_lock_button->get_active();
+
+    if (arc::Archive::instance().settings->media()->id() == row[cols.id]) {
+        if (auto res = arc::Archive::instance().settings->reloadMedia(); !res) {
+            reportError(res.error());
+            return;
+        }
+        Signals::instance().update_main_window();
+    }
 }
 

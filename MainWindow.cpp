@@ -151,12 +151,12 @@ void MainWindow::updateUI() {
     theme->add_resource_path("/icons/app");
 
     m_sep1->set_visible(arc::Archive::instance().hasActiveArchive());
-    m_sep2->set_visible(arc::Archive::instance().hasCurrentMedia());
-    m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia());
-    m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia());
+    m_sep2->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
+    m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
+    m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
-    m_delete_button->set_visible(arc::Archive::instance().hasActiveArchive());
+    m_delete_button->set_visible(arc::Archive::instance().hasActiveArchive() && !arc::Archive::instance().settings->media()->locked());
     m_delete_button->set_sensitive(false);
 
     auto title = Glib::ustring("ColdArc");
