@@ -246,11 +246,13 @@ namespace arc {
     cold_arc::Result<> Archive::remove(uint64_t id, const std::vector<uint64_t>& media_ids) {
         try {
             std::set<uint64_t> media_set(media_ids.begin(), media_ids.end());
+            auto ref = 0;
             {
                 *m_dbhandle
                     << "SELECT siz, arc_media_id FROM arc_tree INNER JOIN arc_tree_to_media ON (arc_tree.id=arc_tree_to_media.arc_tree_id) WHERE arc_tree.id=?"
                     << id
                     >> [&](sqlite3_uint64 siz, sqlite3_uint64 mid) {
+                        ref++;
                         if (media_set.count(mid)) {
                             {
                                 *m_dbhandle << "UPDATE arc_media SET occupied=occupied-? WHERE id=?" << siz << mid;
@@ -260,10 +262,11 @@ namespace arc {
                                     << "DELETE FROM arc_tree_to_media WHERE arc_tree_id=? AND arc_media_id=?"
                                     << id << mid;
                             }
+                            ref--;
                         }
                     };
             }
-            {
+            if (ref == 0) {
                 *m_dbhandle
                     << "DELETE FROM arc_tree WHERE id=?"
                     << id;
