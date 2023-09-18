@@ -67,6 +67,8 @@
       <column type="gchararray"/>
       <!-- column-name id -->
       <column type="gulong"/>
+      <!-- column-name locked -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkLabel" id="new_archive">
@@ -327,11 +329,11 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkToolButton" id="lock_button">
+                              <object class="GtkToolButton" id="export_button">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="use-underline">True</property>
-                                <property name="label-widget">label4</property>
+                                <property name="label-widget">label6</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -339,11 +341,11 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkToolButton" id="export_button">
+                              <object class="GtkToggleToolButton" id="lock_button">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="use-underline">True</property>
-                                <property name="label-widget">label6</property>
+                                <property name="label-widget">label4</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>

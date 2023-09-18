@@ -486,4 +486,20 @@ namespace arc {
     bool Archive::Media::joliet() const {
         return m_joliet;
     }
+    cold_arc::Result<> Archive::Media::lock(bool locked) {
+        try {
+            {
+                *m_dbhandle
+                    << "UPDATE arc_media SET locked=? WHERE id=?"
+                    << (locked ? 1 : 0)
+                    << m_id;
+            }
+        } catch (const sqlite::sqlite_exception& e) {
+            return unexpected_sqlite_exception(cold_arc::ErrorCode::MediaLockError, e.get_code());
+        }
+        return {};
+    }
+    bool Archive::Media::locked() const {
+        return m_locked;
+    }
 } // arc

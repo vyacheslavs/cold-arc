@@ -18,6 +18,8 @@
       <column type="gchararray"/>
       <!-- column-name id -->
       <column type="gulong"/>
+      <!-- column-name locked -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkDialog" id="deletedlg">

@@ -55,7 +55,7 @@ cold_arc::Result<> DeleteDialog::construct(const Glib::RefPtr<Gtk::Builder>& bui
         auto mp = arc::Archive::instance().settings->media()->construct(m);
         if (!mp)
             return unexpected_nested(cold_arc::ErrorCode::DeleteDialogError, mp.error());
-        m_media_view->addMedia(mp.value()->id(), mp.value()->capacity(), mp.value()->occupied(), mp.value()->name(), mp.value()->serial());
+        m_media_view->addMedia(mp.value()->id(), mp.value()->capacity(), mp.value()->occupied(), mp.value()->name(), mp.value()->serial(), mp.value()->locked());
     }
     return {};
 }
