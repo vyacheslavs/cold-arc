@@ -151,9 +151,9 @@ namespace arc {
                 try {
                     cold_arc::Error er;
                     *m_dbhandle
-                        << "SELECT id, capacity, occupied, name, serial FROM arc_media"
-                        >> [&](sqlite3_uint64 id, sqlite3_uint64 cap, sqlite3_uint64 occ, const std::string& name, const std::string& serial) {
-                            er = callback(id, cap, occ, name, serial);
+                        << "SELECT id, capacity, occupied, name, serial, locked FROM arc_media"
+                        >> [&](sqlite3_uint64 id, sqlite3_uint64 cap, sqlite3_uint64 occ, const std::string& name, const std::string& serial, sqlite3_uint64 locked) {
+                            er = callback(id, cap, occ, name, serial, locked);
                            };
                     if (er.code != cold_arc::ErrorCode::None)
                         return unexpected_nested(cold_arc::ErrorCode::BrowseMediaError, er);
@@ -210,6 +210,7 @@ namespace arc {
                      * @param size
                      */
                     [[nodiscard]] cold_arc::Result<> occupy(uint64_t size);
+                    [[nodiscard]] cold_arc::Result<> lock(bool locked);
                     [[nodiscard]] const Glib::ustring& name() const;
                     [[nodiscard]] const Glib::ustring& serial() const;
                     [[nodiscard]] uint64_t occupied() const;
@@ -218,6 +219,7 @@ namespace arc {
                     [[nodiscard]] uint64_t id() const;
                     [[nodiscard]] bool rockridge() const;
                     [[nodiscard]] bool joliet() const;
+                    [[nodiscard]] bool locked() const;
                     /**
                      * Removes the media
                      */
@@ -333,6 +335,7 @@ namespace arc {
                      * @param new_id
                      */
                     [[nodiscard]] cold_arc::Result<> switchMedia(uint64_t new_id);
+                    [[nodiscard]] cold_arc::Result<> reloadMedia();
 
                 private:
                     Glib::ustring m_name;

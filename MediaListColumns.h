@@ -16,6 +16,7 @@ class MediaListColumns : public Gtk::TreeModel::ColumnRecord {
         Gtk::TreeModelColumn<gint> percentage;
         Gtk::TreeModelColumn<Glib::ustring> percentage_text;
         Gtk::TreeModelColumn<gulong> id;
+        Gtk::TreeModelColumn<gint> locked;
 
         MediaListColumns() {
             add(active_icon);
@@ -25,6 +26,7 @@ class MediaListColumns : public Gtk::TreeModel::ColumnRecord {
             add(percentage);
             add(percentage_text);
             add(id);
+            add(locked);
         }
 };
 

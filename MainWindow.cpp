@@ -151,12 +151,12 @@ void MainWindow::updateUI() {
     theme->add_resource_path("/icons/app");
 
     m_sep1->set_visible(arc::Archive::instance().hasActiveArchive());
-    m_sep2->set_visible(arc::Archive::instance().hasCurrentMedia());
-    m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia());
-    m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia());
+    m_sep2->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
+    m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
+    m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
-    m_delete_button->set_visible(arc::Archive::instance().hasActiveArchive());
+    m_delete_button->set_visible(arc::Archive::instance().hasActiveArchive() && !arc::Archive::instance().settings->media()->locked());
     m_delete_button->set_sensitive(false);
 
     auto title = Glib::ustring("ColdArc");
@@ -185,6 +185,13 @@ void MainWindow::updateTree() {
     if (!arc::Archive::instance().hasActiveArchive())
         return;
 
+    std::optional<uint64_t> selected_id;
+    if (m_selection->get_selected()) {
+        FolderModelColumns cols;
+        auto row = *(m_tree->get_selection()->get_selected());
+        selected_id = row[cols.id];
+    }
+
     m_tree_store->clear();
     m_contents_store->clear();
     m_tree_fast_access.clear();
@@ -206,6 +213,13 @@ void MainWindow::updateTree() {
                 m_tree->expand_to_path(m_tree_store->get_path(it->second));
                 m_colapse_expand_records[exp.first] = true;
             }
+        }
+    }
+
+    if (selected_id) {
+        auto sel = m_tree_fast_access.find(selected_id.value());
+        if (sel != m_tree_fast_access.end()) {
+            m_selection->select(sel->second);
         }
     }
 }

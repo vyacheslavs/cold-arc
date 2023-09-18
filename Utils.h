@@ -66,6 +66,8 @@ namespace cold_arc {
         UploadDialogError,
         MediaSelectError,
         MediaRemoveError,
+        MediaLockError,
+        ReloadMediaError,
     };
 
     typedef std::string(*explain_aux_callback)(const struct Error&);
@@ -114,6 +116,7 @@ namespace cold_arc {
 
 #define unexpected_error(code) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_generic, __PRETTY_FUNCTION__, __FILE__, __LINE__})
 #define unexpected_explained(code, foo, bar) tl::unexpected<cold_arc::Error>({code, foo, __PRETTY_FUNCTION__, __FILE__, __LINE__, bar})
+#define unexpected_sqlite_exception(code, bar) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_sqlite_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, bar})
 #define unexpected_nested(code, nested) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_nested_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, nested});
 #define unexpected_invalid_input_parameter(code, param_name) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_invalid_parameter, __PRETTY_FUNCTION__, __FILE__, __LINE__, std::string(param_name)})
 #define unexpected_combined_error(code, nested1, nested2) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_combined_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, cold_arc::combined_error(nested1, nested2)});

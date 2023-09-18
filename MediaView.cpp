@@ -8,6 +8,7 @@
 #include "Archive.h"
 #include "NewMediaDialog.h"
 #include "ExportDialog.h"
+#include "Signals.h"
 
 MediaView::MediaView(Gtk::TreeView::BaseObjectType*, const Glib::RefPtr<Gtk::Builder>& builder, bool toolbar) {
     m_media_view = findWidget<Gtk::TreeView>("mediaview", builder);
@@ -42,11 +43,13 @@ MediaView::MediaView(Gtk::TreeView::BaseObjectType*, const Glib::RefPtr<Gtk::Bui
     m_media_view_remove_button = findWidget<Gtk::ToolButton>("remove_button", builder);
     m_media_new_button = findWidget<Gtk::ToolButton>("new_media_button", builder);
     m_media_export_button = findWidget<Gtk::ToolButton>("export_button", builder);
+    m_media_lock_button = findWidget<Gtk::ToggleToolButton>("lock_button", builder);
 
     applyFontAwesome(m_media_view_select_button->get_label_widget(), false);
     applyFontAwesome(m_media_view_remove_button->get_label_widget(), false);
     applyFontAwesome(m_media_new_button->get_label_widget(), false);
     applyFontAwesome(m_media_export_button->get_label_widget(), false);
+    applyFontAwesome(m_media_lock_button->get_label_widget(), false);
 
     m_media_view_select_button->set_sensitive(false);
     m_media_view_remove_button->set_sensitive(false);
@@ -58,6 +61,7 @@ MediaView::MediaView(Gtk::TreeView::BaseObjectType*, const Glib::RefPtr<Gtk::Bui
     m_media_view_remove_button->signal_clicked().connect(sigc::mem_fun(this, &MediaView::onMediaViewRemoveButtonClicked));
     m_media_new_button->signal_clicked().connect(sigc::mem_fun(this, &MediaView::onNewMediaButtonClicked));
     m_media_export_button->signal_clicked().connect(sigc::mem_fun(this, &MediaView::onMediaViewExportButton));
+    m_media_lock_button->signal_clicked().connect(sigc::mem_fun(this, &MediaView::onMediaViewLockButton));
 }
 
 void MediaView::onMediaToggle(const Glib::ustring& path) {
@@ -102,16 +106,19 @@ std::string MediaView::collectExclusions() const {
 void MediaView::onMediaViewSelectionChanged() {
     auto sel = m_media_view_selection->get_selected();
     bool outcome;
+    bool locked = false;
     if (!sel) {
         outcome = false;
     } else {
         const auto& row = *sel;
         MediaListColumns cols;
         outcome = row[cols.id] != arc::Archive::instance().settings->media()->id();
+        locked = row[cols.locked] > 0;
     }
     m_media_view_select_button->set_sensitive(outcome);
     m_media_view_remove_button->set_sensitive(outcome);
     m_media_export_button->set_sensitive(outcome);
+    m_media_lock_button->set_active(locked);
 }
 
 void MediaView::onMediaViewSelectButton() {
@@ -135,6 +142,7 @@ void MediaView::onMediaViewSelectButton() {
         reportError(rb.error());
         return;
     }
+    Signals::instance().update_main_window();
 }
 
 void MediaView::onMediaViewRemoveButtonClicked() {
@@ -173,7 +181,7 @@ void MediaView::onNewMediaButtonClicked() {
     if (auto res = NewMediaDialog::run();!res)
         reportError(res.error());
 }
-cold_arc::Error MediaView::addMedia(uint64_t id, uint64_t capacity, uint64_t occupied, const std::string& name, const std::string& serial) {
+cold_arc::Error MediaView::addMedia(uint64_t id, uint64_t capacity, uint64_t occupied, const std::string& name, const std::string& serial, uint64_t locked) {
     MediaListColumns cols;
 
     auto row = *m_media_store->append();
@@ -183,6 +191,7 @@ cold_arc::Error MediaView::addMedia(uint64_t id, uint64_t capacity, uint64_t occ
     row[cols.checkbox] = 1;
     row[cols.serial] = serial;
     row[cols.id] = id;
+    row[cols.locked] = locked > 0;
     row[cols.percentage] = static_cast<int>((100 * occupied) / capacity);
     std::ostringstream ss;
     ss << HumanReadable{occupied} << "/" << HumanReadable{capacity};
@@ -224,6 +233,32 @@ void MediaView::onMediaViewExportButton() {
         newISO.hide();
         if (auto res = ExportDialog::run(media_id, newISO.get_filename());!res)
             reportError(res.error());
+    }
+}
+void MediaView::onMediaViewLockButton() {
+    auto sel = m_media_view_selection->get_selected();
+    if (!sel)
+        return;
+
+    MediaListColumns cols;
+    auto media = arc::Archive::instance().settings->media()->construct((*sel)[cols.id]);
+    if (!media) {
+        reportError(media.error());
+        return;
+    }
+
+    if (auto res = media.value()->lock(m_media_lock_button->get_active()); !res)
+        reportError(res.error());
+
+    const auto& row = *sel;
+    row[cols.locked] = m_media_lock_button->get_active();
+
+    if (arc::Archive::instance().settings->media()->id() == row[cols.id]) {
+        if (auto res = arc::Archive::instance().settings->reloadMedia(); !res) {
+            reportError(res.error());
+            return;
+        }
+        Signals::instance().update_main_window();
     }
 }
 
