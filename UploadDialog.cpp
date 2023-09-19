@@ -123,6 +123,15 @@ void UploadDialog::onNextButtonClicked() {
     m_remove_button->set_sensitive(false);
     m_remove_all_skipped->set_sensitive(false);
 
+    if (arc::Archive::instance().settings->is_paranoic()) {
+        std::stringstream ss;
+        ss << "Save point before upload files";
+        if (auto res = arc::Archive::instance().commit(ss.str()); !res) {
+            reportError(res.error());
+            return;
+        }
+    }
+
     m_stage2 = std::make_unique<UploadStage2DbUpdate>(std::move(m_ready_files), m_current_folder_parent_id);
     m_stage2->signal_update_notification(sigc::mem_fun(this, &UploadDialog::onStage2Update));
     m_stage2->start(arc::Archive::instance().settings->media()->free());

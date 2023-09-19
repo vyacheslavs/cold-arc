@@ -103,6 +103,29 @@ cold_arc::Result<> addFont(const Glib::ustring& font_resource) {
     return {};
 }
 
+cold_arc::Result<std::string> sha256(const std::string& data) {
+    unsigned char hash[EVP_MAX_MD_SIZE] = {0};
+    unsigned int md_len = 0;
+
+    auto md = EVP_get_digestbyname("sha256");
+    if (!md)
+        return unexpected_error(cold_arc::ErrorCode::SHA256CalcError);
+
+    auto _cleanup = [](EVP_MD_CTX* ptr) { EVP_MD_CTX_destroy(ptr); };
+    std::unique_ptr<EVP_MD_CTX, decltype(_cleanup)> mdctx(EVP_MD_CTX_create(), _cleanup);
+
+    EVP_DigestInit_ex(mdctx.get(), md, nullptr);
+    EVP_DigestUpdate(mdctx.get(), data.data(), data.size());
+    EVP_DigestFinal_ex(mdctx.get(), hash, &md_len);
+
+    std::ostringstream os;
+    os << std::hex << std::setfill('0');
+
+    for (int i = 0; i < md_len; ++i) {
+        os << std::setw(2) << static_cast<unsigned int>(hash[i]);
+    }
+    return os.str();
+}
 
 tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::string& filename, uint64_t size, const std::function<void(uint64_t)>& callback) {
     std::ifstream fp(filename, std::ios::in | std::ios::binary);
@@ -183,7 +206,7 @@ std::string cold_arc::explain_invalid_parameter(const Error& e) {
 
 std::string cold_arc::explain_sqlite_error(const Error& e) {
     std::stringstream ss;
-    ss << explain_generic(e) << "sqlite error code: " << std::any_cast<int>(e) << "\n";
+    ss << explain_generic(e) << "sqlite error code: " << std::any_cast<int>(e.aux) << "\n";
     return ss.str();
 }
 
@@ -220,10 +243,4 @@ std::string cold_arc::explain_combined_error(const cold_arc::Error& e) {
     ss << explain_nested_error(combined.second);
 
     return ss.str();
-}
-
-cold_arc::Error cold_arc::make_combined_error_(const cold_arc::Error& e, const cold_arc::Error& might_be_e, ErrorCode c,const char* func, const char* source, int line) {
-    if (might_be_e.code != ErrorCode::None)
-        return cold_arc::Error{c,explain_combined_error,func,source,line,combined_error(e, might_be_e)};
-    return e;
 }

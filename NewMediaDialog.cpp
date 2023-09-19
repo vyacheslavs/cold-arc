@@ -31,13 +31,22 @@ cold_arc::Result<> NewMediaDialog::run() {
     if (!r)
         return unexpected_nested(cold_arc::ErrorCode::NewMediaDialogError, r.error());
     if (r.value().rc == Gtk::RESPONSE_OK) {
+
+        auto [name, serial, cap] = r.value().dialog->get();
+
+        if (arc::Archive::instance().settings->is_paranoic()) {
+            std::stringstream ss;
+            ss << "Save point before new media ("<<name<<", serial:" <<serial<<") creation";
+            if (auto res = arc::Archive::instance().commit(ss.str()); !res)
+                return unexpected_nested(cold_arc::ErrorCode::NewMediaDialogError, res.error());
+        }
+
         if (auto rb = arc::Archive::instance().beginTransaction(); !rb)
             return unexpected_nested(cold_arc::ErrorCode::NewMediaDialogError, rb.error());
-        auto [name, serial, cap] = r.value().dialog->get();
         auto m = arc::Archive::instance().newMedia(name, serial, cap, r.value().dialog->rockridge(), r.value().dialog->joliet());
         if (!m) {
             auto rb = arc::Archive::instance().rollbackTransaction();
-            return unexpected_combined_error(cold_arc::ErrorCode::NewMediaDialogError, m.error(), rb.error());
+            return unexpected_combined_error(cold_arc::ErrorCode::NewMediaDialogError, m.error(), rb);
         }
         if (auto rb = arc::Archive::instance().commitTransaction(); !rb)
             return unexpected_nested(cold_arc::ErrorCode::NewMediaDialogError, rb.error());

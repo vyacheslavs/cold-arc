@@ -3,10 +3,11 @@ DROP TABLE IF EXISTS db_settings;
 CREATE TABLE IF NOT EXISTS db_settings (
     version       INTEGER NOT NULL,
     name          TEXT NOT NULL CHECK( LENGTH(name) <= 100 ),
+    paranoic      INTEGER NOT NULL,
     current_media INTEGER
 );
 
-INSERT INTO db_settings (version, name) VALUES (9, 'my archive');
+INSERT INTO db_settings (version, name, paranoic) VALUES (9, 'my archive', 1);
 
 DROP TABLE IF EXISTS arc_tree;
 CREATE TABLE IF NOT EXISTS arc_tree(
@@ -44,3 +45,6 @@ CREATE TABLE IF NOT EXISTS arc_tree_to_media (
     arc_media_id INTEGER NOT NULL,
     UNIQUE (arc_tree_id, arc_media_id)
 );
+
+DROP TABLE IF EXISTS arc_history;
+CREATE TABLE IF NOT EXISTS arc_history (id INTEGER PRIMARY KEY AUTOINCREMENT, description TEXT, dt INTEGER NOT NULL, data BLOB NOT NULL, dsize INTEGER NOT NULL, hash TEXT NOT NULL);

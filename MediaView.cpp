@@ -135,7 +135,7 @@ void MediaView::onMediaViewSelectButton() {
     }
     if (auto res = arc::Archive::instance().settings->switchMedia(new_id); !res) {
         auto rb = arc::Archive::instance().rollbackTransaction();
-        reportError(make_combined_error(res.error(), rb.error(), cold_arc::ErrorCode::MediaSelectError));
+        reportError(make_combined_error(res.error(), rb, cold_arc::ErrorCode::MediaSelectError));
         return;
     }
     if (auto rb = arc::Archive::instance().commitTransaction();!rb) {
@@ -168,7 +168,7 @@ void MediaView::onMediaViewRemoveButtonClicked() {
     }
     if (auto res = media.value()->remove(); !res) {
         auto rb = arc::Archive::instance().rollbackTransaction();
-        reportError(make_combined_error(res.error(), rb.error(), cold_arc::ErrorCode::MediaSelectError));
+        reportError(make_combined_error(res.error(), rb, cold_arc::ErrorCode::MediaSelectError));
         return;
     }
     if (auto rb = arc::Archive::instance().commitTransaction();!rb) {

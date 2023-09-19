@@ -9,6 +9,9 @@
 #include "Signals.h"
 #include <ctime>
 #include <filesystem>
+#include <zlib.h>
+#include <regex>
+#include "HistoryDialog.h"
 
 namespace arc {
     Archive &Archive::instance() {
@@ -314,16 +317,16 @@ namespace arc {
         m_transaction_lock.unlock();
         return {};
     }
-
     cold_arc::Result<> Archive::Settings::construct(const std::shared_ptr<sqlite::database>& dbhandle) {
         try {
             uint64_t media_id {0};
             if (!dbhandle)
                 return unexpected_invalid_input_parameter(cold_arc::ErrorCode::ConstructSettingsError, "dbhandle");
             *dbhandle
-                << "SELECT name, current_media FROM db_settings"
-                >> [&](const std::string& text, sqlite3_uint64 id) {
+                << "SELECT name, current_media, paranoic FROM db_settings"
+                >> [&](const std::string& text, sqlite3_uint64 id, sqlite3_uint64 p) {
                     m_name = text;
+                    m_paranoic = p;
                     media_id = id;
                 };
             if (media_id > 0) {
@@ -343,12 +346,14 @@ namespace arc {
         return m_name;
     }
 
-    cold_arc::Result<> Archive::Settings::updateName(const std::string& name) {
+    cold_arc::Result<> Archive::Settings::update(const std::string& name, bool paranoic) {
         try {
             *m_dbhandle
-                << "UPDATE db_settings SET name=?"
-                << name;
+                << "UPDATE db_settings SET name=?, paranoic=?"
+                << name
+                << (paranoic ? 1 : 0);
             m_name = name;
+            m_paranoic = paranoic;
         } catch (const sqlite::sqlite_exception& e) {
             return unexpected_explained(cold_arc::ErrorCode::SettingsUpdateNameError, cold_arc::explain_sqlite_error, e.get_code());
         }
@@ -384,6 +389,9 @@ namespace arc {
             return unexpected_nested(cold_arc::ErrorCode::ReloadMediaError, res.error());
         m_current_media = std::move(m);
         return {};
+    }
+    bool Archive::Settings::is_paranoic() const {
+        return m_paranoic;
     }
 
     const Glib::ustring &Archive::Media::name() const {
@@ -515,4 +523,238 @@ namespace arc {
     bool Archive::Media::locked() const {
         return m_locked;
     }
+
+    static std::string explain_commite_pipe_error(const cold_arc::Error& e) {
+        std::stringstream ss;
+        ss << cold_arc::explain_generic(e);
+        ss << "failed to invoke sqlite3 tool, propbably sqlite3 is not installed\n";
+        return ss.str();
+    }
+
+    static std::string explain_libz_error(const cold_arc::Error& e) {
+        std::stringstream ss;
+        ss << cold_arc::explain_generic(e);
+        ss << "failed to compress sql, error: " << std::any_cast<int>(e.aux) << "\n";
+        return ss.str();
+    }
+
+    static void cleanup_sql(std::string& sql) {
+        {
+            std::regex history(R"((CREATE\s+TABLE\s+arc_history\s*\())");
+            auto words_begin =
+                std::sregex_iterator(sql.begin(), sql.end(), history);
+            auto words_end = std::sregex_iterator();
+            if (words_begin != words_end) {
+                const std::smatch& match = *words_begin;
+                auto remove_it = sql.begin() + match.position();
+                while (remove_it != sql.end() && *remove_it != '\n') remove_it++;
+                sql.erase(sql.begin() + match.position(), remove_it+1);
+            }
+        }
+
+        do {
+            std::regex history(R"((INSERT\s+INTO\s+arc_history))", std::regex_constants::multiline);
+            auto words_begin = std::sregex_iterator(sql.begin(), sql.end(), history);
+            auto words_end = std::sregex_iterator();
+            if (words_begin == words_end)
+                break;
+            const std::smatch& match = *words_begin;
+            auto remove_it = sql.begin() + match.position();
+            while (remove_it != sql.end() && *remove_it != '\n') remove_it++;
+            sql.erase(sql.begin() + match.position(), remove_it+1);
+
+        } while (true);
+
+        do {
+            std::regex history(R"((INSERT\s+INTO\s+sqlite_sequence\s*VALUES\('arc_history'))", std::regex_constants::multiline);
+            auto words_begin = std::sregex_iterator(sql.begin(), sql.end(), history);
+            auto words_end = std::sregex_iterator();
+            if (words_begin == words_end)
+                break;
+            const std::smatch& match = *words_begin;
+            auto remove_it = sql.begin() + match.position();
+            while (remove_it != sql.end() && *remove_it != '\n') remove_it++;
+            sql.erase(sql.begin() + match.position(), remove_it+1);
+
+        } while (true);
+
+        auto transaction_start = sql.find("BEGIN TRANSACTION;");
+        if (transaction_start != std::string::npos) {
+            sql.insert(transaction_start + 18, "\n\n"
+                "DROP TABLE db_settings;\n"
+                "DROP INDEX arc_tree_walking;\n"
+                "DROP TABLE arc_tree_to_media;\n"
+                "DROP TABLE arc_tree;\n"
+                "DROP TABLE arc_media;\n"
+            );
+        }
+
+    }
+
+    cold_arc::Result<uint64_t> Archive::commit(const std::string& desc) {
+        // test if there's a sqlite tool invokable
+
+        std::stringstream ss;
+        ss << "echo .dump | sqlite3 "<<m_dbname;
+        FILE* fp = popen(ss.str().c_str(), "r");
+        if (!fp)
+            return unexpected_explained(cold_arc::ErrorCode::CommitError, explain_commite_pipe_error, nullptr);
+        auto pipe_auto_close = [](FILE* fp) {if (fp) fclose(fp); };
+        std::unique_ptr<FILE, decltype(pipe_auto_close)> auto_pipe {fp, pipe_auto_close};
+
+        if (auto res = beginTransaction(); !res)
+            return unexpected_nested(cold_arc::ErrorCode::CommitError, res.error());
+        cold_arc::Result<uint64_t> scope_error;
+        do {
+            ScopeExit scope([&]{
+                if (!scope_error) {
+                    if (auto rb = rollbackTransaction(); !rb)
+                        scope_error = unexpected_combined_error(cold_arc::ErrorCode::CommitError, scope_error.error(), rb);
+                    return;
+                }
+                if (auto res = commitTransaction(); !res)
+                    scope_error = unexpected_nested(cold_arc::ErrorCode::CommitError, res.error());
+            });
+
+            const int bsize = 4096;
+            std::list<std::vector<char>> bufs;
+            size_t all_size = 0;
+            do {
+                std::vector<char> b;
+                b.resize(bsize);
+                auto n = fread(&b[0], 1, bsize, fp);
+                if (n > 0) {
+                    b.resize(n);
+                    bufs.emplace_back(std::move(b));
+                    all_size += n;
+                }
+                if (n != bsize)
+                    break;
+            } while (true);
+
+            std::string sql;
+            sql.reserve(all_size);
+            for (auto& l : bufs) {
+                sql += std::string(&l[0], l.size());
+            }
+
+            cleanup_sql(sql);
+
+            std::vector<uint8_t> compressed(sql.size(), 0);
+            uLongf compressed_sz = compressed.size();
+            if (auto res = compress2(&compressed[0], &compressed_sz, reinterpret_cast<const Bytef*>(sql.data()), sql.size(), 9); res != Z_OK) {
+                scope_error = unexpected_explained(cold_arc::ErrorCode::CommitError, explain_libz_error, res);
+                break;
+            }
+            compressed.resize(compressed_sz);
+
+            auto sha = sha256(sql);
+            if (!sha) {
+                scope_error = unexpected_nested(cold_arc::ErrorCode::CommitError, sha.error());
+                break;
+            }
+
+            uint64_t history_id;
+            bool last_record = false;
+            try {
+                *m_dbhandle << "select id, (select max(id) from arc_history)=id from arc_history where hash=?"
+                << sha.value()
+                >> [&](sqlite3_uint64 id, sqlite3_uint64 is_it) {
+                    if (is_it) {
+                        last_record = true;
+                        history_id = id;
+                    }
+                };
+            } catch (const sqlite::sqlite_exception& e) {
+                scope_error = unexpected_sqlite_exception(cold_arc::ErrorCode::CommitError, e.get_code());
+                break;
+            }
+
+            if (last_record) {
+                // just update the description
+                try {
+                    *m_dbhandle << "UPDATE arc_history SET description=?, dt=?  WHERE id=?"
+                    << desc << time(nullptr) << history_id;
+                } catch (const sqlite::sqlite_exception& e) {
+                    scope_error = unexpected_sqlite_exception(cold_arc::ErrorCode::CommitError, e.get_code());
+                    break;
+                }
+            } else {
+                try {
+                    *m_dbhandle
+                        << "INSERT INTO arc_history (description, dt, data, dsize, hash) VALUES (?, ?, ?, ?, ?)"
+                        << desc
+                        << time(nullptr)
+                        << compressed
+                        << sql.size()
+                        << sha.value();
+                } catch (const sqlite::sqlite_exception& e) {
+                    scope_error = unexpected_sqlite_exception(cold_arc::ErrorCode::CommitError, e.get_code());
+                    break;
+                }
+                history_id = m_dbhandle->last_insert_rowid();
+            }
+
+            set_cursor(history_id);
+            scope_error = history_id;
+        } while (false);
+
+
+        return scope_error;
+    }
+
+    cold_arc::Result<> Archive::applyCommit(uint64_t id) {
+
+        std::vector<uint8_t> data;
+        sqlite3_uint64 dsize;
+        try {
+            *m_dbhandle
+            << "SELECT data, dsize FROM arc_history WHERE id=?"
+            << id
+            >> [&](std::vector<uint8_t>&& v, sqlite3_uint64 sz) {
+                data = std::move(v);
+                dsize = sz;
+            };
+        } catch (const sqlite::sqlite_exception& e) {
+            return unexpected_sqlite_exception(cold_arc::ErrorCode::ApplyCommitError, e.get_code());
+        }
+        if (data.empty())
+            return unexpected_error(cold_arc::ErrorCode::ApplyCommitError);
+
+        std::string sql;
+        sql.resize(dsize);
+        uLongf destLen = dsize;
+        uLong srcLen = data.size();
+        if (auto r = uncompress2(reinterpret_cast<Bytef*>(&sql[0]), &destLen, &data[0], &srcLen); r!= Z_OK)
+            return unexpected_explained(cold_arc::ErrorCode::ApplyCommitError, explain_libz_error, r);
+
+        const auto max_path = 256;
+        char tmpf[max_path] = "/tmp/coldarc.XXXXXX";
+        {
+            auto tmp = mkstemp(tmpf);
+            if (tmp < 0)
+                return unexpected_error(cold_arc::ErrorCode::ApplyCommitError);
+            if (write(tmp, sql.c_str(), sql.size()) != sql.size()) {
+                close(tmp);
+                return unexpected_error(cold_arc::ErrorCode::ApplyCommitError);
+            }
+            close(tmp);
+        }
+
+        std::stringstream ss;
+        ss << "cat "<<tmpf<<" | sqlite3 "<<m_dbname;
+        if (auto r = system(ss.str().c_str()); r != 0)
+            return unexpected_error(cold_arc::ErrorCode::ApplyCommitError);
+        return {};
+    }
+
+    cold_arc::Result<> Archive::removeCommit(uint64_t id) {
+        try {
+            *m_dbhandle << "DELETE FROM arc_history WHERE id=?" << id;
+        } catch (const sqlite::sqlite_exception& e) {
+            return unexpected_sqlite_exception(cold_arc::ErrorCode::RemoveCommitError, e.get_code());
+        }
+        return {};
+    }
+
 } // arc

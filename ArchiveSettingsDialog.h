@@ -17,6 +17,7 @@ class ArchiveSettingsDialog : public Gtk::Dialog {
     private:
 
         Gtk::Entry* m_edit_arc_name {nullptr};
+        Gtk::ToggleButton* m_paranoic {nullptr};
 };
 
 

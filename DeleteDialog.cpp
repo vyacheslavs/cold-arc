@@ -20,6 +20,13 @@ cold_arc::Result<> DeleteDialog::run(std::vector<uint64_t>&& items, std::set<uin
     if (r.value().rc != GTK_RESPONSE_OK)
         return {};
 
+    if (arc::Archive::instance().settings->is_paranoic()) {
+        std::stringstream ss;
+        ss << "Save point before delete files";
+        if (auto res = arc::Archive::instance().commit(ss.str()); !res)
+            unexpected_nested(cold_arc::ErrorCode::DeleteDialogError, res.error());
+    }
+
     if (auto res = arc::Archive::instance().beginTransaction(); !res)
         return unexpected_nested(cold_arc::ErrorCode::DeleteDialogError, res.error());
 
@@ -33,11 +40,11 @@ cold_arc::Result<> DeleteDialog::run(std::vector<uint64_t>&& items, std::set<uin
                 return cold_arc::Error{};
             }, id, excl, arc::Archive::CallbackLast | arc::Archive::WalkFilesAndFolders); !res) {
             auto rb = arc::Archive::instance().rollbackTransaction();
-            return unexpected_combined_error(cold_arc::ErrorCode::DeleteDialogError, res.error(), rb.error());
+            return unexpected_combined_error(cold_arc::ErrorCode::DeleteDialogError, res.error(), rb);
         }
         if (auto res = arc::Archive::instance().remove(id, ids); !res) {
             auto rb = arc::Archive::instance().rollbackTransaction();
-            return unexpected_combined_error(cold_arc::ErrorCode::DeleteDialogError, res.error(), rb.error());
+            return unexpected_combined_error(cold_arc::ErrorCode::DeleteDialogError, res.error(), rb);
         }
     }
 
