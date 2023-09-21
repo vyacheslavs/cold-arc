@@ -14,6 +14,7 @@
 #include "ContentsModelColumns.h"
 #include "DeleteDialog.h"
 #include "MediaView.h"
+#include "HistoryDialog.h"
 
 MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk::Builder>& builder) : Gtk::Window(win),
                                                                                                       m_builder(
@@ -33,8 +34,10 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_media_view = findWidgetDerived<MediaView>("mediaview", m_builder);
     m_sep1 = findWidget<Gtk::SeparatorToolItem>("sep1", m_builder);
     m_sep2 = findWidget<Gtk::SeparatorToolItem>("sep2", m_builder);
+    m_sep3 = findWidget<Gtk::SeparatorToolItem>("sep3", m_builder);
     m_delete_button = findWidget<Gtk::ToolButton>("delete_button", builder);
     m_contents_selection = findObject<Gtk::TreeSelection>("contents_selection", builder);
+    m_history_button = findWidget<Gtk::ToolButton>("history_button", m_builder);
 
     applyFontAwesome(m_open_archive_button->get_label_widget());
     applyFontAwesome(m_new_archive_button->get_label_widget());
@@ -43,6 +46,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     applyFontAwesome(m_create_folder->get_label_widget());
     applyFontAwesome(m_upload_button->get_label_widget());
     applyFontAwesome(m_delete_button->get_label_widget());
+    applyFontAwesome(m_history_button->get_label_widget());
 
     m_new_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onNewArchiveButtonClicked));
     m_open_archive_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onOpenArchiveButtonClicked));
@@ -56,6 +60,7 @@ MainWindow::MainWindow(Gtk::Window::BaseObjectType* win, const Glib::RefPtr<Gtk:
     m_delete_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onDeleteButtonClicked));
     m_contents_selection->signal_changed().connect(sigc::mem_fun(this, &MainWindow::updateContentsSelection));
     m_media_view->mediaToggled.connect(sigc::mem_fun(this, &MainWindow::updateTree));
+    m_history_button->signal_clicked().connect(sigc::mem_fun(this, &MainWindow::onHistoryButton));
 
     Signals::instance().update_main_window.connect(sigc::mem_fun(this, &MainWindow::updateUI));
     Signals::instance().new_folder.connect(sigc::mem_fun(this, &MainWindow::allocateTreeNodeUsingParentId));
@@ -152,12 +157,14 @@ void MainWindow::updateUI() {
 
     m_sep1->set_visible(arc::Archive::instance().hasActiveArchive());
     m_sep2->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
+    m_sep3->set_visible(arc::Archive::instance().hasCurrentMedia());
     m_upload_button->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
     m_create_folder->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
     m_archive_settings_button->set_visible(arc::Archive::instance().hasActiveArchive());
     m_add_new_media_button->set_visible(arc::Archive::instance().hasActiveArchive());
-    m_delete_button->set_visible(arc::Archive::instance().hasActiveArchive() && !arc::Archive::instance().settings->media()->locked());
+    m_delete_button->set_visible(arc::Archive::instance().hasCurrentMedia() && !arc::Archive::instance().settings->media()->locked());
     m_delete_button->set_sensitive(false);
+    m_history_button->set_visible(arc::Archive::instance().hasActiveArchive());
 
     auto title = Glib::ustring("ColdArc");
     if (arc::Archive::instance().hasActiveArchive()) {
@@ -330,4 +337,10 @@ void MainWindow::onDeleteButtonClicked() {
 
 void MainWindow::updateContentsSelection() {
     m_delete_button->set_sensitive(m_contents_view->get_selection()->count_selected_rows() > 0);
+}
+void MainWindow::onHistoryButton() {
+    if (auto res = HistoryDialog::run(); !res)
+        reportError(res.error());
+    /*if (auto res = arc::Archive::instance().commit("test"); !res)
+        reportError(res.error());*/
 }

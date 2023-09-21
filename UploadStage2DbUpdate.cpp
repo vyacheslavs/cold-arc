@@ -48,13 +48,13 @@ void UploadStage2DbUpdate::stage2Main(uint64_t cap_limit) {
         auto file_folder = m_db->createPath(item.getFolder(), m_parentId, true);
         if (!file_folder) {
             auto rb = m_db->rollbackTransaction();
-            scope_error = make_combined_error(file_folder.error(), rb.error(), cold_arc::ErrorCode::UploadThreadError);
+            scope_error = make_combined_error(file_folder.error(), rb, cold_arc::ErrorCode::UploadThreadError);
             return;
         }
         auto resFile = m_db->createFile(item.getBasename(), item, file_folder.value());
         if (!resFile) {
             auto rb = m_db->rollbackTransaction();
-            scope_error = make_combined_error(resFile.error(), rb.error(), cold_arc::ErrorCode::UploadThreadError);
+            scope_error = make_combined_error(resFile.error(), rb, cold_arc::ErrorCode::UploadThreadError);
             return;
         }
         if (!resFile.value()) {
@@ -72,7 +72,7 @@ void UploadStage2DbUpdate::stage2Main(uint64_t cap_limit) {
 
     if (auto res = m_db->settings->media()->occupy(to_upload); !res) {
         auto rb = m_db->rollbackTransaction();
-        scope_error = make_combined_error(res.error(), rb.error(), cold_arc::ErrorCode::UploadThreadError);
+        scope_error = make_combined_error(res.error(), rb, cold_arc::ErrorCode::UploadThreadError);
         return;
     }
 

@@ -6,6 +6,7 @@ pkg_check_modules(GTKMM gtkmm-3.0)
 pkg_check_modules(SQLITE3 sqlite3)
 find_package(OpenSSL REQUIRED)
 find_package(Fontconfig)
+find_package(ZLIB)
 
 set(EXPECTED_BUILD_TESTS OFF)
 set(EXPECTED_BUILD_PACKAGE_DEB OFF)
@@ -74,6 +75,9 @@ add_executable(cold_arc_gtk main.cpp
         ExportModelColumns.h
         ErrorBox.cpp
         ErrorBox.h
+        HistoryDialog.cpp
+        HistoryDialog.h
+        HistoryModelColumns.h
 )
 
 target_compile_definitions(cold_arc_gtk PRIVATE COLD_ARC_DB_VERSION=${COLD_ARC_DB_VERSION})
@@ -85,6 +89,7 @@ target_link_libraries(cold_arc_gtk
         ${Fontconfig_LIBRARIES}
         expected
         libisofs
+        ZLIB::ZLIB
 )
 
 add_custom_command(
@@ -100,6 +105,7 @@ add_custom_command(
         DEPENDS ${PROJECT_SOURCE_DIR}/res/updlg.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/deletedlg.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/export.glade
+        DEPENDS ${PROJECT_SOURCE_DIR}/res/history.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/err.glade
         DEPENDS ${PROJECT_SOURCE_DIR}/res/err.css
         DEPENDS ${PROJECT_SOURCE_DIR}/res/skeleton.db

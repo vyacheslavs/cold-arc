@@ -68,6 +68,12 @@ namespace cold_arc {
         MediaRemoveError,
         MediaLockError,
         ReloadMediaError,
+        CommitError,
+        HistoryDialogError,
+        WalkHistoryError,
+        ApplyCommitError,
+        SHA256CalcError,
+        RemoveCommitError,
     };
 
     typedef std::string(*explain_aux_callback)(const struct Error&);
@@ -92,7 +98,13 @@ namespace cold_arc {
     std::string explain_invalid_parameter(const Error& e);
     std::string explain_sqlite_error(const Error& e);
     std::string explain_combined_error(const Error& e);
-    [[maybe_unused]] Error make_combined_error_(const Error& e, const Error& might_be_e, ErrorCode c, const char* func, const char* source, int line);
+
+    template <typename ME>
+    [[maybe_unused]] Error make_combined_error_(const Error& e, const ME& might_be_e, ErrorCode c, const char* func, const char* source, int line) {
+        if (!might_be_e)
+            return cold_arc::Error{c,explain_combined_error,func,source,line,combined_error(e, might_be_e.error())};
+        return e;
+    }
 
     template<typename F>
     void unwind_nested(const Error& e, F && callback) {
@@ -119,7 +131,7 @@ namespace cold_arc {
 #define unexpected_sqlite_exception(code, bar) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_sqlite_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, bar})
 #define unexpected_nested(code, nested) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_nested_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, nested});
 #define unexpected_invalid_input_parameter(code, param_name) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_invalid_parameter, __PRETTY_FUNCTION__, __FILE__, __LINE__, std::string(param_name)})
-#define unexpected_combined_error(code, nested1, nested2) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_combined_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, cold_arc::combined_error(nested1, nested2)});
+#define unexpected_combined_error(code, nested1, nested2) tl::unexpected<cold_arc::Error>({code, cold_arc::explain_combined_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, make_combined_error(nested1, nested2, code)});
 #define make_combined_error(e, might_e, c) cold_arc::make_combined_error_(e, might_e, c, __PRETTY_FUNCTION__, __FILE__, __LINE__)
 #define make_nested_error(c, nested) cold_arc::Error{c, cold_arc::explain_nested_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, nested}
 #define make_sqlite_error(c, code) cold_arc::Error{c, cold_arc::explain_sqlite_error, __PRETTY_FUNCTION__, __FILE__, __LINE__, code}
@@ -258,6 +270,8 @@ enum class CalculateSHA256Errors {
     failedToOpenFileForReading,
     noSHA256CipherFound,
 };
+
+[[nodiscard]] cold_arc::Result<std::string> sha256(const std::string& data);
 
 tl::expected<std::string, CalculateSHA256Errors> calculateSha256(const std::string& filename, uint64_t size, const std::function<void(uint64_t)>& callback);
 

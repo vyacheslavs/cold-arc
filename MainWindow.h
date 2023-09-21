@@ -30,9 +30,11 @@ class MainWindow : public Gtk::Window {
         MediaView* m_media_view;
         Gtk::SeparatorToolItem* m_sep1;
         Gtk::SeparatorToolItem* m_sep2;
+        Gtk::SeparatorToolItem* m_sep3;
         std::unordered_map<uint64_t, Gtk::TreeIter> m_tree_fast_access;
         Gtk::ToolButton* m_delete_button;
         Gtk::TreeSelection* m_contents_selection;
+        Gtk::ToolButton* m_history_button;
 
         void onNewArchiveButtonClicked();
 
@@ -53,6 +55,8 @@ class MainWindow : public Gtk::Window {
         void onDeleteButtonClicked();
 
         void updateContentsSelection();
+
+        void onHistoryButton();
 
         void onTreeViewRowCollapsed(const Gtk::TreeIter& iter, const Gtk::TreePath& path);
 

@@ -93,6 +93,10 @@ namespace arc {
              */
             [[nodiscard]] cold_arc::Result<> remove(uint64_t id, const std::vector<uint64_t>& media_ids);
 
+            [[nodiscard]] cold_arc::Result<uint64_t> commit(const std::string& desc);
+            [[nodiscard]] cold_arc::Result<> applyCommit(uint64_t id);
+            [[nodiscard]] cold_arc::Result<> removeCommit(uint64_t id);
+
             enum WalkFlags {
                     CallbackLast =        (1 << 0),
                     WalkFilesAndFolders = (1 << 1),
@@ -196,6 +200,15 @@ namespace arc {
                 return {};
             }
 
+            template<typename F>
+            [[nodiscard]] cold_arc::Result<> walkHistory(F && callback) {
+                cold_arc::Error e;
+                walkHistory(std::forward<F>(callback), e);
+                if (e.code != cold_arc::ErrorCode::None)
+                    return unexpected_nested(cold_arc::ErrorCode::WalkHistoryError, e);
+                return {};
+            }
+
             [[nodiscard]] bool hasActiveArchive() const;
             [[nodiscard]] bool hasCurrentMedia() const;
 
@@ -240,6 +253,19 @@ namespace arc {
             };
 
         private:
+
+            template<typename F>
+            void walkHistory(F && callback, cold_arc::Error& e) {
+                try {
+                    *m_dbhandle << "SELECT id, description, dt FROM arc_history ORDER by dt"
+                                >> [&](sqlite3_uint64 id, const std::string& desc, sqlite3_uint64 dt) {
+                                    if (e.code == cold_arc::ErrorCode::None)
+                                        e = callback(id, desc, dt);
+                                };
+                } catch (const sqlite::sqlite_exception& ex) {
+                    e = make_sqlite_error(cold_arc::ErrorCode::WalkHistoryError, ex.get_code());
+                }
+            }
 
             /**
              * Walk to root from folder of file id
@@ -324,12 +350,13 @@ namespace arc {
                     Settings() = default;
                     [[nodiscard]] cold_arc::Result<> construct(const std::shared_ptr<sqlite::database>& dbhandle);
                     [[nodiscard]] const Glib::ustring& name() const;
+                    [[nodiscard]] bool is_paranoic() const;
                     [[nodiscard]] const std::unique_ptr<Media>& media() const;
                     /**
                      * Updates name of arc
                      * @param name
                      */
-                    [[nodiscard]] cold_arc::Result<> updateName(const std::string& name);
+                    [[nodiscard]] cold_arc::Result<> update(const std::string& name, bool paranoic);
                     /**
                      * Switch media
                      * @param new_id
@@ -339,6 +366,7 @@ namespace arc {
 
                 private:
                     Glib::ustring m_name;
+                    bool m_paranoic {false};
                     std::shared_ptr<sqlite::database> m_dbhandle;
                     std::unique_ptr<Media> m_current_media;
 
